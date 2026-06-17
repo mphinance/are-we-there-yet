@@ -1,4 +1,4 @@
-# Operation Callahan — Family Trip App
+# Operation Callahan: Family Trip App
 
 A single-page, static family trip app for a Cedar Point birthday run.
 Deploys to GitHub Pages (HTTPS, so the browser Geolocation API works with no backend).
@@ -16,11 +16,11 @@ Deploys to GitHub Pages (HTTPS, so the browser Geolocation API works with no bac
 - Synthwave aesthetic (pink/cyan/purple on dark). Variables defined in `index.html` `:root`.
 
 ## Files
-- `index.html` — the app shell + all tabs + travel map + countdown + packing. Orchestrator owns this.
-- `assets/park.js` — in-park Cedar Point map module. Renders into `<section id="park">`, defines `window.onParkTabShown()`. Agent A owns this.
-- `operation-callahan.html` — deluxe printable packing/briefing sheet.
-- `README.md` — what it is + GitHub Pages deploy steps. Agent B owns this.
-- `.nojekyll` — disable Jekyll on Pages.
+- `index.html`: the app shell + all tabs + travel map + countdown + packing. Orchestrator owns this.
+- `assets/park.js`: in-park Cedar Point map module. Renders into `<section id="park">`, defines `window.onParkTabShown()`. Agent A owns this.
+- `operation-callahan.html`: deluxe printable packing/briefing sheet.
+- `README.md`: what it is + GitHub Pages deploy steps. Agent B owns this.
+- `.nojekyll`: disable Jekyll on Pages.
 
 ## Hard style rules (from the workspace CLAUDE.md)
 - **No em dashes anywhere.** Use periods, commas, or "and".

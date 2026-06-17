@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Operation Callahan — Trip HQ</title>
+<title>Operation Callahan · Trip HQ</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <style>
@@ -168,10 +168,10 @@
     </div>
     <div id="map"></div>
     <div class="stat">
-      <div class="s"><div class="v" id="stRemain">—</div><div class="k">miles to KOA</div></div>
-      <div class="s"><div class="v" id="stEta">—</div><div class="k">est. arrival</div></div>
+      <div class="s"><div class="v" id="stRemain">·</div><div class="k">miles to KOA</div></div>
+      <div class="s"><div class="v" id="stEta">·</div><div class="k">est. arrival</div></div>
       <div class="s"><div class="v" id="stPct">0%</div><div class="k">of the way</div></div>
-      <div class="s"><div class="v" id="stSpeed">—</div><div class="k">current mph</div></div>
+      <div class="s"><div class="v" id="stSpeed">·</div><div class="k">current mph</div></div>
     </div>
     <div class="prog"><i id="progBar"></i></div>
 
@@ -414,7 +414,7 @@ function update(lat,lng,speedMps){
   document.getElementById('stPct').textContent = pct.toFixed(0)+'%';
   document.getElementById('progBar').style.width = pct+'%';
   var mph = (speedMps!=null && speedMps>=0) ? speedMps*2.23694 : null;
-  document.getElementById('stSpeed').textContent = mph!=null ? mph.toFixed(0) : '—';
+  document.getElementById('stSpeed').textContent = mph!=null ? mph.toFixed(0) : '·';
   // ETA: use live speed if moving, else assume 62 mph
   var v = (mph && mph>15) ? mph : 62;
   var hrs = remain / v;

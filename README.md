@@ -87,8 +87,12 @@ Each phone appears as a pin on the shared map. Without a config, solo mode is ac
 
 ## Screenshots
 
+Best viewed live. Once deployed, open `https://mphinance.github.io/callahan/` on a phone and tap through the tabs.
+
+To add screenshots to this README, drop PNGs into a `docs/` folder named `screenshot-now.png`, `screenshot-live-map.png`, and `screenshot-park-map.png`, then uncomment the image lines below.
+
+<!--
 ![Now tab](docs/screenshot-now.png)
-
 ![Live Map tab](docs/screenshot-live-map.png)
-
 ![Park Map tab](docs/screenshot-park-map.png)
+-->
