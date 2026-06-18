@@ -19,29 +19,29 @@
   // Coordinates are real, pulled from OpenStreetMap's Cedar Point ride geometry.
   var PARK_PINS = [
     // CAN RIDE (green, 48")
-    { ll: [41.48542, -82.68607], n: 'Magnum XL-200',         req: '48"', note: 'Legendary hyper coaster, far end by the beach',     color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48166, -82.68812], n: 'Millennium Force',      req: '48"', note: '300 ft, one of the all time greats',                color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48110, -82.68364], n: 'Valravn',               req: '48"', note: 'B and M dive coaster',                              color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48115, -82.68525], n: "Siren's Curse",         req: '48"', note: 'New tilt coaster',                                  color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48638, -82.68959], n: 'Gemini',                req: '48"', note: 'Racing coaster, a great first big one',             color: '#39ff8b', cat: 'ride' },
-    { ll: [41.47986, -82.68261], n: 'Blue Streak',           req: '48"', note: 'Classic woodie near the front',                     color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48213, -82.68518], n: 'Iron Dragon',           req: '48"', note: 'Suspended, gentle',                                 color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48365, -82.68532], n: 'Corkscrew',             req: '48"', note: 'His first inversions',                              color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48479, -82.69039], n: 'Cedar Creek Mine Ride', req: '48"', note: 'Gentle family coaster',                             color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48534, -82.68913], n: 'Woodstock Express',     req: '48"', note: 'Camp Snoopy starter coaster',                       color: '#39ff8b', cat: 'ride' },
-    { ll: [41.48412, -82.69104], n: 'Snake River Falls',     req: '48"', note: 'Water ride, you will get soaked',                   color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48542, -82.68607], n: 'Magnum XL-200',         req: '48"', note: 'Legendary hyper coaster, far end by the beach',     color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48166, -82.68812], n: 'Millennium Force',      req: '48"', note: '300 ft, one of the all time greats',                color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48110, -82.68364], n: 'Valravn',               req: '48"', note: 'B and M dive coaster',                              color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48115, -82.68525], n: "Siren's Curse",         req: '48"', note: 'New tilt coaster',                                  color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48638, -82.68959], n: 'Gemini',                req: '48"', note: 'Racing coaster, a great first big one',             color: '#1f9d55', cat: 'ride' },
+    { ll: [41.47986, -82.68261], n: 'Blue Streak',           req: '48"', note: 'Classic woodie near the front',                     color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48213, -82.68518], n: 'Iron Dragon',           req: '48"', note: 'Suspended, gentle',                                 color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48365, -82.68532], n: 'Corkscrew',             req: '48"', note: 'His first inversions',                              color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48479, -82.69039], n: 'Cedar Creek Mine Ride', req: '48"', note: 'Gentle family coaster',                             color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48534, -82.68913], n: 'Woodstock Express',     req: '48"', note: 'Camp Snoopy starter coaster',                       color: '#1f9d55', cat: 'ride' },
+    { ll: [41.48412, -82.69104], n: 'Snake River Falls',     req: '48"', note: 'Water ride, you will get soaked',                   color: '#1f9d55', cat: 'ride' },
     // TOO TALL FOR HIM THIS YEAR (muted, 52")
-    { ll: [41.48283, -82.68534], n: 'Top Thrill 2',          req: '52"', note: '420 ft, 120 mph. Next year, bud',                   color: '#9a86c4', cat: 'short' },
-    { ll: [41.48450, -82.69291], n: 'Maverick',              req: '52"', note: 'Launch and a beyond-vertical drop',                 color: '#9a86c4', cat: 'short' },
-    { ll: [41.48611, -82.69336], n: 'Steel Vengeance',       req: '52"', note: 'Frontiertown monster',                              color: '#9a86c4', cat: 'short' },
-    { ll: [41.47944, -82.67901], n: 'GateKeeper',            req: '52"', note: 'Wing coaster over the front gate',                  color: '#9a86c4', cat: 'short' },
-    { ll: [41.48085, -82.68014], n: 'MaXair',                req: '52"', note: 'Giant swing',                                       color: '#9a86c4', cat: 'short' },
+    { ll: [41.48283, -82.68534], n: 'Top Thrill 2',          req: '52"', note: '420 ft, 120 mph. Next year, bud',                   color: '#8a93a6', cat: 'short' },
+    { ll: [41.48450, -82.69291], n: 'Maverick',              req: '52"', note: 'Launch and a beyond-vertical drop',                 color: '#8a93a6', cat: 'short' },
+    { ll: [41.48611, -82.69336], n: 'Steel Vengeance',       req: '52"', note: 'Frontiertown monster',                              color: '#8a93a6', cat: 'short' },
+    { ll: [41.47944, -82.67901], n: 'GateKeeper',            req: '52"', note: 'Wing coaster over the front gate',                  color: '#8a93a6', cat: 'short' },
+    { ll: [41.48085, -82.68014], n: 'MaXair',                req: '52"', note: 'Giant swing',                                       color: '#8a93a6', cat: 'short' },
     // LANDMARKS (cyan)
-    { ll: [41.47835, -82.67945], n: 'Main Entrance',         req: null,  note: 'Front gate and lockers (credit card only)',         color: '#16e0ff', cat: 'place' },
-    { ll: [41.47900, -82.67990], n: 'Guest Services',        req: null,  note: 'Free birthday button for Kilian here',              color: '#16e0ff', cat: 'place' },
-    { ll: [41.48185, -82.68130], n: 'Planet Snoopy (kids)',  req: null,  note: 'Kids zone, shade, midday reset',                    color: '#16e0ff', cat: 'place' },
-    { ll: [41.48159, -82.67988], n: 'Giant Wheel',           req: null,  note: 'Dusk photo over Lake Erie to close out being 8',    color: '#16e0ff', cat: 'place' },
-    { ll: [41.47980, -82.68070], n: 'First Aid',             req: null,  note: 'Near the front midway, just in case',               color: '#16e0ff', cat: 'place' }
+    { ll: [41.47835, -82.67945], n: 'Main Entrance',         req: null,  note: 'Front gate and lockers (credit card only)',         color: '#0057b8', cat: 'place' },
+    { ll: [41.47900, -82.67990], n: 'Guest Services',        req: null,  note: 'Free birthday button for Kilian here',              color: '#0057b8', cat: 'place' },
+    { ll: [41.48185, -82.68130], n: 'Planet Snoopy (kids)',  req: null,  note: 'Kids zone, shade, midday reset',                    color: '#0057b8', cat: 'place' },
+    { ll: [41.48159, -82.67988], n: 'Giant Wheel',           req: null,  note: 'Dusk photo over Lake Erie to close out being 8',    color: '#0057b8', cat: 'place' },
+    { ll: [41.47980, -82.68070], n: 'First Aid',             req: null,  note: 'Near the front midway, just in case',               color: '#0057b8', cat: 'place' }
   ];
 
   // ---- Haversine in FEET ----
@@ -70,12 +70,12 @@
   function popupHtml(p) {
     var html = '<b>' + p.n + '</b>';
     if (p.req) {
-      var tagColor = p.cat === 'ride' ? '#39ff8b' : '#9a86c4';
-      var tagBg    = p.cat === 'ride' ? 'rgba(57,255,139,.16)' : 'rgba(154,134,196,.16)';
+      var tagColor = p.cat === 'ride' ? '#1f9d55' : '#5b6b85';
+      var tagBg    = p.cat === 'ride' ? 'rgba(31,157,85,.16)' : 'rgba(138,147,166,.18)';
       html += ' <span style="display:inline-block;font-size:10px;padding:2px 6px;border-radius:5px;'
             + 'background:' + tagBg + ';color:' + tagColor + '">' + p.req + '</span>';
     }
-    html += '<br><span style="font-size:12px;color:#9a86c4">' + p.note + '</span>';
+    html += '<br><span style="font-size:12px;color:#5b6b85">' + p.note + '</span>';
     return html;
   }
 
@@ -93,10 +93,10 @@
       var p = PARK_PINS[i];
       var cm = L.circleMarker(p.ll, {
         radius: 9,
-        color: '#0b0418',
+        color: '#ffffff',
         weight: 2,
         fillColor: p.color,
-        fillOpacity: 0.92
+        fillOpacity: 0.95
       }).addTo(pmap).bindPopup(popupHtml(p));
       ppins.push(p.ll);
     }
@@ -159,12 +159,12 @@
             radius: 10,
             color: '#ffffff',
             weight: 3,
-            fillColor: '#ff2e88',
+            fillColor: '#d81e3f',
             fillOpacity: 1
           }).addTo(pmap).bindPopup('You are here');
           paccCircle = L.circle([lat, lng], {
             radius: acc,
-            color: '#ff2e88',
+            color: '#d81e3f',
             weight: 1,
             fillOpacity: 0.08
           }).addTo(pmap);
@@ -177,7 +177,7 @@
 
         var result = nearestPin(lat, lng);
         pSetStat(result.pin ? result.pin.n : '--', result.distFt, accFt);
-        pSetStatus('<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#39ff8b;margin-right:6px"></span>Live GPS');
+        pSetStatus('<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#1f9d55;margin-right:6px"></span>Live GPS');
       },
       function (err) {
         pSetStatus('Location blocked: ' + err.message + '. Needs HTTPS and permission.');
@@ -196,7 +196,7 @@
 
     function pinRow(p) {
       var tagHtml = p.req
-        ? ' <span class="tag" style="background:' + (p.cat === 'ride' ? 'rgba(57,255,139,.16);color:#39ff8b' : 'rgba(154,134,196,.16);color:#9a86c4') + '">' + p.req + '</span>'
+        ? ' <span class="tag" style="background:' + (p.cat === 'ride' ? 'rgba(31,157,85,.16);color:#1f9d55' : 'rgba(138,147,166,.18);color:#5b6b85') + '">' + p.req + '</span>'
         : '';
       return '<div class="row">'
            + '<span><span class="dot" style="background:' + p.color + '"></span>' + p.n + tagHtml + '</span>'
@@ -211,7 +211,7 @@
     tooShort.forEach(function (p) { html += pinRow(p); });
     html += '<h3 class="cyan" style="margin:14px 0 6px">Landmarks and Services</h3>';
     places.forEach(function (p) { html += pinRow(p); });
-    html += '<p class="mut" style="font-size:11px;margin:10px 0 0">Ride pins are guides, your blue dot is exact.</p>';
+    html += '<p class="mut" style="font-size:11px;margin:10px 0 0">Ride pins are guides, your red dot is exact.</p>';
     return html;
   }
 
@@ -220,7 +220,7 @@
     var style = document.createElement('style');
     style.textContent = [
       '#parkmap{height:62vh;min-height:380px;width:100%;border-radius:14px;',
-      'border:1px solid #3a2563;z-index:1;}'
+      'border:1px solid #d3dce9;z-index:1;}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -239,7 +239,7 @@
     section.innerHTML = [
       '<p class="mut" style="margin:0 0 14px;font-size:14px">',
         'Live in-park map for Kilian\'s birthday day. Tap <b>Find me in the park</b> to drop your blue dot.',
-        ' Green pins are rides he clears at 51 inches. Gray pins need 52. Cyan pins are stops worth knowing.',
+        ' Green pins are rides he clears at 51 inches. Gray pins need 52. Blue pins are stops worth knowing.',
       '</p>',
 
       '<div class="mapbar">',

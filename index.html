@@ -4,98 +4,113 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Operation Callahan · Trip HQ</title>
+<meta name="description" content="Cedar Point birthday trip HQ for Operation Callahan: countdown, live route map, in-park map, weather, and packing lists." />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0c2340" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Callahan" />
+<link rel="apple-touch-icon" href="assets/icon-192.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <style>
   :root{
-    --bg:#0b0418; --bg2:#150a2e; --ink:#f3e9ff; --muted:#9a86c4;
-    --pink:#ff2e88; --cyan:#16e0ff; --purple:#a855f7; --yellow:#ffd23f;
-    --green:#39ff8b; --orange:#ff7b39; --card:#1a0f33; --line:#3a2563;
+    --bg:#eef3fa; --bg2:#e2e9f4; --ink:#0c2340; --muted:#5b6b85;
+    --pink:#d81e3f; --cyan:#0057b8; --purple:#0c2340; --yellow:#b5840c;
+    --green:#1f9d55; --orange:#d4651a; --card:#ffffff; --line:#d3dce9;
+    --navy:#0c2340; --navy2:#16315b; --gold:#f2b21a;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%}
   body{
     font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
     background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(168,85,247,.25), transparent 60%),
-      radial-gradient(900px 500px at 0% 10%, rgba(22,224,255,.15), transparent 55%),
+      radial-gradient(1100px 520px at 82% -12%, rgba(0,87,184,.10), transparent 60%),
+      radial-gradient(900px 480px at 0% 6%, rgba(216,30,63,.06), transparent 55%),
       linear-gradient(180deg,var(--bg),var(--bg2)) fixed;
     color:var(--ink); line-height:1.5; min-height:100%;
   }
   .wrap{max-width:1000px; margin:0 auto; padding:18px 14px 96px}
-  header.mast{text-align:center; padding:18px 10px 10px}
-  .kicker{letter-spacing:.4em; font-size:11px; color:var(--cyan); text-transform:uppercase}
+  header.mast{
+    text-align:center; padding:22px 14px 20px; margin:-18px -14px 8px;
+    background:linear-gradient(180deg,var(--navy),var(--navy2));
+    border-radius:0 0 24px 24px; border-bottom:4px solid var(--gold);
+    box-shadow:0 10px 28px rgba(12,35,64,.22);
+  }
+  .kicker{letter-spacing:.4em; font-size:11px; color:var(--gold); text-transform:uppercase}
   h1{margin:6px 0 2px; font-size:clamp(28px,7vw,52px); font-weight:900; letter-spacing:-1px;
-     background:linear-gradient(90deg,var(--pink),var(--yellow),var(--cyan));
+     background:linear-gradient(90deg,var(--gold),#ffffff,var(--gold));
      -webkit-background-clip:text; background-clip:text; color:transparent}
-  .sub{color:var(--muted); font-size:14px}
+  .sub{color:rgba(255,255,255,.82); font-size:14px}
   /* countdown */
   .count{display:flex; gap:10px; justify-content:center; margin:14px 0 6px; flex-wrap:wrap}
-  .count .box{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 14px; min-width:66px}
+  .count .box{background:var(--card); border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:8px 14px; min-width:66px}
   .count .n{font-size:26px; font-weight:900; color:var(--cyan); font-variant-numeric:tabular-nums; line-height:1}
   .count .l{font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted)}
-  .clocks{font-size:12px; color:var(--muted); margin-top:4px}
-  .clocks b{color:var(--ink)}
+  .clocks{font-size:12px; color:rgba(255,255,255,.72); margin-top:4px}
+  .clocks b{color:#fff}
   /* tabs */
   nav.tabs{position:sticky; top:0; z-index:500; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;
     padding:10px 6px; margin:10px 0 16px; backdrop-filter:blur(8px);
-    background:linear-gradient(180deg, rgba(11,4,24,.92), rgba(11,4,24,.6))}
+    background:linear-gradient(180deg, rgba(238,243,250,.95), rgba(238,243,250,.62))}
   nav.tabs button{
-    background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--muted);
+    background:#fff; border:1px solid var(--line); color:var(--navy);
     padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; transition:.15s}
-  nav.tabs button:hover{color:var(--ink)}
-  nav.tabs button.on{color:#0b0418; background:linear-gradient(90deg,var(--cyan),var(--green)); border-color:transparent}
+  nav.tabs button:hover{border-color:var(--cyan); color:var(--cyan)}
+  nav.tabs button.on{color:#fff; background:linear-gradient(90deg,var(--pink),#a3142e); border-color:transparent}
   section.tab{display:none; animation:fade .25s}
   section.tab.on{display:block}
   @keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1}}
-  h2{font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--purple); margin:26px 0 12px; display:flex; align-items:center; gap:10px}
+  h2{font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--navy); margin:26px 0 12px; display:flex; align-items:center; gap:10px}
   h2::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--line),transparent)}
   .grid{display:grid; gap:14px}
   .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
   @media(max-width:780px){.g3,.g4{grid-template-columns:1fr 1fr}} @media(max-width:520px){.g2,.g3,.g4{grid-template-columns:1fr}}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px; box-shadow:0 8px 30px rgba(0,0,0,.3)}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px; box-shadow:0 6px 18px rgba(12,35,64,.08)}
   .card h3{margin:0 0 8px; font-size:16px}
   .big{font-size:30px; font-weight:900}
   .cyan{color:var(--cyan)} .pink{color:var(--pink)} .yellow{color:var(--yellow)} .green{color:var(--green)} .mut{color:var(--muted)}
   /* map */
   #map{height:62vh; min-height:380px; width:100%; border-radius:14px; border:1px solid var(--line); z-index:1}
-  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#1a0f33; color:#f3e9ff; border:1px solid #3a2563}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff; color:var(--ink); border:1px solid var(--line)}
   .leaflet-popup-content{margin:10px 12px; font-size:13px}
   .mapbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 12px}
-  .btn{background:linear-gradient(90deg,var(--pink),var(--purple)); color:#fff; border:none; padding:10px 16px;
+  .btn{background:linear-gradient(90deg,var(--pink),#a3142e); color:#fff; border:none; padding:10px 16px;
     border-radius:10px; font-weight:700; cursor:pointer; font-size:14px}
-  .btn.alt{background:rgba(255,255,255,.05); border:1px solid var(--line); color:var(--ink)}
+  .btn.alt{background:#fff; border:1px solid var(--line); color:var(--ink)}
   .btn:disabled{opacity:.5; cursor:default}
   .stat{display:flex; gap:14px; flex-wrap:wrap; margin:12px 0}
   .stat .s{flex:1; min-width:120px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; text-align:center}
   .stat .s .v{font-size:22px; font-weight:900; color:var(--cyan); font-variant-numeric:tabular-nums}
   .stat .s .k{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
-  .prog{height:10px; background:rgba(255,255,255,.07); border-radius:99px; overflow:hidden; margin:8px 0 4px}
-  .prog>i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--green),var(--yellow)); transition:width .4s}
+  .prog{height:10px; background:rgba(12,35,64,.08); border-radius:99px; overflow:hidden; margin:8px 0 4px}
+  .prog>i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--green),var(--gold)); transition:width .4s}
   /* lists */
   .row{display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px dashed var(--line); font-size:14px}
   .row:last-child{border:0}
   .row .h{color:var(--cyan); font-variant-numeric:tabular-nums; white-space:nowrap; font-size:13px}
-  .callout{border-left:3px solid var(--cyan); padding:11px 13px; background:rgba(22,224,255,.06); border-radius:0 10px 10px 0; margin:10px 0; font-size:14px}
-  .callout.pink{border-color:var(--pink); background:rgba(255,46,136,.07)}
-  .callout.yellow{border-color:var(--yellow); background:rgba(255,210,63,.07)}
+  .callout{border-left:3px solid var(--cyan); padding:11px 13px; background:rgba(0,87,184,.07); border-radius:0 10px 10px 0; margin:10px 0; font-size:14px}
+  .callout.pink{border-color:var(--pink); background:rgba(216,30,63,.07)}
+  .callout.yellow{border-color:var(--gold); background:rgba(242,178,26,.12)}
   ul.tight{margin:6px 0 0; padding-left:20px; font-size:14px} ul.tight li{margin:5px 0}
   .eat{display:flex; gap:12px; align-items:flex-start}
   .eat .pin{font-size:22px} .eat .body{flex:1}
   .eat .name{font-weight:700} .eat .meta{color:var(--muted); font-size:12px}
   .tag{display:inline-block; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:6px}
-  .tag.kid{background:rgba(57,255,139,.16); color:var(--green)} .tag.fun{background:rgba(255,210,63,.16); color:var(--yellow)}
-  .tag.quick{background:rgba(22,224,255,.16); color:var(--cyan)}
+  .tag.kid{background:rgba(31,157,85,.16); color:var(--green)} .tag.fun{background:rgba(242,178,26,.18); color:var(--yellow)}
+  .tag.quick{background:rgba(0,87,184,.14); color:var(--cyan)}
   /* checklist */
   label.item{display:flex; gap:10px; align-items:flex-start; padding:6px 4px; border-radius:8px; cursor:pointer; font-size:14px}
-  label.item:hover{background:rgba(255,255,255,.04)}
-  label.item input{appearance:none; width:18px; height:18px; border:2px solid var(--purple); border-radius:5px; margin-top:2px; flex:none; position:relative; cursor:pointer}
+  label.item:hover{background:rgba(12,35,64,.04)}
+  label.item input{appearance:none; width:18px; height:18px; border:2px solid var(--navy); border-radius:5px; margin-top:2px; flex:none; position:relative; cursor:pointer}
   label.item input:checked{background:var(--green); border-color:var(--green)}
-  label.item input:checked::after{content:"\2713"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#062; font-weight:900; font-size:13px}
-  label.item input:checked + span{opacity:.45; text-decoration:line-through}
+  label.item input:checked::after{content:"\2713"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:13px}
+  label.item input:checked + span{opacity:.5; text-decoration:line-through}
   .hint{color:var(--muted); font-size:12px; display:block}
   .conv{font-size:13px; color:var(--muted)}
-  .conv code{background:rgba(255,255,255,.06); padding:2px 6px; border-radius:6px; color:var(--cyan)}
+  .conv code{background:rgba(12,35,64,.06); padding:2px 6px; border-radius:6px; color:var(--cyan)}
   .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px}
   a{color:var(--cyan)}
   .foot{text-align:center; color:var(--muted); font-size:12px; margin-top:36px}
@@ -434,18 +449,18 @@ function initMap(){
   map = L.map('map',{zoomControl:true}).setView([42.1,-85.3], 6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(map);
-  L.polyline(ROUTE,{color:'#16e0ff',weight:4,opacity:.7,dashArray:'2,8'}).addTo(map);
-  markerDot(ORIGIN.lat,ORIGIN.lng,'#a855f7').addTo(map).bindPopup("<b>Start</b><br>"+ORIGIN.name);
-  markerDot(KOA.lat,KOA.lng,'#39ff8b').addTo(map).bindPopup("<b>KOA</b><br>"+KOA.name);
-  markerDot(CP.lat,CP.lng,'#ffd23f').addTo(map).bindPopup("<b>Cedar Point</b>");
+  L.polyline(ROUTE,{color:'#0057b8',weight:4,opacity:.75,dashArray:'2,8'}).addTo(map);
+  markerDot(ORIGIN.lat,ORIGIN.lng,'#0057b8').addTo(map).bindPopup("<b>Start</b><br>"+ORIGIN.name);
+  markerDot(KOA.lat,KOA.lng,'#1f9d55').addTo(map).bindPopup("<b>KOA</b><br>"+KOA.name);
+  markerDot(CP.lat,CP.lng,'#f2b21a').addTo(map).bindPopup("<b>Cedar Point</b>");
   STOPS.forEach(function(s){
-    markerDot(s.ll[0],s.ll[1],'#ff7b39').addTo(map).bindPopup("<b>"+s.e+" "+s.n+"</b><br>"+s.d);
+    markerDot(s.ll[0],s.ll[1],'#d4651a').addTo(map).bindPopup("<b>"+s.e+" "+s.n+"</b><br>"+s.d);
   });
   fitRoute();
   mapReady=true;
 }
 function markerDot(lat,lng,color){
-  return L.circleMarker([lat,lng],{radius:8,color:'#0b0418',weight:2,fillColor:color,fillOpacity:1});
+  return L.circleMarker([lat,lng],{radius:8,color:'#ffffff',weight:2,fillColor:color,fillOpacity:1});
 }
 function fitRoute(){ if(map) map.fitBounds(L.latLngBounds(ROUTE).pad(0.15)); }
 
@@ -487,8 +502,8 @@ function update(lat,lng,speedMps){
 }
 function placeMe(lat,lng,acc){
   if(!meMarker){
-    meMarker = L.circleMarker([lat,lng],{radius:9,color:'#fff',weight:2,fillColor:'#ff2e88',fillOpacity:1}).addTo(map).bindPopup("You");
-    accCircle = L.circle([lat,lng],{radius:acc||50,color:'#ff2e88',weight:1,fillOpacity:.08}).addTo(map);
+    meMarker = L.circleMarker([lat,lng],{radius:9,color:'#fff',weight:2,fillColor:'#d81e3f',fillOpacity:1}).addTo(map).bindPopup("You");
+    accCircle = L.circle([lat,lng],{radius:acc||50,color:'#d81e3f',weight:1,fillOpacity:.08}).addTo(map);
   } else { meMarker.setLatLng([lat,lng]); accCircle.setLatLng([lat,lng]).setRadius(acc||50); }
 }
 
@@ -503,7 +518,7 @@ document.getElementById('trackBtn').addEventListener('click', function(){
     var c=p.coords; placeMe(c.latitude,c.longitude,c.accuracy);
     map.setView([c.latitude,c.longitude], Math.max(map.getZoom(),10));
     update(c.latitude,c.longitude,c.speed);
-    setState('<span class="dot" style="background:#39ff8b"></span>Live');
+    setState('<span class="dot" style="background:#1f9d55"></span>Live');
     pushPosition(c.latitude,c.longitude);
   }, function(err){
     setState('Location blocked: '+err.message+' (needs HTTPS + permission)');
@@ -530,7 +545,7 @@ function initConvoy(){
         var v=snap.val()||{};
         Object.keys(v).forEach(function(k){
           if(k===me) return; var d=v[k]; if(!d||d.lat==null) return;
-          if(!peers[k]){ peers[k]=L.circleMarker([d.lat,d.lng],{radius:9,color:'#fff',weight:2,fillColor:'#ffd23f',fillOpacity:1}).addTo(map).bindPopup('Other car'); }
+          if(!peers[k]){ peers[k]=L.circleMarker([d.lat,d.lng],{radius:9,color:'#fff',weight:2,fillColor:'#f2b21a',fillOpacity:1}).addTo(map).bindPopup('Other car'); }
           else peers[k].setLatLng([d.lat,d.lng]);
         });
       });
@@ -660,16 +675,23 @@ setInterval(tick,1000); tick();
   var d=new Date().toLocaleDateString('en-US',{timeZone:'America/Chicago',month:'numeric',day:'numeric'});
   if(d!=='6/19') return;
   var st=document.createElement('style');
-  st.textContent='@keyframes bpulse{0%,100%{box-shadow:0 0 12px rgba(255,46,136,.5)}50%{box-shadow:0 0 32px rgba(255,210,63,.85)}}';
+  st.textContent='@keyframes bpulse{0%,100%{box-shadow:0 0 12px rgba(216,30,63,.45)}50%{box-shadow:0 0 30px rgba(242,178,26,.8)}}';
   document.head.appendChild(st);
   var b=document.createElement('div');
-  b.style.cssText='text-align:center;font-weight:900;font-size:clamp(18px,4.5vw,32px);padding:14px;margin-bottom:12px;border-radius:14px;color:#0b0418;background:linear-gradient(90deg,#ff2e88,#ffd23f,#16e0ff);animation:bpulse 1.6s ease-in-out infinite';
+  b.style.cssText='text-align:center;font-weight:900;font-size:clamp(18px,4.5vw,32px);padding:14px;margin-bottom:12px;border-radius:14px;color:#0c2340;background:linear-gradient(90deg,#ffd24a,#f2b21a,#ffd24a);border:2px solid #d81e3f;animation:bpulse 1.6s ease-in-out infinite';
   b.textContent='🎉 HAPPY 8th BIRTHDAY, KILIAN! 🎉';
   var mast=document.querySelector('header.mast');
   if(mast&&mast.parentNode) mast.parentNode.insertBefore(b, mast);
 })();
 
 initConvoy();
+
+// ----- PWA: register the service worker so the page installs + works offline -----
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){ /* offline cache just won't be available */ });
+  });
+}
 </script>
 <script src="assets/park.js"></script>
 </body>

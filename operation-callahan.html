@@ -6,44 +6,44 @@
 <title>Operation Callahan · Cedar Point Briefing</title>
 <style>
   :root{
-    --bg:#0b0418; --bg2:#150a2e; --ink:#f3e9ff; --muted:#9a86c4;
-    --pink:#ff2e88; --cyan:#16e0ff; --purple:#a855f7; --yellow:#ffd23f;
-    --green:#39ff8b; --orange:#ff7b39; --card:#1a0f33; --line:#3a2563;
+    --bg:#eef3fa; --bg2:#e2e9f4; --ink:#0c2340; --muted:#5b6b85;
+    --pink:#d81e3f; --cyan:#0057b8; --purple:#0c2340; --yellow:#b5840c;
+    --green:#1f9d55; --orange:#d4651a; --card:#ffffff; --line:#d3dce9;
+    --navy:#0c2340; --navy2:#16315b; --gold:#f2b21a;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
     font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
     background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(168,85,247,.25), transparent 60%),
-      radial-gradient(900px 500px at 0% 10%, rgba(22,224,255,.15), transparent 55%),
+      radial-gradient(1200px 600px at 80% -10%, rgba(0,87,184,.10), transparent 60%),
+      radial-gradient(900px 500px at 0% 10%, rgba(216,30,63,.06), transparent 55%),
       linear-gradient(180deg,var(--bg),var(--bg2));
     color:var(--ink); min-height:100vh; line-height:1.5;
   }
   .wrap{max-width:1080px; margin:0 auto; padding:28px 20px 80px}
   header.masthead{
     text-align:center; padding:34px 16px 26px; position:relative;
-    border:1px solid var(--line); border-radius:18px;
-    background:linear-gradient(180deg, rgba(255,46,136,.08), rgba(22,224,255,.04));
-    box-shadow:0 0 50px rgba(168,85,247,.18) inset;
+    border-radius:18px; border-bottom:4px solid var(--gold);
+    background:linear-gradient(180deg,var(--navy),var(--navy2));
+    box-shadow:0 12px 30px rgba(12,35,64,.22);
   }
-  .kicker{letter-spacing:.45em; font-size:12px; color:var(--cyan); text-transform:uppercase; margin-bottom:10px}
+  .kicker{letter-spacing:.45em; font-size:12px; color:var(--gold); text-transform:uppercase; margin-bottom:10px}
   h1{
     margin:0; font-size:clamp(34px,7vw,68px); font-weight:900; letter-spacing:-1px;
-    background:linear-gradient(90deg,var(--pink),var(--yellow),var(--cyan));
+    background:linear-gradient(90deg,var(--gold),#ffffff,var(--gold));
     -webkit-background-clip:text; background-clip:text; color:transparent;
-    text-shadow:0 0 30px rgba(255,46,136,.25);
   }
-  .sub{color:var(--muted); margin-top:8px; font-size:15px}
-  .joke{color:var(--yellow); font-style:italic; font-size:13px; margin-top:6px; opacity:.85}
+  .sub{color:rgba(255,255,255,.82); margin-top:8px; font-size:15px}
+  .joke{color:#ffd98a; font-style:italic; font-size:13px; margin-top:6px; opacity:.9}
   .legrow{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:18px}
   .pill{
-    border:1px solid var(--line); border-radius:999px; padding:7px 14px; font-size:13px;
-    background:rgba(255,255,255,.03); color:var(--ink)
+    border:1px solid rgba(255,255,255,.22); border-radius:999px; padding:7px 14px; font-size:13px;
+    background:rgba(255,255,255,.08); color:#fff
   }
-  .pill b{color:var(--cyan)}
+  .pill b{color:var(--gold)}
   h2{
-    font-size:13px; letter-spacing:.25em; text-transform:uppercase; color:var(--purple);
+    font-size:13px; letter-spacing:.25em; text-transform:uppercase; color:var(--navy);
     margin:38px 0 14px; display:flex; align-items:center; gap:10px;
   }
   h2::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--line),transparent)}
@@ -54,7 +54,7 @@
   @media(max-width:560px){.g2,.g4{grid-template-columns:1fr}}
   .card{
     background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px;
-    box-shadow:0 8px 30px rgba(0,0,0,.3);
+    box-shadow:0 6px 18px rgba(12,35,64,.08);
   }
   /* weather */
   .wx{text-align:center}
@@ -64,29 +64,29 @@
   .wx .hi{font-size:26px; font-weight:900}
   .wx .lo{color:var(--cyan); font-size:13px}
   .wx .note{font-size:12px; color:var(--muted); margin-top:8px; min-height:32px}
-  .wx.flag{border-color:var(--pink); box-shadow:0 0 22px rgba(255,46,136,.25)}
-  .wx.star{border-color:var(--yellow); box-shadow:0 0 22px rgba(255,210,63,.25)}
+  .wx.flag{border-color:var(--pink); box-shadow:0 6px 20px rgba(216,30,63,.16)}
+  .wx.star{border-color:var(--gold); box-shadow:0 6px 20px rgba(242,178,26,.2)}
   .tag{display:inline-block; font-size:10px; letter-spacing:.1em; text-transform:uppercase; padding:2px 7px; border-radius:6px; margin-top:8px}
-  .tag.warn{background:rgba(255,46,136,.18); color:var(--pink)}
-  .tag.win{background:rgba(255,210,63,.16); color:var(--yellow)}
+  .tag.warn{background:rgba(216,30,63,.16); color:var(--pink)}
+  .tag.win{background:rgba(242,178,26,.18); color:var(--yellow)}
   /* checklist */
   .list h3{margin:0 0 10px; font-size:16px; display:flex; align-items:center; gap:8px}
   .list h3 .em{font-size:18px}
-  .prog{height:6px; background:rgba(255,255,255,.07); border-radius:99px; overflow:hidden; margin:0 0 12px}
+  .prog{height:6px; background:rgba(12,35,64,.08); border-radius:99px; overflow:hidden; margin:0 0 12px}
   .prog > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--green)); transition:width .25s}
   label.item{
     display:flex; gap:10px; align-items:flex-start; padding:6px 4px; border-radius:8px; cursor:pointer; font-size:14px;
   }
-  label.item:hover{background:rgba(255,255,255,.04)}
-  label.item input{appearance:none; width:18px; height:18px; border:2px solid var(--purple); border-radius:5px; margin-top:2px; flex:none; cursor:pointer; position:relative}
+  label.item:hover{background:rgba(12,35,64,.04)}
+  label.item input{appearance:none; width:18px; height:18px; border:2px solid var(--navy); border-radius:5px; margin-top:2px; flex:none; cursor:pointer; position:relative}
   label.item input:checked{background:var(--green); border-color:var(--green)}
-  label.item input:checked::after{content:"\2713"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#062; font-weight:900; font-size:13px}
-  label.item input:checked + span{opacity:.45; text-decoration:line-through}
+  label.item input:checked::after{content:"\2713"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:13px}
+  label.item input:checked + span{opacity:.5; text-decoration:line-through}
   .item .hint{color:var(--muted); font-size:12px; display:block}
   /* callout */
-  .callout{border-left:3px solid var(--cyan); padding:12px 14px; background:rgba(22,224,255,.06); border-radius:0 10px 10px 0; margin:10px 0; font-size:14px}
-  .callout.pink{border-color:var(--pink); background:rgba(255,46,136,.07)}
-  .callout.yellow{border-color:var(--yellow); background:rgba(255,210,63,.07)}
+  .callout{border-left:3px solid var(--cyan); padding:12px 14px; background:rgba(0,87,184,.07); border-radius:0 10px 10px 0; margin:10px 0; font-size:14px}
+  .callout.pink{border-color:var(--pink); background:rgba(216,30,63,.07)}
+  .callout.yellow{border-color:var(--gold); background:rgba(242,178,26,.12)}
   .callout b{color:var(--ink)}
   ul.tight{margin:6px 0 0; padding-left:20px; font-size:14px}
   ul.tight li{margin:5px 0}
@@ -100,6 +100,9 @@
   @media print{
     body{background:#fff; color:#111}
     .resetbtn,.prog{display:none}
+    header.masthead{background:#fff; border:1px solid #bbb; box-shadow:none}
+    .kicker{color:#444}
+    .sub,.joke,.pill,.pill b{color:#111}
     .card{break-inside:avoid; box-shadow:none; border-color:#bbb}
     h1{color:#111; -webkit-text-fill-color:#111}
   }
