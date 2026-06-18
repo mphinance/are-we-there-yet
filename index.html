@@ -126,15 +126,15 @@
   <section class="tab on" id="now">
     <div class="grid g3">
       <div class="card"><h3 class="cyan">Thursday 6/18</h3><div class="mut">Travel + cabin check-in</div>
-        <div class="yellow" style="font-size:13px;font-weight:700">&#127788;&#65039; 74&deg; / 55&deg; &middot; windy, gusts to 37</div>
+        <div id="wxThu" class="yellow" style="font-size:13px;font-weight:700">&#127788;&#65039; 74&deg; / 55&deg; &middot; windy, gusts to 37</div>
         <p>Out around 1pm Central. ~6 hrs driving plus the hour lost to Eastern time puts you at the KOA near 8pm ET. Deluxe cabin means no setup in the dark, just unload and breathe. Heads up, it's a windy day (gusts to 37), so expect crosswinds on I-90 by the lake.</p>
         <div class="tag fun">~8pm ET arrival</div></div>
       <div class="card" style="border-color:var(--yellow)"><h3 class="yellow">Friday 6/19</h3><div class="mut">BIRTHDAY + Cedar Point</div>
-        <div class="green" style="font-size:13px;font-weight:700">&#9728;&#65039; 77&deg; / 56&deg; &middot; sunny, light wind</div>
+        <div id="wxFri" class="green" style="font-size:13px;font-weight:700">&#9728;&#65039; 77&deg; / 56&deg; &middot; sunny, light wind</div>
         <p>Sunny, 77, light wind. The perfect park day. Rope-drop the coasters, free birthday button at Guest Services, Giant Wheel at dusk, cake at the campsite.</p>
         <div class="tag kid">Go big</div></div>
       <div class="card"><h3 class="pink">Saturday 6/20</h3><div class="mut">Drive home</div>
-        <div class="cyan" style="font-size:13px;font-weight:700">&#9925; 78&deg; / 57&deg; &middot; slight 2pm storm chance</div>
+        <div id="wxSat" class="cyan" style="font-size:13px;font-weight:700">&#9925; 78&deg; / 57&deg; &middot; slight 2pm storm chance</div>
         <p>Leave the KOA by ~8am ET to beat the afternoon storm chance. You gain an hour heading west, so ~6.5 hrs of driving puts you back in Colgate around 1 to 2pm Central.</p>
         <div class="tag quick">Out by 8am ET</div></div>
     </div>
@@ -262,18 +262,22 @@
       <div class="card"><div class="eat"><div class="pin">&#127789;</div><div class="body">
         <div class="name">Indiana Toll Road travel oasis</div>
         <div class="meta">Right over the highway, no exit detour. Bathrooms, fuel, fast food.</div>
+        <div class="meta">&#128205; On I-80/90 between exits &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Indiana+Toll+Road+travel+plaza" target="_blank" rel="noopener">Map</a></div>
         <span class="tag quick">Zero detour</span></div></div></div>
       <div class="card"><div class="eat"><div class="pin">&#129366;</div><div class="body">
         <div class="name">Das Dutchman Essenhaus &middot; Middlebury, IN</div>
         <div class="meta">Amish family-style, legendary pies. Small detour off the Toll Road.</div>
+        <div class="meta">&#128205; <b>I-80/90 Exit 107</b>, then ~6 mi south &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Das+Dutchman+Essenhaus+Middlebury+IN" target="_blank" rel="noopener">Directions</a></div>
         <span class="tag fun">Worth a detour</span></div></div></div>
       <div class="card"><div class="eat"><div class="pin">&#127828;</div><div class="body">
         <div class="name">Tony Packo's &middot; Toledo, OH</div>
         <div class="meta">Famous Hungarian hot dogs, the M*A*S*H spot. Fun, fast, kid-friendly, right on the way.</div>
+        <div class="meta">&#128205; Toledo, near I-280 (Ohio Turnpike Exit 71) &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Tony+Packo%27s+Front+St+Toledo+OH" target="_blank" rel="noopener">Directions</a></div>
         <span class="tag kid">Kid win</span></div></div></div>
       <div class="card"><div class="eat"><div class="pin">&#9992;&#65039;</div><div class="body">
         <div class="name">Tin Goose Diner &middot; Port Clinton, OH</div>
         <div class="meta">1950s aluminum diner inside an aviation museum near Cedar Point. Burgers + vintage planes.</div>
+        <div class="meta">&#128205; Port Clinton, off SR-2 at Liberty Aviation Museum &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Tin+Goose+Diner+Port+Clinton+OH" target="_blank" rel="noopener">Directions</a></div>
         <span class="tag fun">8-yr-old catnip</span></div></div></div>
     </div>
     <h2>In Sandusky</h2>
@@ -281,6 +285,7 @@
       <div class="card"><div class="eat"><div class="pin">&#127846;</div><div class="body">
         <div class="name">Toft's Ice Cream Parlor</div>
         <div class="meta">50+ flavors, sundaes, banana splits. The birthday-dessert move.</div>
+        <div class="meta">&#128205; Sandusky, ~10 min from the KOA &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Toft%27s+Ice+Cream+Sandusky+OH" target="_blank" rel="noopener">Directions</a></div>
         <span class="tag kid">Birthday cone</span></div></div></div>
       <div class="card"><div class="eat"><div class="pin">&#129374;</div><div class="body">
         <div class="name">Sandusky Bay Pancake House</div>
@@ -593,6 +598,41 @@ setInterval(tick,1000); tick();
     b.addEventListener('change',function(){ var o={}; boxes.forEach(function(x){if(x.checked)o[x.dataset.k]=1;}); localStorage.setItem(KEY,JSON.stringify(o)); paint(); });
   });
   paint();
+})();
+
+// ----- Live weather via Open-Meteo (keyless, with hardcoded fallback) -----
+(function(){
+  var targets={ '2026-06-18':'wxThu', '2026-06-19':'wxFri', '2026-06-20':'wxSat' };
+  function wmo(code){
+    if(code===0) return ['☀️','clear and sunny'];
+    if(code<=2) return ['🌤️','mostly sunny'];
+    if(code===3) return ['☁️','overcast'];
+    if(code<=48) return ['🌫️','fog'];
+    if(code<=57) return ['🌦️','drizzle'];
+    if(code<=65) return ['🌧️','rain'];
+    if(code<=77) return ['❄️','snow'];
+    if(code<=82) return ['🌦️','showers'];
+    if(code<=99) return ['⛈️','thunderstorms'];
+    return ['🌤️','mixed'];
+  }
+  var url='https://api.open-meteo.com/v1/forecast?latitude=41.4489&longitude=-82.7079'
+    +'&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_gusts_10m_max'
+    +'&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=10';
+  fetch(url).then(function(r){return r.json();}).then(function(j){
+    var D=j.daily; if(!D||!D.time) return;
+    for(var i=0;i<D.time.length;i++){
+      var id=targets[D.time[i]]; if(!id) continue;
+      var el=document.getElementById(id); if(!el) continue;
+      var w=wmo(D.weather_code[i]);
+      var hi=Math.round(D.temperature_2m_max[i]), lo=Math.round(D.temperature_2m_min[i]);
+      var gust=Math.round(D.wind_gusts_10m_max[i]), pp=D.precipitation_probability_max[i];
+      var extra=w[1];
+      if(gust>=30) extra+=', gusts to '+gust;
+      else if(pp>=30) extra+=', '+pp+'% rain';
+      el.innerHTML=w[0]+' '+hi+'° / '+lo+'° &middot; '+extra
+        +' <span style="opacity:.55;font-weight:400;font-size:11px">live</span>';
+    }
+  }).catch(function(){ /* keep the hardcoded NWS fallback already in the cards */ });
 })();
 
 // ----- Cedar Point fact rotator -----

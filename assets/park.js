@@ -16,26 +16,32 @@
 
   // ---- Pin data ----
   // Colors: green = CAN RIDE (48"), muted = ONE INCH SHORT (52"), cyan = LANDMARKS
+  // Coordinates are real, pulled from OpenStreetMap's Cedar Point ride geometry.
   var PARK_PINS = [
     // CAN RIDE (green, 48")
-    { ll: [41.4838, -82.6770], n: 'Magnum XL-200',          req: '48"', note: 'Legendary hyper coaster, far end by the beach',      color: '#39ff8b', cat: 'ride' },
-    { ll: [41.4808, -82.6838], n: 'Valravn',                req: '48"', note: 'B and M dive coaster near the front',                color: '#39ff8b', cat: 'ride' },
-    { ll: [41.4795, -82.6792], n: 'Millennium Force',       req: '48"', note: 'One of the all time greats, 48 in',                  color: '#39ff8b', cat: 'ride' },
-    { ll: [41.4848, -82.6800], n: 'Gemini',                 req: '48"', note: 'Racing coaster, great first big one',               color: '#39ff8b', cat: 'ride' },
-    { ll: [41.4815, -82.6862], n: 'Blue Streak',            req: '48"', note: 'Classic woodie near the front',                     color: '#39ff8b', cat: 'ride' },
-    { ll: [41.4845, -82.6818], n: 'Cedar Creek Mine Ride',  req: '48"', note: 'Gentle family coaster',                             color: '#39ff8b', cat: 'ride' },
-    { ll: [41.4840, -82.6872], n: 'Woodstock Express',      req: '48"', note: 'Camp Snoopy starter coaster',                       color: '#39ff8b', cat: 'ride' },
-    // ONE INCH SHORT (muted, 52")
-    { ll: [41.4826, -82.6808], n: 'Top Thrill 2',           req: '52"', note: '420 ft, 120 mph. Next year, bud',                   color: '#9a86c4', cat: 'short' },
-    { ll: [41.4812, -82.6848], n: 'GateKeeper',             req: '52"', note: 'Wing coaster over the front gate',                  color: '#9a86c4', cat: 'short' },
-    { ll: [41.4858, -82.6772], n: 'Steel Vengeance',        req: '52"', note: 'Frontiertown monster',                              color: '#9a86c4', cat: 'short' },
-    { ll: [41.4822, -82.6832], n: 'MaXair',                 req: '52"', note: 'Giant swing',                                       color: '#9a86c4', cat: 'short' },
+    { ll: [41.48542, -82.68607], n: 'Magnum XL-200',         req: '48"', note: 'Legendary hyper coaster, far end by the beach',     color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48166, -82.68812], n: 'Millennium Force',      req: '48"', note: '300 ft, one of the all time greats',                color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48110, -82.68364], n: 'Valravn',               req: '48"', note: 'B and M dive coaster',                              color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48115, -82.68525], n: "Siren's Curse",         req: '48"', note: 'New tilt coaster',                                  color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48638, -82.68959], n: 'Gemini',                req: '48"', note: 'Racing coaster, a great first big one',             color: '#39ff8b', cat: 'ride' },
+    { ll: [41.47986, -82.68261], n: 'Blue Streak',           req: '48"', note: 'Classic woodie near the front',                     color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48213, -82.68518], n: 'Iron Dragon',           req: '48"', note: 'Suspended, gentle',                                 color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48365, -82.68532], n: 'Corkscrew',             req: '48"', note: 'His first inversions',                              color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48479, -82.69039], n: 'Cedar Creek Mine Ride', req: '48"', note: 'Gentle family coaster',                             color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48534, -82.68913], n: 'Woodstock Express',     req: '48"', note: 'Camp Snoopy starter coaster',                       color: '#39ff8b', cat: 'ride' },
+    { ll: [41.48412, -82.69104], n: 'Snake River Falls',     req: '48"', note: 'Water ride, you will get soaked',                   color: '#39ff8b', cat: 'ride' },
+    // TOO TALL FOR HIM THIS YEAR (muted, 52")
+    { ll: [41.48283, -82.68534], n: 'Top Thrill 2',          req: '52"', note: '420 ft, 120 mph. Next year, bud',                   color: '#9a86c4', cat: 'short' },
+    { ll: [41.48450, -82.69291], n: 'Maverick',              req: '52"', note: 'Launch and a beyond-vertical drop',                 color: '#9a86c4', cat: 'short' },
+    { ll: [41.48611, -82.69336], n: 'Steel Vengeance',       req: '52"', note: 'Frontiertown monster',                              color: '#9a86c4', cat: 'short' },
+    { ll: [41.47944, -82.67901], n: 'GateKeeper',            req: '52"', note: 'Wing coaster over the front gate',                  color: '#9a86c4', cat: 'short' },
+    { ll: [41.48085, -82.68014], n: 'MaXair',                req: '52"', note: 'Giant swing',                                       color: '#9a86c4', cat: 'short' },
     // LANDMARKS (cyan)
-    { ll: [41.4805, -82.6855], n: 'Main Entrance',          req: null,  note: 'Front gate and lockers (credit card only)',          color: '#16e0ff', cat: 'place' },
-    { ll: [41.4808, -82.6850], n: 'Guest Services',         req: null,  note: 'Free birthday button for Kilian here',              color: '#16e0ff', cat: 'place' },
-    { ll: [41.4842, -82.6868], n: 'Camp Snoopy / Planet Snoopy', req: null, note: 'Kids zone, shade, midday reset',                color: '#16e0ff', cat: 'place' },
-    { ll: [41.4828, -82.6842], n: 'Giant Wheel',            req: null,  note: 'Dusk photo over Lake Erie to close out being 8',    color: '#16e0ff', cat: 'place' },
-    { ll: [41.4818, -82.6845], n: 'First Aid',              req: null,  note: 'Just in case',                                      color: '#16e0ff', cat: 'place' }
+    { ll: [41.47835, -82.67945], n: 'Main Entrance',         req: null,  note: 'Front gate and lockers (credit card only)',         color: '#16e0ff', cat: 'place' },
+    { ll: [41.47900, -82.67990], n: 'Guest Services',        req: null,  note: 'Free birthday button for Kilian here',              color: '#16e0ff', cat: 'place' },
+    { ll: [41.48185, -82.68130], n: 'Planet Snoopy (kids)',  req: null,  note: 'Kids zone, shade, midday reset',                    color: '#16e0ff', cat: 'place' },
+    { ll: [41.48159, -82.67988], n: 'Giant Wheel',           req: null,  note: 'Dusk photo over Lake Erie to close out being 8',    color: '#16e0ff', cat: 'place' },
+    { ll: [41.47980, -82.68070], n: 'First Aid',             req: null,  note: 'Near the front midway, just in case',               color: '#16e0ff', cat: 'place' }
   ];
 
   // ---- Haversine in FEET ----
@@ -76,7 +82,7 @@
   // ---- Init the Leaflet map ----
   function initParkMap() {
     if (pmapReady) return;
-    pmap = L.map('parkmap', { zoomControl: true }).setView([41.478, -82.683], 16);
+    pmap = L.map('parkmap', { zoomControl: true }).setView([41.4825, -82.685], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
