@@ -100,6 +100,8 @@
   .now .next { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 14px; }
   .now .next b { color: var(--ink); }
   .countdown { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--accent); }
+  .now .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .now .actions .btn { padding: 10px 13px; font-size: 14px; }
 
   /* Schedule list */
   ol.sched { list-style: none; margin: 0; padding: 0; }
@@ -226,6 +228,11 @@ var EV = null;                 // the loaded event
 var placeById = {};            // id -> place
 var map = null, meMarker = null, markers = {}, watchId = null;
 var tickTimer = null;
+var myPos = null;              // last known GPS fix, once "Find me" is on
+
+function walkUrl(p){
+  return "https://www.google.com/maps/dir/?api=1&destination="+p.lat+","+p.lng+"&travelmode=walking";
+}
 
 var ICONS = {
   flag:"🚩", compass:"🧭", water:"💦", truck:"🚚",
@@ -322,8 +329,23 @@ function renderNow(){
             '<div class="when">Turn in your name tag for your patch and medal.</div>';
     }
   }
+
+  // Walk-to-next: prefer the next block's place, else the current block's place.
+  var tp=null, tlabel="";
+  if(nxt && nxt.place && placeById[nxt.place]){ tp=placeById[nxt.place]; tlabel="Walk to next: "+tp.name; }
+  else if(cur && cur.place && placeById[cur.place]){ tp=placeById[cur.place]; tlabel="Walk to "+tp.name; }
+  if(tp){
+    var dist = myPos ? " ("+fmtDist(haversine(myPos.lat,myPos.lng,tp.lat,tp.lng))+")" : "";
+    html+='<div class="actions">'+
+      '<a class="btn primary" style="text-decoration:none" href="'+walkUrl(tp)+'" target="_blank" rel="noopener">🚶 '+esc(tlabel)+dist+'</a>'+
+      '<button class="btn ghost" data-goplace="'+tp.id+'">Show on map</button>'+
+    '</div>';
+  }
+
   html+='</div>';
   wrap.innerHTML=html;
+  var gp = wrap.querySelector("[data-goplace]");
+  if(gp) gp.addEventListener("click", function(){ focusPlace(gp.getAttribute("data-goplace")); });
   tick();
 }
 
@@ -430,9 +452,8 @@ function initMap(){
   }).addTo(map);
   EV.places.forEach(function(p){
     var m=L.marker([p.lat,p.lng],{icon:mkPin(p)}).addTo(map);
-    var maps="https://www.google.com/maps/search/?api=1&query="+p.lat+","+p.lng;
     m.bindPopup("<b>"+esc(p.name)+"</b>"+(p.desc?"<br>"+esc(p.desc):"")+
-      '<br><a href="'+maps+'" target="_blank" rel="noopener">Directions</a>');
+      '<br><a href="'+walkUrl(p)+'" target="_blank" rel="noopener">🚶 Walk here</a>');
     markers[p.id]=m;
   });
   renderLegend();
@@ -468,6 +489,8 @@ function startFindMe(){
   if(watchId!==null) navigator.geolocation.clearWatch(watchId);
   watchId = navigator.geolocation.watchPosition(function(pos){
     var la=pos.coords.latitude, ln=pos.coords.longitude;
+    myPos = { lat: la, lng: ln };
+    renderNow();   // refresh the "walk to next" distance now that we have a fix
     if(!meMarker){
       meMarker = L.marker([la,ln], {icon:L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
         html:'<div class="pin me"><span></span></div>'})}).addTo(map);
