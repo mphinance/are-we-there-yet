@@ -103,6 +103,30 @@
   .now .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
   .now .actions .btn { padding: 10px 13px; font-size: 14px; }
 
+  /* Weather strip */
+  .wx {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 12px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+    font-size: 14px;
+  }
+  .wx .big { font-size: 24px; }
+  .wx .now-t { font-weight: 800; font-size: 16px; }
+  .wx .rest { color: var(--muted); font-size: 13px; }
+
+  /* Up-in-5 nudge */
+  .nudge {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 12px; flex-wrap: wrap;
+    background: var(--accent); color: #fff; border-radius: 12px; padding: 12px 14px;
+    box-shadow: 0 3px 12px rgba(228,86,43,.32); animation: pulse 1.6s ease-in-out infinite;
+  }
+  .nudge .msg { flex: 1; font-weight: 700; font-size: 14px; min-width: 160px; }
+  .nudge .btn { background: #fff; color: var(--accent); padding: 8px 12px; text-decoration: none; }
+  @keyframes pulse { 0%,100%{ box-shadow: 0 3px 12px rgba(228,86,43,.30);} 50%{ box-shadow: 0 3px 20px rgba(228,86,43,.55);} }
+
+  /* All-camp blocks stand out */
+  ol.sched li.is-all { background: #f4efff; box-shadow: inset 3px 0 0 #6d4bd6; border-radius: 8px; }
+  ol.sched li.is-all.is-now { background: #fff6e6; }
+
   /* Schedule list */
   ol.sched { list-style: none; margin: 0; padding: 0; }
   ol.sched li {
@@ -192,6 +216,8 @@
 
 <main>
   <section class="tab active" id="tab-schedule">
+    <div id="wxStrip"></div>
+    <div id="nudge"></div>
     <div id="nowWrap"></div>
     <div class="card">
       <h2>Full schedule</h2>
@@ -202,6 +228,7 @@
   <section class="tab" id="tab-map">
     <div class="maprow">
       <button class="btn primary" id="findMe">📍 Find me</button>
+      <button class="btn ghost" id="parkBtn">🚗 Mark my car</button>
       <button class="btn ghost" id="recenter">Recenter</button>
     </div>
     <div id="map"></div>
@@ -349,6 +376,58 @@ function renderNow(){
   tick();
 }
 
+/* Up-in-5: when the current block is nearly over and there is somewhere to go next,
+   show a loud banner so you start walking on time. In-app only, no notifications. */
+var NUDGE_MIN = 5;
+function renderNudge(){
+  var el=document.getElementById("nudge");
+  if(!isEventToday()){ el.innerHTML=""; return; }
+  var now=new Date(), cur=null, nxt=null;
+  for(var i=0;i<EV.schedule.length;i++){
+    var st=statusOf(EV.schedule[i], now);
+    if(st==="now" && !cur) cur=EV.schedule[i];
+    if(st==="future" && !nxt) nxt=EV.schedule[i];
+  }
+  if(!cur || !nxt){ el.innerHTML=""; return; }
+  var minsLeft = (eventDateAt(cur.end).getTime()-now.getTime())/60000;
+  var tp = nxt.place && placeById[nxt.place];
+  if(minsLeft>0 && minsLeft<=NUDGE_MIN && tp){
+    var m = Math.max(1, Math.ceil(minsLeft));
+    var dist = myPos ? " · "+fmtDist(haversine(myPos.lat,myPos.lng,tp.lat,tp.lng)) : "";
+    el.innerHTML='<div class="nudge"><span class="msg">⏰ '+m+' min left in '+esc(cur.title)+
+      '. Head to '+esc(tp.name)+dist+'.</span>'+
+      '<a class="btn" href="'+walkUrl(tp)+'" target="_blank" rel="noopener">🚶 Walk</a></div>';
+  } else {
+    el.innerHTML="";
+  }
+}
+
+/* Weather via Open-Meteo (no API key). Best-effort: hide if offline or it fails. */
+var WX_CODE = {
+  0:["Clear","☀️"], 1:["Mostly clear","🌤️"], 2:["Partly cloudy","⛅"], 3:["Overcast","☁️"],
+  45:["Fog","🌫️"], 48:["Fog","🌫️"], 51:["Drizzle","🌦️"], 53:["Drizzle","🌦️"], 55:["Drizzle","🌦️"],
+  61:["Rain","🌧️"], 63:["Rain","🌧️"], 65:["Heavy rain","🌧️"], 71:["Snow","🌨️"], 73:["Snow","🌨️"],
+  75:["Snow","🌨️"], 80:["Showers","🌦️"], 81:["Showers","🌦️"], 82:["Storms","⛈️"],
+  95:["Thunderstorm","⛈️"], 96:["Thunderstorm","⛈️"], 99:["Thunderstorm","⛈️"]
+};
+function renderWeather(){
+  var el=document.getElementById("wxStrip");
+  var loc=EV.location;
+  var url="https://api.open-meteo.com/v1/forecast?latitude="+loc.lat+"&longitude="+loc.lng+
+    "&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max"+
+    "&temperature_unit=fahrenheit&timezone=auto&forecast_days=1";
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    if(!d || !d.current){ el.innerHTML=""; return; }
+    var code=d.current.weather_code, wx=WX_CODE[code]||["",""];
+    var t=Math.round(d.current.temperature_2m);
+    var hi=Math.round(d.daily.temperature_2m_max[0]), lo=Math.round(d.daily.temperature_2m_min[0]);
+    var pop=d.daily.precipitation_probability_max[0];
+    el.innerHTML='<div class="wx"><span class="big">'+wx[1]+'</span>'+
+      '<span><span class="now-t">'+t+'°F</span> '+esc(wx[0])+
+      '<br><span class="rest">High '+hi+'° · Low '+lo+'° · '+(pop!=null?pop+'% rain':'')+'</span></span></div>';
+  }).catch(function(){ el.innerHTML=""; });
+}
+
 function renderSchedule(){
   var now = new Date(), today = isEventToday();
   var ol = document.getElementById("schedList");
@@ -356,8 +435,11 @@ function renderSchedule(){
   EV.schedule.forEach(function(item){
     var li=document.createElement("li");
     var st = today ? statusOf(item, now) : "";
-    if(st==="now") li.className="is-now";
-    else if(st==="past") li.className="is-past";
+    var cls = [];
+    if(st==="now") cls.push("is-now");
+    else if(st==="past") cls.push("is-past");
+    if(item.all) cls.push("is-all");
+    li.className = cls.join(" ");
     var sess = item.session? '<span class="sesspill">'+item.session+'</span>' : (item.all?'<span class="sesspill" style="background:#6d4bd6">ALL</span>':'');
     var sub = "";
     var p = item.place && placeById[item.place];
@@ -456,7 +538,33 @@ function initMap(){
       '<br><a href="'+walkUrl(p)+'" target="_blank" rel="noopener">🚶 Walk here</a>');
     markers[p.id]=m;
   });
+  var c=getCar(); if(c) dropCarMarker(c);
   renderLegend();
+}
+
+/* ---------- car finder ---------- */
+var carMarker=null;
+function carKey(){ return "daykit:"+EV.id+":car"; }
+function getCar(){ try { return JSON.parse(localStorage.getItem(carKey())||"null"); } catch(e){ return null; } }
+function dropCarMarker(c){
+  if(!map || typeof L==="undefined") return;
+  var icon=L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28],
+    html:'<div class="pin" style="background:#2a1a00"><span>🚗</span></div>'});
+  if(carMarker) carMarker.setLatLng([c.lat,c.lng]);
+  else carMarker=L.marker([c.lat,c.lng],{icon:icon}).addTo(map);
+  carMarker.bindPopup('<b>My car</b><br><a href="'+walkUrl(c)+'" target="_blank" rel="noopener">🚶 Walk to my car</a>');
+}
+function markCar(){
+  var stat=document.getElementById("locStat");
+  if(!navigator.geolocation){ stat.textContent="No GPS on this device."; return; }
+  stat.textContent="Marking your car...";
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var c={lat:pos.coords.latitude, lng:pos.coords.longitude};
+    try { localStorage.setItem(carKey(), JSON.stringify(c)); } catch(e){}
+    initMap(); dropCarMarker(c);
+    stat.innerHTML='🚗 Car saved. <a href="'+walkUrl(c)+'" target="_blank" rel="noopener">Walk to my car</a>';
+  }, function(){ stat.textContent="Could not get a fix. Try again outside."; },
+  { enableHighAccuracy:true, timeout:15000 });
 }
 function renderLegend(){
   var used={};
@@ -490,7 +598,7 @@ function startFindMe(){
   watchId = navigator.geolocation.watchPosition(function(pos){
     var la=pos.coords.latitude, ln=pos.coords.longitude;
     myPos = { lat: la, lng: ln };
-    renderNow();   // refresh the "walk to next" distance now that we have a fix
+    renderNow(); renderNudge();   // refresh distances now that we have a fix
     if(!meMarker){
       meMarker = L.marker([la,ln], {icon:L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
         html:'<div class="pin me"><span></span></div>'})}).addTo(map);
@@ -536,7 +644,7 @@ function startClock(){
   tick();
   tickTimer = setInterval(function(){
     tick();
-    if(Date.now() - lastRederive >= 20000){ lastRederive = Date.now(); renderNow(); renderSchedule(); }
+    if(Date.now() - lastRederive >= 20000){ lastRederive = Date.now(); renderNow(); renderSchedule(); renderNudge(); }
   }, 1000);
 }
 
@@ -568,8 +676,10 @@ function boot(){
     applyTheme();
     renderHeader();
     renderNow();
+    renderNudge();
     renderSchedule();
     renderInfo();
+    renderWeather();
     document.getElementById("foot").textContent = "Daykit · map data © OpenStreetMap · offline-ready";
     startClock();
     var h=(location.hash||"").replace("#","");
@@ -586,6 +696,7 @@ document.querySelectorAll("nav.tabs button").forEach(function(b){
   b.addEventListener("click", function(){ showTab(b.getAttribute("data-tab")); });
 });
 document.getElementById("findMe").addEventListener("click", startFindMe);
+document.getElementById("parkBtn").addEventListener("click", markCar);
 document.getElementById("recenter").addEventListener("click", function(){
   initMap(); if(map) map.setView([EV.location.lat, EV.location.lng], EV.location.zoom||17);
 });

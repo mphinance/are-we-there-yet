@@ -3,7 +3,7 @@
    Caches the app shell plus event.json so the whole day still loads with no signal.
    Live GPS and map tiles still need a network, they just degrade gracefully. */
 
-var CACHE = 'daykit-v2';
+var CACHE = 'daykit-v3';
 
 // Same-origin shell (relative to scope). These must all fetch for install to succeed.
 var CORE = [
@@ -44,9 +44,15 @@ self.addEventListener('fetch', function (e) {
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
 
-  // Map tiles: network first, fall back to whatever is cached. Never block on them.
-  if (/tile\.openstreetmap\.org$/.test(url.host)) {
-    e.respondWith(fetch(req).catch(function () { return caches.match(req); }));
+  // Map tiles and live weather: network first, fall back to cache. Never block on them.
+  if (/tile\.openstreetmap\.org$/.test(url.host) || /api\.open-meteo\.com$/.test(url.host)) {
+    e.respondWith(fetch(req).then(function (res) {
+      if (/api\.open-meteo\.com$/.test(url.host) && res && res.status === 200) {
+        var clone = res.clone();
+        caches.open(CACHE).then(function (c) { c.put(req, clone); });
+      }
+      return res;
+    }).catch(function () { return caches.match(req); }));
     return;
   }
 
