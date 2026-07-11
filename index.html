@@ -448,7 +448,7 @@ function renderNow(){
       html+='<div class="label">Good morning</div><div class="title">'+esc(first2.title)+' at '+fmt12(first2.start)+'</div>'+
             '<div class="when">Starts in <span class="countdown" data-until="'+dateAt(day.date,first2.start).getTime()+'"></span>.</div>';
     } else {
-      html+='<div class="label">That’s a wrap</div><div class="title">'+(isMulti?"Day complete 🎉":"Day complete 🎉")+'</div>'+
+      html+='<div class="label">That’s a wrap</div><div class="title">Day complete 🎉</div>'+
             '<div class="when">'+esc(day.closingNote || EV.closingNote || "Nicely done. Enjoy the rest of your day.")+'</div>';
     }
   }
@@ -801,7 +801,9 @@ function startClock(){
   tick();
   tickTimer = setInterval(function(){
     tick();
-    if(Date.now() - lastRederive >= 20000){ lastRederive = Date.now(); renderNow(); renderSchedule(); renderNudge(); renderDayStrip(); }
+    // Day chips do not change minute to minute, so they stay out of this loop
+    // (re-rendering them here would scroll the strip back under the user's finger).
+    if(Date.now() - lastRederive >= 20000){ lastRederive = Date.now(); renderNow(); renderSchedule(); renderNudge(); }
   }, 1000);
 }
 
