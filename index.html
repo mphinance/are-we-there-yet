@@ -589,7 +589,9 @@ function renderInfo(){
     if(EV.location.address) html+='<dt>Address</dt><dd>'+esc(EV.location.address)+'</dd>';
   }
   html+='</dl>';
-  html+='<div style="margin-top:10px"><a class="btn primary" style="text-decoration:none" href="'+searchUrl(center)+'" target="_blank" rel="noopener">Open in Maps</a></div>';
+  html+='<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+
+    '<a class="btn primary" style="text-decoration:none" href="'+searchUrl(center)+'" target="_blank" rel="noopener">Open in Maps</a>'+
+    '<button class="btn ghost" id="shareBtn">🔗 Share</button></div>';
   if(EV.team && EV.team.note) html+='<p class="small muted" style="margin:10px 0 0">'+esc(EV.team.note)+'</p>';
   html+='</div>';
 
@@ -619,6 +621,13 @@ function renderInfo(){
     html+='</ul></div>';
   }
 
+  if("Notification" in window){
+    html+='<div class="card"><h2>Reminders</h2>'+
+      '<p class="small muted" style="margin:0 0 10px">A heads-up before each activity. Works best with the app installed and open in your pocket.</p>'+
+      '<button class="btn ghost" id="notifBtn">🔔 Turn on reminders</button>'+
+      '<div class="small muted" id="notifStat" style="margin-top:8px"></div></div>';
+  }
+
   html+='<div class="card"><h2>About this app</h2>'+
     '<p class="small muted" style="margin:0">This is a <b>Daykit</b>: a pocket app for one day or a whole trip, built from photos of a paper schedule, map, or itinerary. '+
     'Install it to your home screen and it runs offline. To make one for another day or trip, swap in a new <code>event.json</code>.</p></div>';
@@ -635,6 +644,10 @@ function renderInfo(){
       try { localStorage.setItem(key, JSON.stringify(saved)); } catch(e){}
     });
   });
+
+  var sb=w.querySelector("#shareBtn"); if(sb) sb.addEventListener("click", shareThis);
+  var nb=w.querySelector("#notifBtn"); if(nb) nb.addEventListener("click", toggleNotify);
+  updateNotifBtn();
 }
 
 /* ---------- map ---------- */
@@ -809,6 +822,82 @@ function startClock(){
 
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
 
+/* ---------- share ---------- */
+function shareThis(){
+  var url = location.href.split("#")[0];
+  if(navigator.share){ navigator.share({ title:EV.title, text:EV.title, url:url }).catch(function(){}); return; }
+  var btn=document.getElementById("shareBtn");
+  function flash(msg){ if(!btn) return; var o=btn.textContent; btn.textContent=msg; setTimeout(function(){ btn.textContent=o; },1600); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){ flash("✓ Link copied"); }).catch(function(){ flash(url); });
+  } else { flash(url); }
+}
+
+/* ---------- reminders (best-effort local notifications) ---------- */
+var notifTimers=[];
+var NOTIF_LEAD=10; // minutes before an activity starts
+function notifKey(){ return "daykit:"+EV.id+":notify"; }
+function notifEnabled(){
+  try { return localStorage.getItem(notifKey())==="1" && ("Notification" in window) && Notification.permission==="granted"; }
+  catch(e){ return false; }
+}
+function setNotifPref(on){ try { localStorage.setItem(notifKey(), on?"1":"0"); } catch(e){} }
+function showNotif(title, body){
+  var opts={ body:body, icon:"assets/icon-192.png", badge:"assets/icon-192.png", tag:"daykit-next", renotify:true };
+  if(navigator.serviceWorker && navigator.serviceWorker.ready){
+    navigator.serviceWorker.ready.then(function(reg){ reg.showNotification(title, opts); })
+      .catch(function(){ try{ new Notification(title, opts); }catch(e){} });
+  } else { try{ new Notification(title, opts); }catch(e){} }
+}
+function clearNotifTimers(){ notifTimers.forEach(clearTimeout); notifTimers=[]; }
+function scheduleNotifs(){
+  clearNotifTimers();
+  if(!notifEnabled()) return;
+  var ti=todayIndex(); if(ti<0) return;
+  var day=EV.days[ti], now=Date.now();
+  day.schedule.forEach(function(it){
+    var start=dateAt(day.date, it.start).getTime();
+    if(start<=now) return;                        // already started
+    var delay=(start - NOTIF_LEAD*60000) - now;
+    if(delay<0) delay=0;                          // starts within the lead window: remind now
+    if(delay>86400000) return;                    // safety cap (setTimeout range)
+    var p=it.place && placeById[it.place];
+    notifTimers.push(setTimeout(function(){
+      showNotif("Up next: "+it.title, "Starts at "+fmt12(it.start)+(p?" · "+p.name:""));
+    }, delay));
+  });
+}
+function updateNotifBtn(){
+  var btn=document.getElementById("notifBtn"), stat=document.getElementById("notifStat");
+  if(!btn) return;
+  var on=notifEnabled();
+  btn.className="btn "+(on?"primary":"ghost");
+  btn.textContent = on ? "🔔 Reminders on (tap to turn off)" : "🔔 Turn on reminders";
+  if(stat){
+    if(!("Notification" in window)) stat.textContent="This browser does not support reminders.";
+    else if(Notification.permission==="denied") stat.textContent="Notifications are blocked. Enable them in your browser settings.";
+    else if(on){ var ti=todayIndex(); stat.textContent = ti<0 ? "Set. They will fire on the event day." : (notifTimers.length+" reminder"+(notifTimers.length===1?"":"s")+" queued for today."); }
+    else stat.textContent="";
+  }
+}
+function toggleNotify(){
+  if(!("Notification" in window)) return;
+  if(notifEnabled()){ setNotifPref(false); clearNotifTimers(); updateNotifBtn(); return; }
+  Notification.requestPermission().then(function(perm){
+    if(perm==="granted"){ setNotifPref(true); scheduleNotifs(); }
+    updateNotifBtn();
+  }).catch(function(){ updateNotifBtn(); });
+}
+
+/* ---------- auto-focus the current/next block on the event day ---------- */
+function scrollToNow(){
+  var day=EV.days[curDay];
+  if(!isToday(day.date)) return;
+  if(!document.getElementById("tab-schedule").classList.contains("active")) return;
+  var el=document.querySelector("#schedList li.is-now") || document.querySelector("#schedList li:not(.is-past)");
+  if(el){ try{ el.scrollIntoView({block:"center", behavior:"smooth"}); }catch(e){ el.scrollIntoView(); } }
+}
+
 /* ---------- boot ---------- */
 function normalizeDays(data){
   if(Array.isArray(data.days) && data.days.length){
@@ -861,8 +950,10 @@ function boot(){
     syncAllPinsBtn();
     document.getElementById("foot").textContent = "Daykit · map data © OpenStreetMap · offline-ready";
     startClock();
+    if(notifEnabled()) scheduleNotifs();
     var h=(location.hash||"").replace("#","");
     if(h==="map"||h==="info") showTab(h);
+    else setTimeout(scrollToNow, 350);
   }).catch(function(e){
     document.getElementById("hdrTitle").textContent="Could not load event.json";
     document.getElementById("schedList").innerHTML='<li class="loading">Add an <code>event.json</code> next to index.html.</li>';
@@ -900,6 +991,11 @@ document.getElementById("installBtn").addEventListener("click", function(){
 document.getElementById("installX").addEventListener("click", function(){
   document.getElementById("installBar").classList.remove("show");
   try { localStorage.setItem("daykit:install-dismissed","1"); } catch(e){}
+});
+
+/* re-arm reminders when the app returns to the foreground */
+document.addEventListener("visibilitychange", function(){
+  if(!document.hidden && notifEnabled()){ scheduleNotifs(); updateNotifBtn(); }
 });
 
 /* service worker */

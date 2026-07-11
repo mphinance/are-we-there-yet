@@ -3,7 +3,7 @@
    Caches the app shell plus event.json so the whole day still loads with no signal.
    Live GPS and map tiles still need a network, they just degrade gracefully. */
 
-var CACHE = 'daykit-v4';
+var CACHE = 'daykit-v5';
 
 // Same-origin shell (relative to scope). These must all fetch for install to succeed.
 var CORE = [
@@ -36,6 +36,16 @@ self.addEventListener('activate', function (e) {
     var keys = await caches.keys();
     await Promise.all(keys.map(function (k) { return k === CACHE ? null : caches.delete(k); }));
     await self.clients.claim();
+  })());
+});
+
+// Tapping a reminder focuses the open app, or opens it if closed.
+self.addEventListener('notificationclick', function (e) {
+  e.notification.close();
+  e.waitUntil((async function () {
+    var list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (var i = 0; i < list.length; i++) { if ('focus' in list[i]) return list[i].focus(); }
+    if (self.clients.openWindow) return self.clients.openWindow('./');
   })());
 });
 

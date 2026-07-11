@@ -45,17 +45,19 @@ Single-day files need no `days[]` at all. The app treats a flat top-level
 Three tabs, no backend, no build step.
 
 - **Schedule** - A live "right now / up next" banner with a countdown to the
-  next thing, plus the day as a timeline. On the event day, the current block
-  is highlighted and finished blocks are dimmed. A pulsing "up in 5 minutes"
-  nudge tells you when to start walking. Every block links to its spot on the
-  map, with one-tap walking directions to your next stop. On trips, a day
-  switcher scrolls across the top.
+  next thing, plus the day as a timeline. On the event day it opens focused on
+  the current block, highlights it, and dims finished ones. A pulsing "up in 5
+  minutes" nudge tells you when to start walking, and optional reminders can
+  notify you before each activity even with the app in your pocket. Every
+  block links to its spot on the map, with one-tap walking directions to your
+  next stop. On trips, a day switcher scrolls across the top.
 - **Map** - A Leaflet map with a colored pin for every stop (activities,
   food, lodging, services). "Find me" drops your live GPS and names the
   nearest stop. "Mark my car" saves where you parked. On trips, the map shows
   the selected day's stops with a "Show all" toggle.
-- **Info** - Location and Open-in-Maps, where you're staying, a packing
-  checklist that saves to the phone, live weather, and good-to-know notes.
+- **Info** - Location and Open-in-Maps, a Share button to send the installable
+  link to family, where you're staying, a packing checklist that saves to the
+  phone, live weather, reminder controls, and good-to-know notes.
 
 The whole thing installs to the home screen and works offline.
 
