@@ -3,7 +3,7 @@
    Caches the app shell plus event.json so the whole day still loads with no signal.
    Live GPS and map tiles still need a network, they just degrade gracefully. */
 
-var CACHE = 'daykit-v3';
+var CACHE = 'daykit-v4';
 
 // Same-origin shell (relative to scope). These must all fetch for install to succeed.
 var CORE = [
