@@ -1,27 +1,32 @@
-// Renders the Operation Callahan PWA icons (navy + red coaster, gold star) to PNG.
-// Uses the Playwright chromium that already ships with this repo's deps.
+// Renders the Daykit PWA icons (summer sunburst on cream) to PNG.
+// Uses the Playwright chromium that ships with this repo's deps.
 //   node gen-icons.js
 const { chromium } = require('playwright');
 
-// Inner artwork, drawn in a 512x512 coordinate space.
+// Inner artwork, drawn in a 512x512 coordinate space: a sunburst over a blue splash.
 const ART = `
-  <rect x="0" y="408" width="512" height="104" fill="#0a1c33"/>
-  <line x1="48" y1="408" x2="464" y2="408" stroke="#f2b21a" stroke-width="6" stroke-linecap="round"/>
-  <g stroke="#1c3a63" stroke-width="11">
-    <line x1="148" y1="252" x2="148" y2="408"/>
-    <line x1="256" y1="150" x2="256" y2="408"/>
-    <line x1="364" y1="252" x2="364" y2="408"/>
+  <defs>
+    <radialGradient id="sun" cx="50%" cy="44%" r="60%">
+      <stop offset="0%" stop-color="#ffd873"/>
+      <stop offset="55%" stop-color="#f2b21a"/>
+      <stop offset="100%" stop-color="#f28c1a"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(256 236)" fill="#f2b21a">
+    ${Array.from({length: 12}).map((_, i) => {
+      const a = (i * 30) * Math.PI / 180;
+      const x1 = Math.cos(a) * 150, y1 = Math.sin(a) * 150;
+      const x2 = Math.cos(a) * 205, y2 = Math.sin(a) * 205;
+      const w = 14;
+      const px = Math.cos(a + Math.PI/2) * w, py = Math.sin(a + Math.PI/2) * w;
+      return `<path d="M${x1+px} ${y1+py} L${x2} ${y2} L${x1-px} ${y1-py} Z"/>`;
+    }).join('')}
   </g>
-  <path d="M40 388 C 130 388 150 142 256 142 C 362 142 382 388 472 388"
-        fill="none" stroke="#e4002b" stroke-width="24" stroke-linecap="round"/>
-  <path d="M40 370 C 130 370 150 124 256 124 C 362 124 382 370 472 370"
-        fill="none" stroke="#f2b21a" stroke-width="8" stroke-linecap="round" opacity="0.92"/>
-  <g transform="translate(231 99)">
-    <rect x="0" y="0" width="50" height="27" rx="8" fill="#ffffff"/>
-    <circle cx="14" cy="31" r="6" fill="#0c2340"/>
-    <circle cx="36" cy="31" r="6" fill="#0c2340"/>
-  </g>
-  <path d="M408 92 l11 23 25 3 -18 18 5 25 -23-13 -23 13 5-25 -18-18 25-3 z" fill="#f2b21a"/>
+  <circle cx="256" cy="236" r="132" fill="url(#sun)" stroke="#e4562b" stroke-width="10"/>
+  <path d="M18 392 q 46 -34 92 0 q 46 34 92 0 q 46 -34 92 0 q 46 34 92 0 q 46 -34 92 0
+           l 0 130 l -552 0 z" fill="#1d9bd1"/>
+  <path d="M18 392 q 46 -34 92 0 q 46 34 92 0 q 46 -34 92 0 q 46 34 92 0 q 46 -34 92 0"
+        fill="none" stroke="#7fd3f0" stroke-width="9"/>
 `;
 
 function svg(size, maskable) {
@@ -29,7 +34,7 @@ function svg(size, maskable) {
     ? `<g transform="translate(56 56) scale(0.78)">${ART}</g>`
     : ART;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 512 512">
-    <rect width="512" height="512" fill="#0c2340"/>
+    <rect width="512" height="512" fill="#fff7ea"/>
     ${inner}
   </svg>`;
 }

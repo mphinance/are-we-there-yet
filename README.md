@@ -1,98 +1,100 @@
-# Operation Callahan
+# Daykit
 
-A static family trip web app for a Cedar Point birthday run. Kilian turns 8 on 6/19. It's set in Sandusky, Ohio. Yes, that Sandusky. Tommy Boy was right about it.
+A drop-in, day-of-event pocket app. Point Claude at a photo of a paper
+schedule and a map, and it fills in one `event.json`. The app renders that
+into an installable PWA with a live schedule, a campus map, and find-me GPS.
+It runs fully offline once installed, so it works in a field with no signal.
 
-## What it does
+This started as a fork of Operation Callahan (a one-off Cedar Point trip app)
+and was generalized so any single day can be dropped in.
 
-Seven tabs, no backend, no build step.
+## The idea
 
-- **Now** -- Trip overview, day-by-day weather summary, countdown clock (CT and ET), and quick tips (lockers are card-only, Ziploc the phones before the water rides, etc.)
-- **Live Map** -- Leaflet map of the full Colgate-to-Sandusky toll route with GPS tracking. Tap "Start tracking my location" and it plots your position live, shows miles remaining, estimated arrival in Eastern time, and trip progress percentage.
-- **Park Map** -- In-park Cedar Point map (rendered by `assets/park.js`). Pins family-relevant spots and highlights the 48-inch coasters Kilian clears. "Find me in the park" button for live GPS inside the park.
-- **Route and Tolls** -- The toll route breakdown (Chicago Skyway, Indiana Toll Road, Ohio Turnpike) vs. the free Michigan loop, with cost estimates and timing notes.
-- **Eats** -- Road stops (Das Dutchman Essenhaus, Tony Packo's, Tin Goose Diner) and Sandusky picks (Toft's, Sandusky Bay Pancake House). All of these also drop as pins on the Live Map.
-- **Park Plan** -- Ride height guide for Kilian's 51 inches, rope-drop strategy, and the Friday battle plan.
-- **Pack** -- Interactive checklist (state saves to localStorage) for birthday gear, the park day bag, the KOA cabin, and car packing. Links to the full printable sheet.
+The app code never changes. A single `event.json` describes the whole day:
+title, date, team, location with GPS, the schedule, and every place on the
+map. Swap that one file and you have a different day.
+
+The hard part, turning a photographed paper schedule and a paper map into
+clean structured data with real GPS coordinates, is done by Claude (or any
+capable AI). See [NEW-DAY.md](NEW-DAY.md) for the exact workflow and prompt.
+
+```
+  📷 photos of schedule + map  ->  🤖 Claude OCR + geocode  ->  event.json  ->  📱 installable PWA
+```
+
+## The bundled example: Summer Blast West, Bear day
+
+The `event.json` in this repo is a real, built-from-photos example: the
+**Bear (Popsicle Pirates)** track at **PAC Summer Blast Adventure WEST**,
+St. John's Northwestern Academy, Delafield WI. Registration at 8:00,
+Pathfinders, Archery, lunch and Touch a Truck, BB Guns, Bottle Rockets, and
+Super Splash to close, then flags at 4:00.
+
+## What the app does
+
+Three tabs, no backend, no build step.
+
+- **Schedule** - A live "right now / up next" banner with a countdown to the
+  next transition, plus the full day as a timeline. On the event day, the
+  current block is highlighted and finished blocks are dimmed. Every block
+  links straight to its spot on the map.
+- **Map** - A Leaflet map of the venue with a colored pin for every activity
+  and service (first aid, restrooms, lunch, parking). "Find me" drops your
+  live GPS position and tells you the nearest station and how far it is.
+- **Info** - Location with an "Open in Maps" link, team notes, a "bring"
+  checklist that saves to the phone, and good-to-know reminders.
+
+The whole thing installs to the home screen and works offline.
 
 ## Run it locally
 
-This is plain static HTML. No npm, no build.
-
-**Quickest option -- just open the file:**
-
-```
-open index.html
-```
-
-That works fine for everything except GPS tracking. Browsers block the Geolocation API on plain `file://` URLs. For tracking, serve it over localhost instead.
-
-**With Node:**
+Plain static HTML. No npm needed to run it.
 
 ```
 npx serve .
-```
-
-**With Python:**
-
-```
+# or
 python -m http.server 8000
 ```
 
-Then visit `http://localhost:8000` in your browser. The Geolocation API works on `localhost` without HTTPS.
+Then open `http://localhost:8000`. Geolocation works on `localhost` and on
+HTTPS (like GitHub Pages), but browsers block it on plain `file://` URLs, so
+serve it rather than double-clicking the file if you want GPS.
 
 ## Deploy to GitHub Pages
 
-This app is meant to live at `https://mphinance.github.io/callahan/`. Pages is HTTPS, so the Geolocation API works there with no backend required.
+Pages is HTTPS, so GPS and installability both work with no backend.
 
-1. Create the repo at github.com/mphinance/callahan (or confirm it already exists).
-2. Push the `main` branch:
-   ```
-   git remote add origin https://github.com/mphinance/callahan.git
-   git push -u origin main
-   ```
-3. In the GitHub repo, go to **Settings > Pages > Build and deployment**.
-4. Set **Source** to "Deploy from a branch", choose branch `main`, folder `/ (root)`, and click **Save**.
-5. Wait about 60 seconds. Your live URL is `https://mphinance.github.io/callahan/`.
+1. Push this branch.
+2. In the repo, go to **Settings > Pages > Build and deployment**.
+3. Set **Source** to "Deploy from a branch", pick the branch, folder
+   `/ (root)`, and **Save**.
+4. Wait about a minute. The live URL is `https://<user>.github.io/<repo>/`.
 
-The `.nojekyll` file in this repo disables Jekyll processing so the `assets/` folder serves correctly. Do not remove it.
+The `.nojekyll` file disables Jekyll so the `assets/` folder serves. Keep it.
 
-## Convoy mode (optional)
+## Make it your own day
 
-By default the app tracks only your own phone, which works with zero setup.
-
-To get both vehicles on the same live map:
-
-1. Create a free [Firebase](https://console.firebase.google.com/) project and add a Realtime Database.
-2. Copy the Firebase web config (an object with `apiKey`, `databaseURL`, `projectId`, etc.).
-3. Paste it into the `FIREBASE_CONFIG` block near the bottom of `index.html` (the variable is already there, set to `null`).
-4. Everyone opens the page with the same crew code in the URL, e.g. `https://mphinance.github.io/callahan/?crew=callahan`.
-
-Each phone appears as a pin on the shared map. Without a config, solo mode is active and nothing changes.
+1. Read [NEW-DAY.md](NEW-DAY.md).
+2. Take clear photos of the schedule and the map.
+3. Hand them to Claude with the prompt in that file. You get a fresh
+   `event.json`.
+4. Drop the new `event.json` in, bump `CACHE` in `sw.js`, and update the
+   `name` in `manifest.json`. Redeploy.
 
 ## Files
 
 | File | What it is |
 |------|------------|
-| `index.html` | App shell, all tabs, travel map, countdown, packing checklist |
-| `assets/park.js` | In-park Cedar Point map module, renders into the Park Map tab |
-| `operation-callahan.html` | Full printable packing and trip briefing sheet |
-| `SPEC.md` | Trip facts, stack notes, and per-agent contracts |
-| `.nojekyll` | Disables Jekyll so GitHub Pages serves the assets/ folder correctly |
+| `index.html` | The entire app: shell, three tabs, map, live clock, PWA wiring. Data-driven, never needs editing per event. |
+| `event.json` | The one file that describes a day. Swap this to change events. |
+| `manifest.json` | PWA metadata (name, icons, colors). |
+| `sw.js` | Service worker. Caches the shell and `event.json` for offline use. |
+| `gen-icons.js` | Regenerates the app icons via Playwright. |
+| `NEW-DAY.md` | How to turn photos into a new `event.json` with Claude. |
+| `SPEC.md` | The `event.json` schema, field by field. |
+| `.nojekyll` | Lets GitHub Pages serve the `assets/` folder. |
 
 ## Credits
 
-- Weather via [NWS Sandusky](https://www.weather.gov/)
 - Map tiles (c) [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors
 - Map rendering by [Leaflet](https://leafletjs.com/) 1.9.4
-
-## Screenshots
-
-Best viewed live. Once deployed, open `https://mphinance.github.io/callahan/` on a phone and tap through the tabs.
-
-To add screenshots to this README, drop PNGs into a `docs/` folder named `screenshot-now.png`, `screenshot-live-map.png`, and `screenshot-park-map.png`, then uncomment the image lines below.
-
-<!--
-![Now tab](docs/screenshot-now.png)
-![Live Map tab](docs/screenshot-live-map.png)
-![Park Map tab](docs/screenshot-park-map.png)
--->

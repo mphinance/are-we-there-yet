@@ -1,16 +1,15 @@
-/* Operation Callahan service worker.
-   Lives at the repo root so its scope is /callahan/ on GitHub Pages.
-   Caches the app shell so the page still loads in a dead zone on the drive.
-   Live GPS, map tiles, and weather still need signal, they just degrade gracefully. */
+/* Daykit service worker.
+   Lives at the repo root so its scope covers the whole app on GitHub Pages.
+   Caches the app shell plus event.json so the whole day still loads with no signal.
+   Live GPS and map tiles still need a network, they just degrade gracefully. */
 
-var CACHE = 'callahan-v1';
+var CACHE = 'daykit-v1';
 
-// Same-origin shell (relative to /callahan/). These must all fetch for install to succeed.
+// Same-origin shell (relative to scope). These must all fetch for install to succeed.
 var CORE = [
   './',
   './index.html',
-  './operation-callahan.html',
-  './assets/park.js',
+  './event.json',
   './manifest.json',
   './assets/icon-192.png',
   './assets/icon-512.png',
@@ -45,9 +44,24 @@ self.addEventListener('fetch', function (e) {
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
 
-  // Map tiles and live weather: network first, fall back to whatever is cached. Never block on them.
-  if (/tile\.openstreetmap\.org$/.test(url.host) || /api\.open-meteo\.com$/.test(url.host)) {
+  // Map tiles: network first, fall back to whatever is cached. Never block on them.
+  if (/tile\.openstreetmap\.org$/.test(url.host)) {
     e.respondWith(fetch(req).catch(function () { return caches.match(req); }));
+    return;
+  }
+
+  // event.json: network first so a fresh copy wins when online, cache as offline fallback.
+  if (url.origin === self.location.origin && /event\.json$/.test(url.pathname)) {
+    e.respondWith((async function () {
+      try {
+        var res = await fetch(req);
+        var c = await caches.open(CACHE);
+        c.put('./event.json', res.clone());
+        return res;
+      } catch (err) {
+        return (await caches.match('./event.json')) || Response.error();
+      }
+    })());
     return;
   }
 

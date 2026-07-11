@@ -1,698 +1,596 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Operation Callahan · Trip HQ</title>
-<meta name="description" content="Cedar Point birthday trip HQ for Operation Callahan: countdown, live route map, in-park map, weather, and packing lists." />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Daykit</title>
+<meta name="description" content="A drop-in day-of-event mini app: schedule, live map, and offline pocket guide." />
+
+<!-- PWA -->
 <link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#0c2340" />
-<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f28c1a" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Callahan" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Daykit" />
 <link rel="apple-touch-icon" href="assets/icon-192.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
 <style>
-  :root{
-    --bg:#eef3fa; --bg2:#e2e9f4; --ink:#0c2340; --muted:#5b6b85;
-    --pink:#d81e3f; --cyan:#0057b8; --purple:#0c2340; --yellow:#b5840c;
-    --green:#1f9d55; --orange:#d4651a; --card:#ffffff; --line:#d3dce9;
-    --navy:#0c2340; --navy2:#16315b; --gold:#f2b21a;
+  :root {
+    --primary: #f28c1a;
+    --accent: #e4562b;
+    --sun: #f2b21a;
+    --water: #1d9bd1;
+    --ink: #2a1a00;
+    --bg: #fff7ea;
+    --card: #ffffff;
+    --muted: #7a6a52;
+    --line: #f0e2cb;
+    --good: #2e9e5b;
+    --pastdim: 0.5;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;height:100%}
-  body{
-    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
-    background:
-      radial-gradient(1100px 520px at 82% -12%, rgba(0,87,184,.10), transparent 60%),
-      radial-gradient(900px 480px at 0% 6%, rgba(216,30,63,.06), transparent 55%),
-      linear-gradient(180deg,var(--bg),var(--bg2)) fixed;
-    color:var(--ink); line-height:1.5; min-height:100%;
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap{max-width:1000px; margin:0 auto; padding:18px 14px 96px}
-  header.mast{
-    text-align:center; padding:22px 14px 20px; margin:-18px -14px 8px;
-    background:linear-gradient(180deg,var(--navy),var(--navy2));
-    border-radius:0 0 24px 24px; border-bottom:4px solid var(--gold);
-    box-shadow:0 10px 28px rgba(12,35,64,.22);
+  a { color: var(--accent); }
+
+  /* Header */
+  header.app {
+    position: sticky; top: 0; z-index: 500;
+    padding: calc(var(--safe-top) + 12px) 16px 12px;
+    background: linear-gradient(135deg, var(--sun), var(--primary) 55%, var(--accent));
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.18);
   }
-  .kicker{letter-spacing:.4em; font-size:11px; color:var(--gold); text-transform:uppercase}
-  h1{margin:6px 0 2px; font-size:clamp(28px,7vw,52px); font-weight:900; letter-spacing:-1px;
-     background:linear-gradient(90deg,var(--gold),#ffffff,var(--gold));
-     -webkit-background-clip:text; background-clip:text; color:transparent}
-  .sub{color:rgba(255,255,255,.82); font-size:14px}
-  /* countdown */
-  .count{display:flex; gap:10px; justify-content:center; margin:14px 0 6px; flex-wrap:wrap}
-  .count .box{background:var(--card); border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:8px 14px; min-width:66px}
-  .count .n{font-size:26px; font-weight:900; color:var(--cyan); font-variant-numeric:tabular-nums; line-height:1}
-  .count .l{font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted)}
-  .clocks{font-size:12px; color:rgba(255,255,255,.72); margin-top:4px}
-  .clocks b{color:#fff}
-  /* tabs */
-  nav.tabs{position:sticky; top:0; z-index:500; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;
-    padding:10px 6px; margin:10px 0 16px; backdrop-filter:blur(8px);
-    background:linear-gradient(180deg, rgba(238,243,250,.95), rgba(238,243,250,.62))}
-  nav.tabs button{
-    background:#fff; border:1px solid var(--line); color:var(--navy);
-    padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; transition:.15s}
-  nav.tabs button:hover{border-color:var(--cyan); color:var(--cyan)}
-  nav.tabs button.on{color:#fff; background:linear-gradient(90deg,var(--pink),#a3142e); border-color:transparent}
-  section.tab{display:none; animation:fade .25s}
-  section.tab.on{display:block}
-  @keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1}}
-  h2{font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--navy); margin:26px 0 12px; display:flex; align-items:center; gap:10px}
-  h2::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--line),transparent)}
-  .grid{display:grid; gap:14px}
-  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
-  @media(max-width:780px){.g3,.g4{grid-template-columns:1fr 1fr}} @media(max-width:520px){.g2,.g3,.g4{grid-template-columns:1fr}}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px; box-shadow:0 6px 18px rgba(12,35,64,.08)}
-  .card h3{margin:0 0 8px; font-size:16px}
-  .big{font-size:30px; font-weight:900}
-  .cyan{color:var(--cyan)} .pink{color:var(--pink)} .yellow{color:var(--yellow)} .green{color:var(--green)} .mut{color:var(--muted)}
-  /* map */
-  #map{height:62vh; min-height:380px; width:100%; border-radius:14px; border:1px solid var(--line); z-index:1}
-  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff; color:var(--ink); border:1px solid var(--line)}
-  .leaflet-popup-content{margin:10px 12px; font-size:13px}
-  .mapbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 12px}
-  .btn{background:linear-gradient(90deg,var(--pink),#a3142e); color:#fff; border:none; padding:10px 16px;
-    border-radius:10px; font-weight:700; cursor:pointer; font-size:14px}
-  .btn.alt{background:#fff; border:1px solid var(--line); color:var(--ink)}
-  .btn:disabled{opacity:.5; cursor:default}
-  .stat{display:flex; gap:14px; flex-wrap:wrap; margin:12px 0}
-  .stat .s{flex:1; min-width:120px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; text-align:center}
-  .stat .s .v{font-size:22px; font-weight:900; color:var(--cyan); font-variant-numeric:tabular-nums}
-  .stat .s .k{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
-  .prog{height:10px; background:rgba(12,35,64,.08); border-radius:99px; overflow:hidden; margin:8px 0 4px}
-  .prog>i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--green),var(--gold)); transition:width .4s}
-  /* lists */
-  .row{display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px dashed var(--line); font-size:14px}
-  .row:last-child{border:0}
-  .row .h{color:var(--cyan); font-variant-numeric:tabular-nums; white-space:nowrap; font-size:13px}
-  .callout{border-left:3px solid var(--cyan); padding:11px 13px; background:rgba(0,87,184,.07); border-radius:0 10px 10px 0; margin:10px 0; font-size:14px}
-  .callout.pink{border-color:var(--pink); background:rgba(216,30,63,.07)}
-  .callout.yellow{border-color:var(--gold); background:rgba(242,178,26,.12)}
-  ul.tight{margin:6px 0 0; padding-left:20px; font-size:14px} ul.tight li{margin:5px 0}
-  .eat{display:flex; gap:12px; align-items:flex-start}
-  .eat .pin{font-size:22px} .eat .body{flex:1}
-  .eat .name{font-weight:700} .eat .meta{color:var(--muted); font-size:12px}
-  .tag{display:inline-block; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:6px}
-  .tag.kid{background:rgba(31,157,85,.16); color:var(--green)} .tag.fun{background:rgba(242,178,26,.18); color:var(--yellow)}
-  .tag.quick{background:rgba(0,87,184,.14); color:var(--cyan)}
-  /* checklist */
-  label.item{display:flex; gap:10px; align-items:flex-start; padding:6px 4px; border-radius:8px; cursor:pointer; font-size:14px}
-  label.item:hover{background:rgba(12,35,64,.04)}
-  label.item input{appearance:none; width:18px; height:18px; border:2px solid var(--navy); border-radius:5px; margin-top:2px; flex:none; position:relative; cursor:pointer}
-  label.item input:checked{background:var(--green); border-color:var(--green)}
-  label.item input:checked::after{content:"\2713"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:13px}
-  label.item input:checked + span{opacity:.5; text-decoration:line-through}
-  .hint{color:var(--muted); font-size:12px; display:block}
-  .conv{font-size:13px; color:var(--muted)}
-  .conv code{background:rgba(12,35,64,.06); padding:2px 6px; border-radius:6px; color:var(--cyan)}
-  .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px}
-  a{color:var(--cyan)}
-  .foot{text-align:center; color:var(--muted); font-size:12px; margin-top:36px}
+  header.app .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; opacity: .92; font-weight: 700; }
+  header.app h1 { margin: 2px 0 4px; font-size: 21px; line-height: 1.1; }
+  header.app .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.35);
+    padding: 2px 9px; border-radius: 999px; font-weight: 700; font-size: 12px;
+  }
+
+  /* Tabs */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 480;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    background: var(--card); border-bottom: 1px solid var(--line);
+  }
+  nav.tabs button {
+    appearance: none; border: 0; background: none; cursor: pointer;
+    padding: 11px 4px 9px; font-size: 13px; font-weight: 700; color: var(--muted);
+    border-bottom: 3px solid transparent; font-family: inherit;
+  }
+  nav.tabs button .ic { display: block; font-size: 18px; line-height: 1; margin-bottom: 3px; }
+  nav.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+  main { padding: 14px 16px calc(28px + var(--safe-bottom)); max-width: 720px; margin: 0 auto; }
+  section.tab { display: none; }
+  section.tab.active { display: block; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px; margin: 0 0 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .card h2 { margin: 0 0 8px; font-size: 15px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+
+  /* Now banner */
+  .now {
+    background: linear-gradient(135deg, #fff, #fff6e6);
+    border: 2px solid var(--primary);
+  }
+  .now .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; color: var(--accent); }
+  .now .title { font-size: 22px; font-weight: 800; margin: 2px 0; }
+  .now .when { font-size: 14px; color: var(--muted); font-weight: 600; }
+  .now .next { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 14px; }
+  .now .next b { color: var(--ink); }
+  .countdown { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--accent); }
+
+  /* Schedule list */
+  ol.sched { list-style: none; margin: 0; padding: 0; }
+  ol.sched li {
+    display: grid; grid-template-columns: 62px 1fr auto; gap: 10px; align-items: center;
+    padding: 11px 6px; border-bottom: 1px solid var(--line);
+  }
+  ol.sched li:last-child { border-bottom: 0; }
+  ol.sched .time { font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  ol.sched .what { font-weight: 700; font-size: 15px; }
+  ol.sched .what .sub { display: block; font-weight: 500; font-size: 12px; color: var(--muted); }
+  ol.sched .go {
+    appearance: none; border: 1px solid var(--line); background: #fff; border-radius: 9px;
+    width: 34px; height: 34px; font-size: 15px; cursor: pointer; color: var(--accent);
+  }
+  ol.sched li.is-now { background: #fff6e6; border-radius: 10px; box-shadow: inset 0 0 0 2px var(--primary); }
+  ol.sched li.is-now .what::after { content: " • NOW"; color: var(--accent); font-size: 11px; font-weight: 800; }
+  ol.sched li.is-past { opacity: var(--pastdim); }
+  ol.sched li.is-past .what { text-decoration: line-through; text-decoration-color: var(--line); }
+  .sesspill { display:inline-block; min-width: 18px; text-align:center; background: var(--accent); color:#fff; font-size:10px; font-weight:800; border-radius:6px; padding:1px 5px; margin-right:5px; }
+
+  /* Map */
+  #map { height: 62vh; min-height: 340px; border-radius: 14px; border: 1px solid var(--line); }
+  .maprow { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .btn {
+    appearance: none; border: 0; border-radius: 10px; padding: 11px 14px; font-weight: 700;
+    font-size: 14px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  .btn:active { transform: translateY(1px); }
+  .locstat { font-size: 13px; margin-top: 8px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+
+  .pin {
+    display:flex; align-items:center; justify-content:center;
+    width: 30px; height: 30px; border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,.35);
+    font-size: 15px;
+  }
+  .pin > span { transform: rotate(45deg); }
+  .pin.me { border-radius: 50%; background: var(--water); }
+
+  /* Info */
+  ul.plain { margin: 6px 0 0; padding-left: 18px; }
+  ul.plain li { margin: 4px 0; }
+  .check { list-style: none; margin: 0; padding: 0; }
+  .check li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+  .check li:last-child { border-bottom: 0; }
+  .check input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--accent); flex: 0 0 auto; }
+  .check label { font-size: 14px; }
+  .check li.done label { text-decoration: line-through; color: var(--muted); }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; margin: 0; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; font-weight: 600; }
+
+  .installbar {
+    position: fixed; left: 12px; right: 12px; bottom: calc(12px + var(--safe-bottom)); z-index: 700;
+    background: var(--ink); color: #fff; border-radius: 12px; padding: 12px 14px;
+    display: none; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    max-width: 700px; margin: 0 auto;
+  }
+  .installbar.show { display: flex; }
+  .installbar p { margin: 0; font-size: 13px; flex: 1; }
+  .installbar .btn { padding: 8px 12px; }
+  .installbar .x { background: none; border: 0; color: #fff; font-size: 20px; cursor: pointer; opacity: .8; }
+
+  .loading { text-align: center; padding: 40px 0; color: var(--muted); }
+  footer { text-align: center; font-size: 11px; color: var(--muted); padding: 8px 0 4px; }
+  code { background: #f3ead6; padding: 1px 4px; border-radius: 4px; font-size: 12px; }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <header class="mast">
-    <div class="kicker">Trip HQ &middot; Tommy Boy was right, it's in Sandusky</div>
-    <h1>OPERATION CALLAHAN</h1>
-    <div class="sub">Colgate, WI &rarr; Cedar Point &middot; Kilian turns 8</div>
-    <div class="count" id="count"></div>
-    <div class="clocks" id="clocks"></div>
-  </header>
+<header class="app">
+  <div class="eyebrow" id="hdrEyebrow">Daykit</div>
+  <h1 id="hdrTitle">Loading your day...</h1>
+  <div class="meta" id="hdrMeta"></div>
+</header>
 
-  <nav class="tabs" id="tabs">
-    <button data-t="now" class="on">Now</button>
-    <button data-t="map">Live Map</button>
-    <button data-t="park">Park Map</button>
-    <button data-t="route">Route &amp; Tolls</button>
-    <button data-t="eats">Eats</button>
-    <button data-t="plan">Park Plan</button>
-    <button data-t="pack">Pack</button>
-  </nav>
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="schedule"><span class="ic">🗓️</span>Schedule</button>
+  <button role="tab" aria-selected="false" data-tab="map"><span class="ic">🗺️</span>Map</button>
+  <button role="tab" aria-selected="false" data-tab="info"><span class="ic">ℹ️</span>Info</button>
+</nav>
 
-  <!-- ===================== NOW ===================== -->
-  <section class="tab on" id="now">
-    <div class="grid g3">
-      <div class="card"><h3 class="cyan">Thursday 6/18</h3><div class="mut">Travel + cabin check-in</div>
-        <div id="wxThu" class="yellow" style="font-size:13px;font-weight:700">&#127788;&#65039; 74&deg; / 55&deg; &middot; windy, gusts to 37</div>
-        <p>Out around 1pm Central. ~6 hrs driving plus the hour lost to Eastern time puts you at the KOA near 8pm ET. Deluxe cabin means no setup in the dark, just unload and breathe. Heads up, it's a windy day (gusts to 37), so expect crosswinds on I-90 by the lake.</p>
-        <div class="tag fun">~8pm ET arrival</div></div>
-      <div class="card" style="border-color:var(--yellow)"><h3 class="yellow">Friday 6/19</h3><div class="mut">BIRTHDAY + Cedar Point</div>
-        <div id="wxFri" class="green" style="font-size:13px;font-weight:700">&#9728;&#65039; 77&deg; / 56&deg; &middot; sunny, light wind</div>
-        <p>Sunny, 77, light wind. The perfect park day. Rope-drop the coasters, free birthday button at Guest Services, Giant Wheel at dusk, cake at the campsite.</p>
-        <div class="tag kid">Go big</div></div>
-      <div class="card"><h3 class="pink">Saturday 6/20</h3><div class="mut">Drive home</div>
-        <div id="wxSat" class="cyan" style="font-size:13px;font-weight:700">&#9925; 78&deg; / 57&deg; &middot; slight 2pm storm chance</div>
-        <p>Leave the KOA by ~8am ET to beat the afternoon storm chance. You gain an hour heading west, so ~6.5 hrs of driving puts you back in Colgate around 1 to 2pm Central.</p>
-        <div class="tag quick">Out by 8am ET</div></div>
-    </div>
-
-    <h2>The Numbers</h2>
-    <div class="grid g4">
-      <div class="card" style="text-align:center"><div class="big cyan">~430</div><div class="mut">miles each way</div></div>
-      <div class="card" style="text-align:center"><div class="big cyan">~6.5 hr</div><div class="mut">driving (no stops)</div></div>
-      <div class="card" style="text-align:center"><div class="big yellow">+1 hr</div><div class="mut">Eastern time there</div></div>
-      <div class="card" style="text-align:center"><div class="big pink">$25-35</div><div class="mut">tolls each way</div></div>
-    </div>
-
-    <h2>Key Info</h2>
-    <div class="grid g2">
-      <div class="card"><h3 class="green">Sandusky / Bayshore KOA</h3>
-        <p style="margin:4px 0"><b>2311 Cleveland Rd, Sandusky, OH 44870</b><br>
-        <a href="tel:+18005622486">(800) 562-2486</a> &middot; 1 mi east of Cedar Point Dr on US-6.<br>
-        Deluxe Cabin: full kitchen, bathroom, linens + towels for 6, fire pit, propane grill.</p>
-        <p class="mut" style="font-size:13px">Paste the address into Maps as your backup if GPS drops.</p>
-      </div>
-      <div class="card"><h3 class="yellow">Cedar Point (Friday)</h3>
-        <p style="margin:4px 0">Gates typically open <b>10am ET</b> (hours vary, confirm in the Cedar Point app).<br>
-        Parking <b>$30/car</b> general, $40 preferred.<br>
-        Free birthday button for Kilian at Guest Services inside the gate.</p>
-        <p class="mut" style="font-size:13px">Buy tickets + any Fast Lane Thursday night on cabin wifi.</p>
-      </div>
-    </div>
-
-    <div class="card" style="text-align:center;margin-top:16px">
-      <div class="mut" style="font-size:11px;letter-spacing:.2em;text-transform:uppercase">Did you know? &middot; Cedar Point</div>
-      <div id="cpFact" class="cyan" style="font-size:17px;font-weight:600;min-height:48px;display:flex;align-items:center;justify-content:center;transition:opacity .4s">&nbsp;</div>
-    </div>
-
-    <h2>Don't Forget (the sneaky stuff)</h2>
-    <div class="grid g2">
-      <div class="card"><ul class="tight">
-        <li><b>Lost-kid plan:</b> photo of Kilian each morning in that day's clothes, your number on a card in his pocket, a meetup landmark.</li>
-        <li><b>Ride lockers are credit-card only.</b> No coins, no debit. Keep a card on the lead adult.</li>
-        <li><b>Buy tickets / Fast Lane Thursday night</b> on campsite wifi, not in a dead-zone line at the gate.</li>
-      </ul></div>
-      <div class="card"><ul class="tight">
-        <li><b>Bottled water for the KOA</b> tap, reviewers ding the water quality.</li>
-        <li><b>Ziploc the phones</b> before Snake River Falls and Thunder Canyon. You will get soaked.</li>
-        <li><b>Birthday button photo</b> at the front sign first thing, before everyone melts.</li>
-      </ul></div>
+<main>
+  <section class="tab active" id="tab-schedule">
+    <div id="nowWrap"></div>
+    <div class="card">
+      <h2>Full schedule</h2>
+      <ol class="sched" id="schedList"><li class="loading">Loading schedule...</li></ol>
     </div>
   </section>
 
-  <!-- ===================== MAP ===================== -->
-  <section class="tab" id="map-tab">
-    <div class="mapbar">
-      <button class="btn" id="trackBtn">Start tracking my location</button>
-      <button class="btn alt" id="fitBtn">Show whole route</button>
-      <span id="trackState" class="mut">Tracking off</span>
+  <section class="tab" id="tab-map">
+    <div class="maprow">
+      <button class="btn primary" id="findMe">📍 Find me</button>
+      <button class="btn ghost" id="recenter">Recenter</button>
     </div>
     <div id="map"></div>
-    <div class="stat">
-      <div class="s"><div class="v" id="stRemain">·</div><div class="k">miles to KOA</div></div>
-      <div class="s"><div class="v" id="stEta">·</div><div class="k">est. arrival</div></div>
-      <div class="s"><div class="v" id="stPct">0%</div><div class="k">of the way</div></div>
-      <div class="s"><div class="v" id="stSpeed">·</div><div class="k">current mph</div></div>
-    </div>
-    <div class="prog"><i id="progBar"></i></div>
-    <div id="kidEta" class="callout yellow" style="text-align:center;font-weight:700;font-size:16px;display:none"></div>
-
-    <h2>Convoy Mode (optional, share between cars)</h2>
-    <div class="card conv">
-      <p>Right now this tracks <b>your</b> phone, no setup, works the second you tap Start. To see <b>both vehicles</b> on the same map live, flip on convoy mode:</p>
-      <ol>
-        <li>Make a free Firebase project, add a Realtime Database, copy the web config.</li>
-        <li>Paste it into the <code>FIREBASE_CONFIG</code> block near the bottom of <code>index.html</code>.</li>
-        <li>Everyone opens the page with the same trip code in the URL, e.g. <code>?crew=callahan</code>, and pins appear for each car.</li>
-      </ol>
-      <p class="mut">No config pasted = solo mode, which is exactly what you have now. I left the wiring in so it's a 2-minute switch if you want it.</p>
-      <div id="convoyState"></div>
-    </div>
-    <p class="mut" style="font-size:12px">Location needs HTTPS. Works on Netlify / GitHub Pages / Railway (all HTTPS) or <code>localhost</code>. Map tiles &copy; OpenStreetMap.</p>
+    <div class="locstat muted" id="locStat">Tap "Find me" to drop your live location.</div>
+    <div class="legend" id="legend"></div>
   </section>
 
-  <!-- ===================== PARK MAP (owned by assets/park.js) ===================== -->
-  <section class="tab" id="park">
-    <!-- assets/park.js renders into this section. It defines window.onParkTabShown()
-         which index.html calls when this tab opens, and reuses the .btn/.stat/.card styles. -->
+  <section class="tab" id="tab-info">
+    <div id="infoWrap" class="loading">Loading...</div>
   </section>
+</main>
 
-  <!-- ===================== ROUTE ===================== -->
-  <section class="tab" id="route">
-    <div class="grid g2">
-      <div class="card" style="border-color:var(--green)">
-        <h3 class="green">Take this one (faster, tolled)</h3>
-        <div class="mut">The route your mom meant</div>
-        <ul class="tight">
-          <li>I-94 SE through Milwaukee toward Chicago</li>
-          <li><b>Chicago Skyway</b> (~$8 car)</li>
-          <li><b>Indiana Toll Road</b> full length, ~157 mi (~$13-14 cash / ~$11 E-ZPass)</li>
-          <li><b>Ohio Turnpike</b> west gate to the Sandusky exit (~$3-4)</li>
-          <li>US-250 / US-6 to the KOA on Cleveland Rd</li>
-        </ul>
-        <div class="callout green" style="margin-top:10px"><b>~420 mi, ~6 hrs</b> non-stop, plus the 1-hour time-zone jump. Tolls roughly <b>$25-35</b> cash each way.</div>
-      </div>
-      <div class="card">
-        <h3>The free alternative</h3>
-        <div class="mut">Skip if you're chasing the shorter clock</div>
-        <ul class="tight">
-          <li>Loops up and around through Michigan to dodge the Chicago tolls</li>
-          <li>Longer in both miles and time, and you still hit Chicago traffic gravity</li>
-          <li>Only worth it if a toll-free transponder situation makes it a wash</li>
-        </ul>
-        <div class="callout">You already said you're taking the toll route, so this is just here for the record.</div>
-      </div>
-    </div>
-    <h2>Smart Money + Timing</h2>
-    <div class="card"><ul class="tight">
-      <li><b>Get an E-ZPass / I-PASS transponder</b> if either car has one, it's cheaper than cash on the Indiana Toll Road and saves the booth stop.</li>
-      <li><b>Gas up before the Skyway,</b> Illinois/Indiana toll-corridor prices run high.</li>
-      <li><b>Eastern time:</b> leaving ~1pm Central puts you near Sandusky around 8pm Eastern with one good meal stop. Deluxe cabin check-in, so no tent setup in the dark.</li>
-      <li><b>Saturday home:</b> leave the KOA in the morning to beat the 2pm storm chance and you're back in Colgate for a normal evening.</li>
-    </ul></div>
-  </section>
-
-  <!-- ===================== EATS ===================== -->
-  <section class="tab" id="eats">
-    <h2>On the Road (toll corridor)</h2>
-    <div class="grid g2">
-      <div class="card"><div class="eat"><div class="pin">&#127789;</div><div class="body">
-        <div class="name">Indiana Toll Road travel oasis</div>
-        <div class="meta">Right over the highway, no exit detour. Bathrooms, fuel, fast food.</div>
-        <div class="meta">&#128205; On I-80/90 between exits &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Indiana+Toll+Road+travel+plaza" target="_blank" rel="noopener">Map</a></div>
-        <span class="tag quick">Zero detour</span></div></div></div>
-      <div class="card"><div class="eat"><div class="pin">&#129366;</div><div class="body">
-        <div class="name">Das Dutchman Essenhaus &middot; Middlebury, IN</div>
-        <div class="meta">Amish family-style, legendary pies. Small detour off the Toll Road.</div>
-        <div class="meta">&#128205; <b>I-80/90 Exit 107</b>, then ~6 mi south &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Das+Dutchman+Essenhaus+Middlebury+IN" target="_blank" rel="noopener">Directions</a></div>
-        <span class="tag fun">Worth a detour</span></div></div></div>
-      <div class="card"><div class="eat"><div class="pin">&#127828;</div><div class="body">
-        <div class="name">Tony Packo's &middot; Toledo, OH</div>
-        <div class="meta">Famous Hungarian hot dogs, the M*A*S*H spot. Fun, fast, kid-friendly, right on the way.</div>
-        <div class="meta">&#128205; Toledo, near I-280 (Ohio Turnpike Exit 71) &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Tony+Packo%27s+Front+St+Toledo+OH" target="_blank" rel="noopener">Directions</a></div>
-        <span class="tag kid">Kid win</span></div></div></div>
-      <div class="card"><div class="eat"><div class="pin">&#9992;&#65039;</div><div class="body">
-        <div class="name">Tin Goose Diner &middot; Port Clinton, OH</div>
-        <div class="meta">1950s aluminum diner inside an aviation museum near Cedar Point. Burgers + vintage planes.</div>
-        <div class="meta">&#128205; Port Clinton, off SR-2 at Liberty Aviation Museum &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Tin+Goose+Diner+Port+Clinton+OH" target="_blank" rel="noopener">Directions</a></div>
-        <span class="tag fun">8-yr-old catnip</span></div></div></div>
-    </div>
-    <h2>In Sandusky</h2>
-    <div class="grid g2">
-      <div class="card"><div class="eat"><div class="pin">&#127846;</div><div class="body">
-        <div class="name">Toft's Ice Cream Parlor</div>
-        <div class="meta">50+ flavors, sundaes, banana splits. The birthday-dessert move.</div>
-        <div class="meta">&#128205; Sandusky, ~10 min from the KOA &middot; <a href="https://www.google.com/maps/search/?api=1&amp;query=Toft%27s+Ice+Cream+Sandusky+OH" target="_blank" rel="noopener">Directions</a></div>
-        <span class="tag kid">Birthday cone</span></div></div></div>
-      <div class="card"><div class="eat"><div class="pin">&#129374;</div><div class="body">
-        <div class="name">Sandusky Bay Pancake House</div>
-        <div class="meta">Big breakfast before the park. Pancakes, crepes, vegan + GF options.</div>
-        <span class="tag quick">Pre-park fuel</span></div></div></div>
-      <div class="card"><div class="eat"><div class="pin">&#127844;</div><div class="body">
-        <div class="name">New Sandusky Fish Company</div>
-        <div class="meta">Lake Erie perch sandwiches done right. Local classic.</div>
-        <span class="tag fun">Local pick</span></div></div></div>
-      <div class="card"><div class="eat"><div class="pin">&#127828;</div><div class="body">
-        <div class="name">Inside the park</div>
-        <div class="meta">Melt sandwiches, Chickie's &amp; Pete's, Panda Express. A dining plan can pay off for a full day.</div>
-        <span class="tag quick">Friday lunch</span></div></div></div>
-    </div>
-    <p class="mut" style="font-size:12px">All of these drop as pins on the Live Map tab too.</p>
-  </section>
-
-  <!-- ===================== PLAN ===================== -->
-  <section class="tab" id="plan">
-    <div class="callout yellow"><b>Kilian's 51 inches, which is the good news.</b> He clears the entire 48-inch coaster tier, including the big famous ones. He's just one inch under the 52-inch club. Hype what he CAN ride and he'll have the day of his life.</div>
-    <div class="grid g2">
-      <div class="card"><h3 class="green" style="margin-top:0">He CAN ride these (48")</h3>
-        <div class="row"><span>Magnum XL-200 (legendary hyper coaster)</span><span class="h">48"</span></div>
-        <div class="row"><span>Millennium Force (300 ft, an all-time great)</span><span class="h">48"</span></div>
-        <div class="row"><span>Valravn (B&amp;M dive coaster)</span><span class="h">48"</span></div>
-        <div class="row"><span>Siren's Curse (new tilt coaster)</span><span class="h">48"</span></div>
-        <div class="row"><span>Gemini (racing coaster, great first big one)</span><span class="h">48"</span></div>
-        <div class="row"><span>Blue Streak &middot; Iron Dragon &middot; Corkscrew</span><span class="h">48"</span></div>
-        <div class="row"><span>Cedar Creek Mine Ride &middot; Woodstock Express</span><span class="h">48"</span></div>
-      </div>
-      <div class="card"><h3 class="pink" style="margin-top:0">One inch short (52")</h3>
-        <div class="row"><span>Top Thrill 2 (420 ft, 120 mph)</span><span class="h">52"</span></div>
-        <div class="row"><span>GateKeeper (wing coaster over the gate)</span><span class="h">52"</span></div>
-        <div class="row"><span>MaXair (giant swing)</span><span class="h">52"</span></div>
-        <div class="callout pink" style="margin-top:12px">So close. Don't make a thing of it. "Next year you're tall enough for the 120-mph one" is a pretty great thing to tell a kid.</div>
-      </div>
-    </div>
-    <h2>The Friday Battle Plan</h2>
-    <div class="card"><ul class="tight">
-      <li><b>Rope drop</b> the biggest coasters first (Magnum, Valravn, Siren's Curse) while lines are short and it's cool.</li>
-      <li><b>Free birthday button</b> at Guest Services near the front gate, plus a sign photo before anyone's sweaty.</li>
-      <li><b>Hot midday:</b> water rides (Snake River Falls, Thunder Canyon) and Camp Snoopy shade. Ziploc the phones.</li>
-      <li><b>Birthday dinner</b> in-park or back at Toft's for a cone.</li>
-      <li><b>Giant Wheel at dusk</b> over Lake Erie to close out being 8 years old. That's the photo.</li>
-    </ul></div>
-
-    <h2>Kilian's Ride Bucket List</h2>
-    <div class="card">
-      <p class="mut" style="margin:0 0 10px;font-size:13px">Tap each one off as you ride it, buddy. It saves automatically.</p>
-      <div class="prog"><i id="bucketBar"></i></div>
-      <div id="bucketList">
-        <label class="item"><input type="checkbox"><span>Magnum XL-200</span></label>
-        <label class="item"><input type="checkbox"><span>Millennium Force</span></label>
-        <label class="item"><input type="checkbox"><span>Valravn</span></label>
-        <label class="item"><input type="checkbox"><span>Siren's Curse</span></label>
-        <label class="item"><input type="checkbox"><span>Gemini</span></label>
-        <label class="item"><input type="checkbox"><span>Blue Streak</span></label>
-        <label class="item"><input type="checkbox"><span>Iron Dragon</span></label>
-        <label class="item"><input type="checkbox"><span>Corkscrew</span></label>
-        <label class="item"><input type="checkbox"><span>Cedar Creek Mine Ride</span></label>
-        <label class="item"><input type="checkbox"><span>Woodstock Express</span></label>
-        <label class="item"><input type="checkbox"><span>Snake River Falls (get soaked)</span></label>
-        <label class="item"><input type="checkbox"><span>Thunder Canyon (get soaked again)</span></label>
-        <label class="item"><input type="checkbox"><span>Giant Wheel at dusk</span></label>
-        <label class="item"><input type="checkbox"><span>Birthday cone at Toft's</span></label>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== PACK ===================== -->
-  <section class="tab" id="pack">
-    <p class="mut">Quick version below. The full printable checklist with progress bars lives in
-      <a href="operation-callahan.html">operation-callahan.html</a>. Checks here save on this device.</p>
-    <div class="grid g2" id="packGrid">
-      <div class="card"><h3 class="yellow">Birthday</h3>
-        <label class="item"><input type="checkbox"><span>Wrapped gifts hidden where he won't dig</span></label>
-        <label class="item"><input type="checkbox"><span>Cake/cupcakes + candles + lighter</span></label>
-        <label class="item"><input type="checkbox"><span>Birthday outfit for Friday</span></label>
-        <label class="item"><input type="checkbox"><span>Cash for a park souvenir</span></label>
-      </div>
-      <div class="card"><h3 class="cyan">Park day bag</h3>
-        <label class="item"><input type="checkbox"><span>Small bag (8x12x4 in max)</span></label>
-        <label class="item"><input type="checkbox"><span>SPF 50 + reapply stick</span></label>
-        <label class="item"><input type="checkbox"><span>Refillable water bottles</span></label>
-        <label class="item"><input type="checkbox"><span>Credit card (lockers are card-only)</span></label>
-        <label class="item"><input type="checkbox"><span>Ziploc for phones on water rides</span></label>
-        <label class="item"><input type="checkbox"><span>Packable poncho + battery pack</span></label>
-      </div>
-      <div class="card"><h3 class="green">Deluxe Cabin</h3>
-        <div class="hint" style="margin:-4px 0 8px">Provided: full kitchen + dishes, bathroom, linens &amp; towels for 6, futon, cable, fire pit, propane grill. So skip tent, bedding, and bath towels.</div>
-        <label class="item"><input type="checkbox"><span>Groceries + coffee + food to grill</span></label>
-        <label class="item"><input type="checkbox"><span>Bottled water (KOA tap is iffy)</span></label>
-        <label class="item"><input type="checkbox"><span>Dish soap + sponge + a couple trash bags</span></label>
-        <label class="item"><input type="checkbox"><span>Firewood (buy on site) + lighter + s'mores</span></label>
-        <label class="item"><input type="checkbox"><span>Bug spray + beach towels + camp chairs</span></label>
-        <label class="item"><input type="checkbox"><span>Cooler for the drive + Thursday-night dinner</span></label>
-      </div>
-      <div class="card"><h3 class="pink">Clothes + car</h3>
-        <label class="item"><input type="checkbox"><span>Hoodie/fleece per person</span></label>
-        <label class="item"><input type="checkbox"><span>Swimsuits + spare shoes</span></label>
-        <label class="item"><input type="checkbox"><span>Road snacks + tablet + headphones</span></label>
-        <label class="item"><input type="checkbox"><span>Cash for tolls + phone car mount</span></label>
-        <label class="item"><input type="checkbox"><span>Meds + first-aid + after-sun</span></label>
-      </div>
-    </div>
-  </section>
-
-  <div class="foot">
-    Built for Operation Callahan &middot; weather via NWS Sandusky &middot; tolls/rides verified 6/17/26.<br>
-    Re-check weather Thursday AM. Have the best one, and tell Kilian happy birthday.
-  </div>
+<div class="installbar" id="installBar">
+  <p><b>Install this day</b> to your home screen. Runs offline all day.</p>
+  <button class="btn primary" id="installBtn">Install</button>
+  <button class="x" id="installX" aria-label="Dismiss">&times;</button>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<footer id="foot"></footer>
+
 <script>
-/* ---------- OPTIONAL convoy mode: paste your Firebase web config here ---------- */
-var FIREBASE_CONFIG = null; // e.g. {apiKey:"...", databaseURL:"https://xxx.firebaseio.com", projectId:"..."}
-/* ------------------------------------------------------------------------------ */
+/* ---------- Daykit: a generic day-of-event PWA driven entirely by event.json ---------- */
+var EV = null;                 // the loaded event
+var placeById = {};            // id -> place
+var map = null, meMarker = null, markers = {}, watchId = null;
+var tickTimer = null;
 
-// Key coordinates (approximate)
-var ORIGIN = {lat:43.215, lng:-88.246, name:"Home base, Colgate WI 53033"};
-var KOA    = {lat:41.466, lng:-82.656, name:"Sandusky / Bayshore KOA"};
-var CP     = {lat:41.478, lng:-82.683, name:"Cedar Point"};
+var ICONS = {
+  flag:"🚩", compass:"🧭", water:"💦", truck:"🚚",
+  target:"🎯", rocket:"🚀", aid:"⛑️", rest:"🚻",
+  lunch:"🥪", parking:"🅿️", pin:"📍"
+};
+var KIND_COLOR = { hub:"#6d4bd6", activity:"#e4562b", water:"#1d9bd1", service:"#2e9e5b" };
+var KIND_LABEL = { hub:"Hub", activity:"Activity", water:"Water", service:"Services" };
 
-// Route waypoints (toll route, approximate for the line + progress math)
-var ROUTE = [
-  [43.215,-88.246],[43.03,-87.96],[42.30,-87.83],[41.715,-87.55],
-  [41.59,-87.20],[41.68,-86.25],[41.70,-85.97],[41.65,-84.10],
-  [41.66,-83.55],[41.51,-82.94],[41.466,-82.656]
-];
-
-// Food / fun pins
-var STOPS = [
-  {ll:[41.66,-86.40], n:"Indiana Toll Road oasis", d:"Over-highway plaza, zero detour", e:"⛽"},
-  {ll:[41.6745,-85.6905], n:"Das Dutchman Essenhaus", d:"Amish family-style + pie (Middlebury IN)", e:"🥧"},
-  {ll:[41.6620,-83.5110], n:"Tony Packo's", d:"Famous Hungarian dogs, Toledo OH", e:"🌭"},
-  {ll:[41.5120,-82.9410], n:"Tin Goose Diner", d:"50s diner in an aviation museum, Port Clinton", e:"✈️"},
-  {ll:[41.4470,-82.7080], n:"Toft's Ice Cream", d:"Birthday cone HQ, Sandusky", e:"🍦"}
-];
-
-// ----- Map -----
-var map, meMarker, accCircle, progLine, watchId=null, mapReady=false, peers={}, db=null, crew=null;
-function initMap(){
-  if(mapReady) return;
-  map = L.map('map',{zoomControl:true}).setView([42.1,-85.3], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(map);
-  L.polyline(ROUTE,{color:'#0057b8',weight:4,opacity:.75,dashArray:'2,8'}).addTo(map);
-  markerDot(ORIGIN.lat,ORIGIN.lng,'#0057b8').addTo(map).bindPopup("<b>Start</b><br>"+ORIGIN.name);
-  markerDot(KOA.lat,KOA.lng,'#1f9d55').addTo(map).bindPopup("<b>KOA</b><br>"+KOA.name);
-  markerDot(CP.lat,CP.lng,'#f2b21a').addTo(map).bindPopup("<b>Cedar Point</b>");
-  STOPS.forEach(function(s){
-    markerDot(s.ll[0],s.ll[1],'#d4651a').addTo(map).bindPopup("<b>"+s.e+" "+s.n+"</b><br>"+s.d);
-  });
-  fitRoute();
-  mapReady=true;
+/* ---- time helpers. All schedule times are local wall-clock on event.date. ---- */
+function hm(t){ var p=t.split(":"); return {h:+p[0], m:+p[1]}; }
+function eventDateAt(t){
+  var d = EV.date.split("-");            // yyyy-mm-dd
+  var x = hm(t);
+  return new Date(+d[0], +d[1]-1, +d[2], x.h, x.m, 0, 0);  // local time
 }
-function markerDot(lat,lng,color){
-  return L.circleMarker([lat,lng],{radius:8,color:'#ffffff',weight:2,fillColor:color,fillOpacity:1});
+function fmt12(t){
+  var x=hm(t), ap = x.h>=12?"pm":"am", h=x.h%12; if(h===0)h=12;
+  return h + (x.m?(":"+String(x.m).padStart(2,"0")):"") + ap;
 }
-function fitRoute(){ if(map) map.fitBounds(L.latLngBounds(ROUTE).pad(0.15)); }
+function fmtRange(a,b){ return fmt12(a)+" – "+fmt12(b); }
+function isEventToday(){
+  var n=new Date(), d=EV.date.split("-");
+  return n.getFullYear()==+d[0] && (n.getMonth()+1)==+d[1] && n.getDate()==+d[2];
+}
+function statusOf(item, now){
+  var s=eventDateAt(item.start).getTime(), e=eventDateAt(item.end).getTime(), t=now.getTime();
+  if(t>=e) return "past";
+  if(t>=s) return "now";
+  return "future";
+}
+function fmtCountdown(ms){
+  if(ms<0) ms=0;
+  var s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  if(h>0) return h+"h "+m+"m";
+  if(m>0) return m+"m "+String(ss).padStart(2,"0")+"s";
+  return ss+"s";
+}
 
-// ----- Geometry -----
-function haversine(a,b,c,d){ // miles
-  var R=3958.8, t=Math.PI/180;
-  var dLat=(c-a)*t, dLng=(d-b)*t;
-  var x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a*t)*Math.cos(c*t)*Math.sin(dLng/2)*Math.sin(dLng/2);
-  return 2*R*Math.asin(Math.sqrt(x));
+/* ---------- rendering ---------- */
+function renderHeader(){
+  document.title = EV.title + (EV.team? " · "+EV.team.rank : "");
+  document.getElementById("hdrEyebrow").textContent = EV.subtitle || "Daykit";
+  document.getElementById("hdrTitle").textContent = EV.title;
+  var meta = document.getElementById("hdrMeta");
+  var dateStr = eventDateAt("12:00").toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"});
+  meta.innerHTML = "";
+  var d = document.createElement("span"); d.className="badge"; d.textContent="📅 "+dateStr; meta.appendChild(d);
+  if(EV.team){ var t=document.createElement("span"); t.className="badge"; t.textContent="🐻 "+EV.team.rank+" · "+EV.team.name; meta.appendChild(t); }
+  if(EV.location){ var l=document.createElement("span"); l.className="badge"; l.textContent="📍 "+EV.location.name; meta.appendChild(l); }
 }
-function routeTotal(){ var s=0; for(var i=1;i<ROUTE.length;i++) s+=haversine(ROUTE[i-1][0],ROUTE[i-1][1],ROUTE[i][0],ROUTE[i][1]); return s; }
-var TOTAL = routeTotal();
-// distance still to go = straight-line to KOA (good enough for a progress feel)
-function update(lat,lng,speedMps){
-  var remain = haversine(lat,lng,KOA.lat,KOA.lng);
-  var done = Math.max(0, TOTAL - remain);
-  var pct = Math.min(100, Math.max(0, 100*done/TOTAL));
-  document.getElementById('stRemain').textContent = remain.toFixed(0);
-  document.getElementById('stPct').textContent = pct.toFixed(0)+'%';
-  document.getElementById('progBar').style.width = pct+'%';
-  var mph = (speedMps!=null && speedMps>=0) ? speedMps*2.23694 : null;
-  document.getElementById('stSpeed').textContent = mph!=null ? mph.toFixed(0) : '·';
-  // ETA: use live speed if moving, else assume 62 mph
-  var v = (mph && mph>15) ? mph : 62;
-  var hrs = remain / v;
-  var eta = new Date(Date.now() + hrs*3600*1000);
-  // show in Eastern (destination) time
-  document.getElementById('stEta').textContent = eta.toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'})+' ET';
-  var kid=document.getElementById('kidEta');
-  if(kid){
-    var msg;
-    if(remain<2) msg='WE ARE HERE. Cedar Point, baby!';
-    else if(hrs<0.5) msg='Almost there, buddy. Shoes on, get excited!';
-    else if(hrs<1.5) msg='About an hour to go. One more movie.';
-    else if(hrs<3) msg='Roughly 2 movies left. Snack time.';
-    else msg='Still a long one. Pick a good movie and settle in.';
-    kid.textContent=msg; kid.style.display='block';
+
+function placeSuffix(item){
+  var p = item.place && placeById[item.place];
+  return p ? " · "+p.name : "";
+}
+
+function renderNow(){
+  var wrap = document.getElementById("nowWrap");
+  if(!isEventToday()){
+    wrap.innerHTML = '<div class="card now"><div class="label">Heads up</div>'+
+      '<div class="title">Not today</div>'+
+      '<div class="when">This day runs on '+eventDateAt("12:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})+
+      '. The live "now" tracker turns on that morning.</div></div>';
+    return;
   }
-}
-function placeMe(lat,lng,acc){
-  if(!meMarker){
-    meMarker = L.circleMarker([lat,lng],{radius:9,color:'#fff',weight:2,fillColor:'#d81e3f',fillOpacity:1}).addTo(map).bindPopup("You");
-    accCircle = L.circle([lat,lng],{radius:acc||50,color:'#d81e3f',weight:1,fillOpacity:.08}).addTo(map);
-  } else { meMarker.setLatLng([lat,lng]); accCircle.setLatLng([lat,lng]).setRadius(acc||50); }
-}
-
-// ----- Tracking -----
-document.getElementById('trackBtn').addEventListener('click', function(){
-  initMap();
-  if(watchId!=null){ navigator.geolocation.clearWatch(watchId); watchId=null; this.textContent='Start tracking my location'; setState('Tracking off'); return; }
-  if(!navigator.geolocation){ setState('Geolocation not supported on this device'); return; }
-  setState('Getting a fix…');
-  this.textContent='Stop tracking';
-  watchId = navigator.geolocation.watchPosition(function(p){
-    var c=p.coords; placeMe(c.latitude,c.longitude,c.accuracy);
-    map.setView([c.latitude,c.longitude], Math.max(map.getZoom(),10));
-    update(c.latitude,c.longitude,c.speed);
-    setState('<span class="dot" style="background:#1f9d55"></span>Live');
-    pushPosition(c.latitude,c.longitude);
-  }, function(err){
-    setState('Location blocked: '+err.message+' (needs HTTPS + permission)');
-  }, {enableHighAccuracy:true, maximumAge:5000, timeout:20000});
-});
-document.getElementById('fitBtn').addEventListener('click', function(){ initMap(); fitRoute(); });
-function setState(h){ document.getElementById('trackState').innerHTML=h; }
-
-// ----- Optional convoy mode (Firebase Realtime DB) -----
-function getCrew(){ var m=location.search.match(/[?&]crew=([^&]+)/); return m?decodeURIComponent(m[1]):null; }
-function initConvoy(){
-  var el=document.getElementById('convoyState');
-  crew=getCrew();
-  if(!FIREBASE_CONFIG){ el.innerHTML='<p class="mut">Solo mode (no Firebase config). Only your phone shows.</p>'; return; }
-  if(!crew){ el.innerHTML='<p class="yellow">Config found. Add <code>?crew=callahan</code> to the URL on each phone to join the convoy.</p>'; return; }
-  var s1=document.createElement('script'); s1.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
-  s1.onload=function(){
-    var s2=document.createElement('script'); s2.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
-    s2.onload=function(){
-      firebase.initializeApp(FIREBASE_CONFIG); db=firebase.database();
-      var me='car-'+Math.floor((performance.now()%100000));
-      window.__me=me;
-      db.ref('trips/'+crew).on('value',function(snap){
-        var v=snap.val()||{};
-        Object.keys(v).forEach(function(k){
-          if(k===me) return; var d=v[k]; if(!d||d.lat==null) return;
-          if(!peers[k]){ peers[k]=L.circleMarker([d.lat,d.lng],{radius:9,color:'#fff',weight:2,fillColor:'#f2b21a',fillOpacity:1}).addTo(map).bindPopup('Other car'); }
-          else peers[k].setLatLng([d.lat,d.lng]);
-        });
-      });
-      el.innerHTML='<p class="green"><span class="dot" style="background:#39ff8b"></span>Convoy mode on, crew <code>'+crew+'</code>. Other cars show as yellow pins.</p>';
-    };
-    document.head.appendChild(s2);
-  };
-  document.head.appendChild(s1);
-}
-function pushPosition(lat,lng){
-  if(db && crew && window.__me){ db.ref('trips/'+crew+'/'+window.__me).set({lat:lat,lng:lng,t:Date.now()}); }
-}
-
-// ----- Tabs -----
-document.querySelectorAll('#tabs button').forEach(function(b){
-  b.addEventListener('click', function(){
-    document.querySelectorAll('#tabs button').forEach(function(x){x.classList.remove('on');});
-    this.classList.add('on');
-    var t=this.dataset.t;
-    document.querySelectorAll('section.tab').forEach(function(s){s.classList.remove('on');});
-    document.getElementById(t==='map'?'map-tab':t).classList.add('on');
-    if(t==='map'){ setTimeout(function(){ initMap(); map.invalidateSize(); }, 60); }
-    if(t==='park' && window.onParkTabShown){ setTimeout(window.onParkTabShown, 60); }
-  });
-});
-
-// ----- Countdown + clocks -----
-function depart(){ // Thu 6/18/2026 13:00 Central (1pm)
-  return new Date('2026-06-18T13:00:00-05:00');
-}
-function tick(){
-  var now=new Date(), d=depart()-now;
-  var box=document.getElementById('count');
-  if(d>0){
-    var days=Math.floor(d/864e5), h=Math.floor(d/36e5)%24, m=Math.floor(d/6e4)%60, s=Math.floor(d/1e3)%60;
-    box.innerHTML = cell(days,'days')+cell(h,'hrs')+cell(m,'min')+cell(s,'sec');
-  } else { box.innerHTML='<div class="box" style="min-width:auto"><div class="n" style="font-size:18px">Wheels up. Drive safe.</div></div>'; }
-  var ct=now.toLocaleTimeString('en-US',{timeZone:'America/Chicago',hour:'numeric',minute:'2-digit'});
-  var et=now.toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'});
-  document.getElementById('clocks').innerHTML='Home <b>'+ct+'</b> CT &nbsp;&middot;&nbsp; Sandusky <b>'+et+'</b> ET';
-}
-function cell(n,l){ return '<div class="box"><div class="n">'+String(n).padStart(2,'0')+'</div><div class="l">'+l+'</div></div>'; }
-setInterval(tick,1000); tick();
-
-// ----- Packing checklist persistence -----
-(function(){
-  var boxes=Array.prototype.slice.call(document.querySelectorAll('#packGrid input'));
-  boxes.forEach(function(b,i){b.dataset.k='p'+i;});
-  var KEY='callahan-pack';
-  var s={}; try{s=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){}
-  boxes.forEach(function(b){ if(s[b.dataset.k]) b.checked=true;
-    b.addEventListener('change',function(){ var o={}; boxes.forEach(function(x){if(x.checked)o[x.dataset.k]=1;}); localStorage.setItem(KEY,JSON.stringify(o)); });
-  });
-})();
-
-// ----- Ride bucket list persistence + progress -----
-(function(){
-  var boxes=Array.prototype.slice.call(document.querySelectorAll('#bucketList input'));
-  if(!boxes.length) return;
-  boxes.forEach(function(b,i){b.dataset.k='r'+i;});
-  var KEY='callahan-bucket', bar=document.getElementById('bucketBar');
-  function paint(){ var done=0; boxes.forEach(function(x){if(x.checked)done++;}); if(bar) bar.style.width=(100*done/boxes.length)+'%'; }
-  var s={}; try{s=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){}
-  boxes.forEach(function(b){ if(s[b.dataset.k]) b.checked=true;
-    b.addEventListener('change',function(){ var o={}; boxes.forEach(function(x){if(x.checked)o[x.dataset.k]=1;}); localStorage.setItem(KEY,JSON.stringify(o)); paint(); });
-  });
-  paint();
-})();
-
-// ----- Live weather via Open-Meteo (keyless, with hardcoded fallback) -----
-(function(){
-  var targets={ '2026-06-18':'wxThu', '2026-06-19':'wxFri', '2026-06-20':'wxSat' };
-  function wmo(code){
-    if(code===0) return ['☀️','clear and sunny'];
-    if(code<=2) return ['🌤️','mostly sunny'];
-    if(code===3) return ['☁️','overcast'];
-    if(code<=48) return ['🌫️','fog'];
-    if(code<=57) return ['🌦️','drizzle'];
-    if(code<=65) return ['🌧️','rain'];
-    if(code<=77) return ['❄️','snow'];
-    if(code<=82) return ['🌦️','showers'];
-    if(code<=99) return ['⛈️','thunderstorms'];
-    return ['🌤️','mixed'];
+  var now = new Date();
+  var cur=null, nxt=null;
+  for(var i=0;i<EV.schedule.length;i++){
+    var st=statusOf(EV.schedule[i], now);
+    if(st==="now" && !cur){ cur=EV.schedule[i]; }
+    if(st==="future" && !nxt){ nxt=EV.schedule[i]; }
   }
-  var url='https://api.open-meteo.com/v1/forecast?latitude=41.4489&longitude=-82.7079'
-    +'&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_gusts_10m_max'
-    +'&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=10';
-  fetch(url).then(function(r){return r.json();}).then(function(j){
-    var D=j.daily; if(!D||!D.time) return;
-    for(var i=0;i<D.time.length;i++){
-      var id=targets[D.time[i]]; if(!id) continue;
-      var el=document.getElementById(id); if(!el) continue;
-      var w=wmo(D.weather_code[i]);
-      var hi=Math.round(D.temperature_2m_max[i]), lo=Math.round(D.temperature_2m_min[i]);
-      var gust=Math.round(D.wind_gusts_10m_max[i]), pp=D.precipitation_probability_max[i];
-      var extra=w[1];
-      if(gust>=30) extra+=', gusts to '+gust;
-      else if(pp>=30) extra+=', '+pp+'% rain';
-      el.innerHTML=w[0]+' '+hi+'° / '+lo+'° &middot; '+extra
-        +' <span style="opacity:.55;font-weight:400;font-size:11px">live</span>';
+  var html='<div class="card now">';
+  if(cur){
+    html+='<div class="label">Right now</div>';
+    html+='<div class="title">'+esc(cur.title)+'</div>';
+    html+='<div class="when">'+fmtRange(cur.start,cur.end)+placeSuffix(cur)+'</div>';
+    html+='<div class="next">Wraps up in <span class="countdown" data-until="'+eventDateAt(cur.end).getTime()+'"></span>';
+    if(nxt) html+='. Next: <b>'+esc(nxt.title)+'</b> at '+fmt12(nxt.start);
+    html+='.</div>';
+  } else if(nxt){
+    html+='<div class="label">Up next</div>';
+    html+='<div class="title">'+esc(nxt.title)+'</div>';
+    html+='<div class="when">'+fmtRange(nxt.start,nxt.end)+placeSuffix(nxt)+'</div>';
+    html+='<div class="next">Starts in <span class="countdown" data-until="'+eventDateAt(nxt.start).getTime()+'"></span>.</div>';
+  } else {
+    var first=EV.schedule[0];
+    if(now.getTime()<eventDateAt(first.start).getTime()){
+      html+='<div class="label">Good morning</div><div class="title">'+esc(first.title)+' at '+fmt12(first.start)+'</div>'+
+            '<div class="when">Starts in <span class="countdown" data-until="'+eventDateAt(first.start).getTime()+'"></span>.</div>';
+    } else {
+      html+='<div class="label">That’s a wrap</div><div class="title">Day complete 🎉</div>'+
+            '<div class="when">Turn in your name tag for your patch and medal.</div>';
     }
-  }).catch(function(){ /* keep the hardcoded NWS fallback already in the cards */ });
-})();
+  }
+  html+='</div>';
+  wrap.innerHTML=html;
+  tick();
+}
 
-// ----- Cedar Point fact rotator -----
-(function(){
-  var facts=[
-    "Cedar Point has 18 roller coasters, one of the most of any park on Earth.",
-    "Top Thrill 2 launches you to 120 mph in just a few seconds.",
-    "Millennium Force drops you 300 feet at 93 mph.",
-    "Steel Vengeance was the world's first hyper-hybrid coaster.",
-    "The whole park sits on a peninsula poking into Lake Erie.",
-    "Cedar Point opened in 1870, one of the oldest parks in America.",
-    "Magnum XL-200 was the first coaster over 200 feet tall, back in 1989.",
-    "They call it the Roller Coaster Capital of the World.",
-    "GateKeeper's wings fly right over the front gate.",
-    "Maverick launches through a tunnel and has a beyond-vertical drop."
-  ];
-  var el=document.getElementById('cpFact'); if(!el) return;
-  var i=0;
-  function show(){ el.style.opacity=0; setTimeout(function(){ el.textContent=facts[i%facts.length]; el.style.opacity=1; i++; }, 400); }
-  show(); setInterval(show, 7000);
-})();
-
-// ----- Birthday banner on 6/19 (Central) -----
-(function(){
-  var d=new Date().toLocaleDateString('en-US',{timeZone:'America/Chicago',month:'numeric',day:'numeric'});
-  if(d!=='6/19') return;
-  var st=document.createElement('style');
-  st.textContent='@keyframes bpulse{0%,100%{box-shadow:0 0 12px rgba(216,30,63,.45)}50%{box-shadow:0 0 30px rgba(242,178,26,.8)}}';
-  document.head.appendChild(st);
-  var b=document.createElement('div');
-  b.style.cssText='text-align:center;font-weight:900;font-size:clamp(18px,4.5vw,32px);padding:14px;margin-bottom:12px;border-radius:14px;color:#0c2340;background:linear-gradient(90deg,#ffd24a,#f2b21a,#ffd24a);border:2px solid #d81e3f;animation:bpulse 1.6s ease-in-out infinite';
-  b.textContent='🎉 HAPPY 8th BIRTHDAY, KILIAN! 🎉';
-  var mast=document.querySelector('header.mast');
-  if(mast&&mast.parentNode) mast.parentNode.insertBefore(b, mast);
-})();
-
-initConvoy();
-
-// ----- PWA: register the service worker so the page installs + works offline -----
-if('serviceWorker' in navigator){
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){ /* offline cache just won't be available */ });
+function renderSchedule(){
+  var now = new Date(), today = isEventToday();
+  var ol = document.getElementById("schedList");
+  ol.innerHTML="";
+  EV.schedule.forEach(function(item){
+    var li=document.createElement("li");
+    var st = today ? statusOf(item, now) : "";
+    if(st==="now") li.className="is-now";
+    else if(st==="past") li.className="is-past";
+    var sess = item.session? '<span class="sesspill">'+item.session+'</span>' : (item.all?'<span class="sesspill" style="background:#6d4bd6">ALL</span>':'');
+    var sub = "";
+    var p = item.place && placeById[item.place];
+    if(p) sub = p.name;
+    if(item.also && placeById[item.also]) sub += (sub?" + ":"")+placeById[item.also].name;
+    li.innerHTML =
+      '<span class="time">'+fmt12(item.start)+'<br>'+fmt12(item.end)+'</span>'+
+      '<span class="what">'+sess+esc(item.title)+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</span>'+
+      (p?'<button class="go" title="Show on map" data-place="'+p.id+'">🗺️</button>':'<span></span>');
+    ol.appendChild(li);
+  });
+  ol.querySelectorAll(".go").forEach(function(b){
+    b.addEventListener("click", function(){ focusPlace(b.getAttribute("data-place")); });
   });
 }
+
+function renderInfo(){
+  var w=document.getElementById("infoWrap");
+  w.className="";
+  var loc=EV.location;
+  var mapsUrl = "https://www.google.com/maps/search/?api=1&query="+loc.lat+","+loc.lng;
+  var html="";
+
+  html+='<div class="card"><h2>'+esc(EV.title)+'</h2>';
+  if(EV.subtitle) html+='<p class="muted small" style="margin:0 0 8px">'+esc(EV.subtitle)+'</p>';
+  html+='<dl class="kv">';
+  html+='<dt>Date</dt><dd>'+eventDateAt("12:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+'</dd>';
+  if(EV.team) html+='<dt>Team</dt><dd>'+esc(EV.team.rank)+' · '+esc(EV.team.name)+'</dd>';
+  html+='<dt>Where</dt><dd>'+esc(loc.name)+'</dd>';
+  if(loc.address) html+='<dt>Address</dt><dd>'+esc(loc.address)+'</dd>';
+  html+='</dl>';
+  html+='<div style="margin-top:10px"><a class="btn primary" style="text-decoration:none" href="'+mapsUrl+'" target="_blank" rel="noopener">Open in Maps</a></div>';
+  if(EV.team && EV.team.note) html+='<p class="small muted" style="margin:10px 0 0">'+esc(EV.team.note)+'</p>';
+  html+='</div>';
+
+  if(EV.bring && EV.bring.length){
+    html+='<div class="card"><h2>Bring / checklist</h2><ul class="check" id="bringList">';
+    EV.bring.forEach(function(b,i){
+      html+='<li><input type="checkbox" id="bring'+i+'"><label for="bring'+i+'">'+esc(b)+'</label></li>';
+    });
+    html+='</ul></div>';
+  }
+
+  if(EV.notes && EV.notes.length){
+    html+='<div class="card"><h2>Good to know</h2><ul class="plain">';
+    EV.notes.forEach(function(n){ html+='<li>'+esc(n)+'</li>'; });
+    html+='</ul></div>';
+  }
+
+  html+='<div class="card"><h2>About this app</h2>'+
+    '<p class="small muted" style="margin:0">This is a <b>Daykit</b>: a one-day pocket app built from photos of a paper schedule and map. '+
+    'Install it to your home screen and it runs offline all day. To make one for a different day, swap in a new <code>event.json</code>.</p></div>';
+
+  w.innerHTML=html;
+
+  // checklist persistence
+  var key="daykit:"+EV.id+":bring";
+  var saved={};
+  try { saved = JSON.parse(localStorage.getItem(key)||"{}"); } catch(e){}
+  w.querySelectorAll("#bringList input").forEach(function(cb){
+    if(saved[cb.id]){ cb.checked=true; cb.closest("li").classList.add("done"); }
+    cb.addEventListener("change", function(){
+      cb.closest("li").classList.toggle("done", cb.checked);
+      saved[cb.id]=cb.checked;
+      try { localStorage.setItem(key, JSON.stringify(saved)); } catch(e){}
+    });
+  });
+}
+
+/* ---------- map ---------- */
+function mkPin(place){
+  var color = KIND_COLOR[place.kind] || KIND_COLOR.activity;
+  var glyph = ICONS[place.icon] || ICONS.pin;
+  return L.divIcon({
+    className:"", iconSize:[30,30], iconAnchor:[15,29], popupAnchor:[0,-28],
+    html:'<div class="pin" style="background:'+color+'"><span>'+glyph+'</span></div>'
+  });
+}
+function initMap(){
+  if(map) return;
+  if(typeof L === "undefined"){
+    document.getElementById("map").innerHTML =
+      '<div style="padding:24px;text-align:center;color:var(--muted);font-size:14px">'+
+      'Map needs a connection the first time you open it. Reconnect once, then it works offline.</div>';
+    document.getElementById("locStat").textContent = "Map library not loaded yet.";
+    return;
+  }
+  var loc=EV.location;
+  map = L.map("map", { zoomControl:true }).setView([loc.lat, loc.lng], loc.zoom||17);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:19, attribution:"&copy; OpenStreetMap"
+  }).addTo(map);
+  EV.places.forEach(function(p){
+    var m=L.marker([p.lat,p.lng],{icon:mkPin(p)}).addTo(map);
+    var maps="https://www.google.com/maps/search/?api=1&query="+p.lat+","+p.lng;
+    m.bindPopup("<b>"+esc(p.name)+"</b>"+(p.desc?"<br>"+esc(p.desc):"")+
+      '<br><a href="'+maps+'" target="_blank" rel="noopener">Directions</a>');
+    markers[p.id]=m;
+  });
+  renderLegend();
+}
+function renderLegend(){
+  var used={};
+  EV.places.forEach(function(p){ used[p.kind]=true; });
+  var el=document.getElementById("legend"); el.innerHTML="";
+  Object.keys(used).forEach(function(k){
+    var s=document.createElement("span");
+    s.innerHTML='<span class="dot" style="background:'+(KIND_COLOR[k]||"#888")+'"></span>'+(KIND_LABEL[k]||k);
+    el.appendChild(s);
+  });
+  var me=document.createElement("span");
+  me.innerHTML='<span class="dot" style="background:var(--water)"></span>You';
+  el.appendChild(me);
+}
+function focusPlace(id){
+  showTab("map");
+  setTimeout(function(){
+    initMap(); if(!map) return; map.invalidateSize();
+    var p=placeById[id]; if(!p) return;
+    map.setView([p.lat,p.lng], Math.max(map.getZoom(),18), {animate:true});
+    if(markers[id]) markers[id].openPopup();
+  }, 60);
+}
+function startFindMe(){
+  var stat=document.getElementById("locStat");
+  if(!navigator.geolocation){ stat.textContent="This device has no GPS support."; return; }
+  stat.textContent="Locating...";
+  initMap();
+  if(!map) return;
+  if(watchId!==null) navigator.geolocation.clearWatch(watchId);
+  watchId = navigator.geolocation.watchPosition(function(pos){
+    var la=pos.coords.latitude, ln=pos.coords.longitude;
+    if(!meMarker){
+      meMarker = L.marker([la,ln], {icon:L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+        html:'<div class="pin me"><span></span></div>'})}).addTo(map);
+      map.setView([la,ln], 18);
+    } else { meMarker.setLatLng([la,ln]); }
+    var best=null,bd=1e12;
+    EV.places.forEach(function(p){ var d=haversine(la,ln,p.lat,p.lng); if(d<bd){bd=d;best=p;} });
+    stat.innerHTML = "You are here (±"+Math.round(pos.coords.accuracy)+"m)."+
+      (best? " Nearest: <b>"+esc(best.name)+"</b>, "+fmtDist(bd)+" away." : "");
+  }, function(err){
+    stat.textContent = err.code===1 ? "Location permission denied. Enable it in your browser settings." : "Could not get a fix. Try again outside.";
+  }, { enableHighAccuracy:true, maximumAge:5000, timeout:15000 });
+}
+function haversine(la1,ln1,la2,ln2){
+  var R=6371000, toR=Math.PI/180;
+  var dLa=(la2-la1)*toR, dLn=(ln2-ln1)*toR;
+  var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1*toR)*Math.cos(la2*toR)*Math.sin(dLn/2)*Math.sin(dLn/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function fmtDist(m){ return m<950 ? Math.round(m)+" m" : (m/1609.34).toFixed(1)+" mi"; }
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(function(b){
+    b.setAttribute("aria-selected", b.getAttribute("data-tab")===name ? "true":"false");
+  });
+  document.querySelectorAll("section.tab").forEach(function(s){
+    s.classList.toggle("active", s.id==="tab-"+name);
+  });
+  if(name==="map"){ initMap(); setTimeout(function(){ if(map) map.invalidateSize(); },60); }
+  try { history.replaceState(null,"","#"+name); } catch(e){}
+}
+
+/* ---------- live ticking ---------- */
+var lastRederive = 0;
+function tick(){
+  document.querySelectorAll(".countdown[data-until]").forEach(function(el){
+    el.textContent = fmtCountdown(+el.getAttribute("data-until") - Date.now());
+  });
+}
+function startClock(){
+  if(tickTimer) clearInterval(tickTimer);
+  tick();
+  tickTimer = setInterval(function(){
+    tick();
+    if(Date.now() - lastRederive >= 20000){ lastRederive = Date.now(); renderNow(); renderSchedule(); }
+  }, 1000);
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+
+/* ---------- boot ---------- */
+function applyTheme(){
+  if(!EV.theme) return;
+  var r=document.documentElement.style, t=EV.theme;
+  if(t.primary) r.setProperty("--primary", t.primary);
+  if(t.accent)  r.setProperty("--accent", t.accent);
+  if(t.sun)     r.setProperty("--sun", t.sun);
+  if(t.water)   r.setProperty("--water", t.water);
+  if(t.ink)     r.setProperty("--ink", t.ink);
+  if(t.bg)      r.setProperty("--bg", t.bg);
+  if(t.card)    r.setProperty("--card", t.card);
+  if(t.water)   { KIND_COLOR.water = t.water; }
+  if(t.accent)  { KIND_COLOR.activity = t.accent; }
+  var tc=document.querySelector('meta[name="theme-color"]');
+  if(tc && t.primary) tc.setAttribute("content", t.primary);
+}
+function boot(){
+  fetch("event.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).then(function(data){
+    EV = data;
+    EV.places = EV.places || [];
+    EV.schedule = EV.schedule || [];
+    placeById = {};
+    EV.places.forEach(function(p){ placeById[p.id]=p; });
+    applyTheme();
+    renderHeader();
+    renderNow();
+    renderSchedule();
+    renderInfo();
+    document.getElementById("foot").textContent = "Daykit · map data © OpenStreetMap · offline-ready";
+    startClock();
+    var h=(location.hash||"").replace("#","");
+    if(h==="map"||h==="info") showTab(h);
+  }).catch(function(e){
+    document.getElementById("hdrTitle").textContent="Could not load event.json";
+    document.getElementById("schedList").innerHTML='<li class="loading">Add an <code>event.json</code> next to index.html.</li>';
+    console.error(e);
+  });
+}
+
+/* wire up */
+document.querySelectorAll("nav.tabs button").forEach(function(b){
+  b.addEventListener("click", function(){ showTab(b.getAttribute("data-tab")); });
+});
+document.getElementById("findMe").addEventListener("click", startFindMe);
+document.getElementById("recenter").addEventListener("click", function(){
+  initMap(); if(map) map.setView([EV.location.lat, EV.location.lng], EV.location.zoom||17);
+});
+
+/* PWA install */
+var deferredPrompt=null;
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault(); deferredPrompt=e;
+  if(!localStorage.getItem("daykit:install-dismissed")) document.getElementById("installBar").classList.add("show");
+});
+document.getElementById("installBtn").addEventListener("click", function(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.finally(function(){
+    deferredPrompt=null; document.getElementById("installBar").classList.remove("show");
+  });
+});
+document.getElementById("installX").addEventListener("click", function(){
+  document.getElementById("installBar").classList.remove("show");
+  try { localStorage.setItem("daykit:install-dismissed","1"); } catch(e){}
+});
+
+/* service worker */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+}
+
+boot();
 </script>
-<script src="assets/park.js"></script>
 </body>
 </html>

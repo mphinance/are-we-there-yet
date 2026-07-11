@@ -1,0 +1,68 @@
+{
+  "id": "summer-blast-west-bear",
+  "title": "Summer Blast Adventure WEST",
+  "subtitle": "PAC Cub Scout Day Camp",
+  "date": "2026-07-11",
+  "timezone": "America/Chicago",
+  "team": {
+    "name": "Popsicle Pirates",
+    "rank": "Bear",
+    "note": "Tiger and Wolf ride with the Beach Ballers. You are a Bear, so you follow the Popsicle Pirates column."
+  },
+  "theme": {
+    "primary": "#f28c1a",
+    "accent": "#e4562b",
+    "sun": "#f2b21a",
+    "water": "#1d9bd1",
+    "ink": "#2a1a00",
+    "bg": "#fff7ea",
+    "card": "#ffffff"
+  },
+  "location": {
+    "name": "St. John's Northwestern Academy",
+    "address": "1101 N Genesee St, Delafield, WI 53018",
+    "lat": 43.06565,
+    "lng": -88.40245,
+    "zoom": 17
+  },
+  "bring": [
+    "Swimsuit and towel (Super Splash + Swimming)",
+    "Sunscreen, hat, refillable water bottle",
+    "Closed-toe shoes for Archery and BB Guns",
+    "Name tag (turn it in at the end for your patch and medal)"
+  ],
+  "notes": [
+    "At the end of the day, turn in your name tag to receive your patch and medal.",
+    "Session times are tight. When a block ends, walk straight to the next station.",
+    "Lunch is combined with Touch a Truck for Tiger, Wolf, and Bear."
+  ],
+  "places": [
+    { "id": "field",         "name": "Main Field / Flags",  "kind": "hub",      "icon": "flag",    "lat": 43.06560, "lng": -88.40248, "desc": "Registration, flag ceremony, and closing." },
+    { "id": "pathfinders",   "name": "Pathfinders",         "kind": "activity", "icon": "compass", "lat": 43.06618, "lng": -88.40268, "desc": "Scout skills and orienteering." },
+    { "id": "geocaching",    "name": "Geocaching",          "kind": "activity", "icon": "compass", "lat": 43.06598, "lng": -88.40255, "desc": "GPS treasure hunt station." },
+    { "id": "supersplash",   "name": "Super Splash",        "kind": "water",    "icon": "water",   "lat": 43.06622, "lng": -88.40190, "desc": "Water games. Bring a swimsuit and towel." },
+    { "id": "touchatruck",   "name": "Touch a Truck",       "kind": "activity", "icon": "truck",   "lat": 43.06628, "lng": -88.40120, "desc": "Climb on the big rigs during lunch." },
+    { "id": "swimming",      "name": "Swimming",            "kind": "water",    "icon": "water",   "lat": 43.06620, "lng": -88.40075, "desc": "British Swim School of St. John's pool." },
+    { "id": "archery",       "name": "Archery",             "kind": "activity", "icon": "target",  "lat": 43.06478, "lng": -88.40340, "desc": "Teach then shoot. Closed-toe shoes required." },
+    { "id": "bbguns",        "name": "BB Guns",             "kind": "activity", "icon": "target",  "lat": 43.06462, "lng": -88.40318, "desc": "Teach then shoot. Closed-toe shoes required." },
+    { "id": "bottlerockets", "name": "Bottle Rockets",      "kind": "activity", "icon": "rocket",  "lat": 43.06520, "lng": -88.40385, "desc": "Build and launch." },
+    { "id": "firstaid",      "name": "First Aid",           "kind": "service",  "icon": "aid",     "lat": 43.06562, "lng": -88.40282, "desc": "Medical station." },
+    { "id": "restrooms",     "name": "Restrooms",           "kind": "service",  "icon": "rest",    "lat": 43.06535, "lng": -88.40225, "desc": "Toilets." },
+    { "id": "lunch",         "name": "Lunch",               "kind": "service",  "icon": "lunch",   "lat": 43.06532, "lng": -88.40210, "desc": "Bag lunch pickup, combined with Touch a Truck." },
+    { "id": "parking",       "name": "Parking",             "kind": "service",  "icon": "parking", "lat": 43.06452, "lng": -88.40382, "desc": "Guest parking." }
+  ],
+  "schedule": [
+    { "start": "08:00", "end": "08:30", "title": "Registration",                 "place": "field", "all": true },
+    { "start": "08:30", "end": "08:40", "title": "Flag Ceremony & Announcements", "place": "field", "all": true },
+    { "start": "08:40", "end": "08:45", "title": "Transition to Session 1",       "place": null,    "all": true, "transition": true },
+    { "session": 1, "start": "08:45", "end": "09:35", "title": "Pathfinders",                    "place": "pathfinders" },
+    { "session": 2, "start": "09:40", "end": "10:30", "title": "Archery Teach",                  "place": "archery" },
+    { "session": 3, "start": "10:35", "end": "11:25", "title": "Archery Shoot",                  "place": "archery" },
+    { "session": 4, "start": "11:25", "end": "12:10", "title": "Lunch + Touch a Truck",          "place": "lunch", "also": "touchatruck" },
+    { "session": 5, "start": "12:10", "end": "13:00", "title": "BB Gun Teach",                   "place": "bbguns" },
+    { "session": 6, "start": "13:05", "end": "13:55", "title": "BB Gun Shoot",                   "place": "bbguns" },
+    { "session": 7, "start": "14:05", "end": "14:55", "title": "Bottle Rockets",                 "place": "bottlerockets" },
+    { "session": 8, "start": "15:05", "end": "15:55", "title": "Super Splash",                   "place": "supersplash" },
+    { "start": "16:00", "end": "16:20", "title": "Closing Flags & Giant Water Balloon", "place": "field", "all": true }
+  ]
+}
