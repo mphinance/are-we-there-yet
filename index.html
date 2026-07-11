@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Daykit</title>
-<meta name="description" content="A drop-in day-of-event mini app: schedule, live map, and offline pocket guide." />
+<meta name="description" content="A drop-in day or trip pocket app: schedule, live map, and offline itinerary." />
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json" />
@@ -89,6 +89,23 @@
   .muted { color: var(--muted); }
   .small { font-size: 13px; }
 
+  /* Day switcher (multi-day trips) */
+  .daystrip {
+    display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px 10px; padding: 2px 16px 10px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .daystrip::-webkit-scrollbar { display: none; }
+  .daychip {
+    flex: 0 0 auto; border: 1px solid var(--line); background: var(--card); border-radius: 12px;
+    padding: 7px 13px; cursor: pointer; text-align: center; font-family: inherit; line-height: 1.15; color: var(--ink);
+  }
+  .daychip .d1 { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .daychip .d2 { font-size: 14px; font-weight: 800; }
+  .daychip[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .daychip[aria-selected="true"] .d1 { color: rgba(255,255,255,.85); }
+  .daychip.today .d2::after { content: " •"; color: var(--good); font-weight: 900; }
+  .daychip[aria-selected="true"].today .d2::after { color: #fff; }
+
   /* Now banner */
   .now {
     background: linear-gradient(135deg, #fff, #fff6e6);
@@ -123,7 +140,7 @@
   .nudge .btn { background: #fff; color: var(--accent); padding: 8px 12px; text-decoration: none; }
   @keyframes pulse { 0%,100%{ box-shadow: 0 3px 12px rgba(228,86,43,.30);} 50%{ box-shadow: 0 3px 20px rgba(228,86,43,.55);} }
 
-  /* All-camp blocks stand out */
+  /* All-group blocks stand out */
   ol.sched li.is-all { background: #f4efff; box-shadow: inset 3px 0 0 #6d4bd6; border-radius: 8px; }
   ol.sched li.is-all.is-now { background: #fff6e6; }
 
@@ -183,6 +200,9 @@
   .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; margin: 0; }
   .kv dt { color: var(--muted); }
   .kv dd { margin: 0; font-weight: 600; }
+  .lodge { border-bottom: 1px solid var(--line); padding: 9px 0; font-size: 14px; }
+  .lodge:last-child { border-bottom: 0; }
+  .lodge b { display: block; }
 
   .installbar {
     position: fixed; left: 12px; right: 12px; bottom: calc(12px + var(--safe-bottom)); z-index: 700;
@@ -204,7 +224,7 @@
 
 <header class="app">
   <div class="eyebrow" id="hdrEyebrow">Daykit</div>
-  <h1 id="hdrTitle">Loading your day...</h1>
+  <h1 id="hdrTitle">Loading...</h1>
   <div class="meta" id="hdrMeta"></div>
 </header>
 
@@ -216,19 +236,22 @@
 
 <main>
   <section class="tab active" id="tab-schedule">
+    <div class="daystrip" id="dayStrip" hidden></div>
     <div id="wxStrip"></div>
     <div id="nudge"></div>
     <div id="nowWrap"></div>
     <div class="card">
-      <h2>Full schedule</h2>
+      <h2 id="schedHead">Full schedule</h2>
       <ol class="sched" id="schedList"><li class="loading">Loading schedule...</li></ol>
     </div>
+    <div id="dayNotes"></div>
   </section>
 
   <section class="tab" id="tab-map">
     <div class="maprow">
       <button class="btn primary" id="findMe">📍 Find me</button>
       <button class="btn ghost" id="parkBtn">🚗 Mark my car</button>
+      <button class="btn ghost" id="allPinsBtn" hidden>Show all stops</button>
       <button class="btn ghost" id="recenter">Recenter</button>
     </div>
     <div id="map"></div>
@@ -242,7 +265,7 @@
 </main>
 
 <div class="installbar" id="installBar">
-  <p><b>Install this day</b> to your home screen. Runs offline all day.</p>
+  <p><b>Install this</b> to your home screen. Works offline.</p>
   <button class="btn primary" id="installBtn">Install</button>
   <button class="x" id="installX" aria-label="Dismiss">&times;</button>
 </div>
@@ -250,43 +273,60 @@
 <footer id="foot"></footer>
 
 <script>
-/* ---------- Daykit: a generic day-of-event PWA driven entirely by event.json ---------- */
+/* ---------- Daykit: a drop-in day OR multi-day trip PWA driven by event.json ---------- */
 var EV = null;                 // the loaded event
 var placeById = {};            // id -> place
-var map = null, meMarker = null, markers = {}, watchId = null;
+var isMulti = false;           // more than one day
+var curDay = 0;                // selected day index
+var showAllPins = false;       // map: show every stop vs just this day
+var map = null, meMarker = null, markers = {}, watchId = null, carMarker = null;
 var tickTimer = null;
 var myPos = null;              // last known GPS fix, once "Find me" is on
 
 function walkUrl(p){
   return "https://www.google.com/maps/dir/?api=1&destination="+p.lat+","+p.lng+"&travelmode=walking";
 }
+function searchUrl(o){
+  return "https://www.google.com/maps/search/?api=1&query="+o.lat+","+o.lng;
+}
 
 var ICONS = {
-  flag:"🚩", compass:"🧭", water:"💦", truck:"🚚",
-  target:"🎯", rocket:"🚀", aid:"⛑️", rest:"🚻",
-  lunch:"🥪", parking:"🅿️", pin:"📍"
+  flag:"🚩", compass:"🧭", water:"💦", truck:"🚚", target:"🎯", rocket:"🚀",
+  aid:"⛑️", rest:"🚻", lunch:"🥪", parking:"🅿️",
+  lodging:"🏨", food:"🍽️", coffee:"☕", sight:"📸", transport:"🚗", flight:"✈️",
+  train:"🚆", hike:"🥾", beach:"🏖️", shop:"🛍️", star:"⭐", pin:"📍"
 };
-var KIND_COLOR = { hub:"#6d4bd6", activity:"#e4562b", water:"#1d9bd1", service:"#2e9e5b" };
-var KIND_LABEL = { hub:"Hub", activity:"Activity", water:"Water", service:"Services" };
+var KIND_COLOR = {
+  hub:"#6d4bd6", activity:"#e4562b", water:"#1d9bd1", service:"#2e9e5b",
+  lodging:"#b8558f", food:"#e8892b", sight:"#3f7fd6", travel:"#5a5550"
+};
+var KIND_LABEL = {
+  hub:"Hub", activity:"Activity", water:"Water", service:"Services",
+  lodging:"Lodging", food:"Food", sight:"Sights", travel:"Travel"
+};
 
-/* ---- time helpers. All schedule times are local wall-clock on event.date. ---- */
+/* ---- time helpers. Times are local wall-clock on each day's date. ---- */
 function hm(t){ var p=t.split(":"); return {h:+p[0], m:+p[1]}; }
-function eventDateAt(t){
-  var d = EV.date.split("-");            // yyyy-mm-dd
-  var x = hm(t);
-  return new Date(+d[0], +d[1]-1, +d[2], x.h, x.m, 0, 0);  // local time
+function dateAt(dateStr, t){
+  var d = dateStr.split("-"), x = hm(t);
+  return new Date(+d[0], +d[1]-1, +d[2], x.h, x.m, 0, 0);
 }
 function fmt12(t){
   var x=hm(t), ap = x.h>=12?"pm":"am", h=x.h%12; if(h===0)h=12;
   return h + (x.m?(":"+String(x.m).padStart(2,"0")):"") + ap;
 }
 function fmtRange(a,b){ return fmt12(a)+" – "+fmt12(b); }
-function isEventToday(){
-  var n=new Date(), d=EV.date.split("-");
+function fmtDay(dateStr, opts){ return dateAt(dateStr,"12:00").toLocaleDateString(undefined, opts); }
+function isToday(dateStr){
+  var n=new Date(), d=dateStr.split("-");
   return n.getFullYear()==+d[0] && (n.getMonth()+1)==+d[1] && n.getDate()==+d[2];
 }
-function statusOf(item, now){
-  var s=eventDateAt(item.start).getTime(), e=eventDateAt(item.end).getTime(), t=now.getTime();
+function todayIndex(){
+  for(var i=0;i<EV.days.length;i++){ if(isToday(EV.days[i].date)) return i; }
+  return -1;
+}
+function statusOf(item, dateStr, now){
+  var s=dateAt(dateStr,item.start).getTime(), e=dateAt(dateStr,item.end).getTime(), t=now.getTime();
   if(t>=e) return "past";
   if(t>=s) return "now";
   return "future";
@@ -298,62 +338,118 @@ function fmtCountdown(ms){
   if(m>0) return m+"m "+String(ss).padStart(2,"0")+"s";
   return ss+"s";
 }
-
-/* ---------- rendering ---------- */
-function renderHeader(){
-  document.title = EV.title + (EV.team? " · "+EV.team.rank : "");
-  document.getElementById("hdrEyebrow").textContent = EV.subtitle || "Daykit";
-  document.getElementById("hdrTitle").textContent = EV.title;
-  var meta = document.getElementById("hdrMeta");
-  var dateStr = eventDateAt("12:00").toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"});
-  meta.innerHTML = "";
-  var d = document.createElement("span"); d.className="badge"; d.textContent="📅 "+dateStr; meta.appendChild(d);
-  if(EV.team){ var t=document.createElement("span"); t.className="badge"; t.textContent="🐻 "+EV.team.rank+" · "+EV.team.name; meta.appendChild(t); }
-  if(EV.location){ var l=document.createElement("span"); l.className="badge"; l.textContent="📍 "+EV.location.name; meta.appendChild(l); }
+function tripStatus(){
+  var now=Date.now();
+  var firstStart = dateAt(EV.days[0].date,"00:00").getTime();
+  var lastEnd = dateAt(EV.days[EV.days.length-1].date,"23:59").getTime();
+  if(now < firstStart){ return { phase:"pre", days: Math.ceil((firstStart-now)/86400000) }; }
+  if(now > lastEnd){ return { phase:"post" }; }
+  var ti=todayIndex();
+  return { phase:"during", dayNum: (ti>=0?ti+1:null), total: EV.days.length };
+}
+function currentCenter(){
+  var day=EV.days[curDay];
+  if(day && day.location) return day.location;
+  if(EV.location) return EV.location;
+  var list=placesForDay(curDay);
+  if(list.length) return { lat:list[0].lat, lng:list[0].lng, zoom:14 };
+  return { lat:0, lng:0, zoom:2 };
 }
 
+/* ---------- header ---------- */
+function renderHeader(){
+  document.title = EV.title + (EV.team? " · "+EV.team.rank : "");
+  document.getElementById("hdrEyebrow").textContent = EV.subtitle || (isMulti ? "Trip itinerary" : "Daykit");
+  document.getElementById("hdrTitle").textContent = EV.title;
+  var meta = document.getElementById("hdrMeta");
+  meta.innerHTML = "";
+  function add(txt){ var s=document.createElement("span"); s.className="badge"; s.textContent=txt; meta.appendChild(s); }
+
+  if(isMulti){
+    var first=EV.days[0].date, last=EV.days[EV.days.length-1].date;
+    add("📅 "+fmtDay(first,{month:"short",day:"numeric"})+" – "+fmtDay(last,{month:"short",day:"numeric"}));
+    var ts=tripStatus();
+    if(ts.phase==="pre") add("⏳ Starts in "+ts.days+" day"+(ts.days===1?"":"s"));
+    else if(ts.phase==="post") add("✓ Trip complete");
+    else add(ts.dayNum ? "Day "+ts.dayNum+" of "+ts.total : "In progress");
+  } else {
+    add("📅 "+fmtDay(EV.days[0].date,{weekday:"long",month:"long",day:"numeric"}));
+  }
+  if(EV.team) add((EV.team.emoji||"👥")+" "+EV.team.rank+(EV.team.name?" · "+EV.team.name:""));
+  if(EV.location) add("📍 "+EV.location.name);
+}
+
+/* ---------- day switcher ---------- */
+function renderDayStrip(){
+  var strip=document.getElementById("dayStrip");
+  if(!isMulti){ strip.hidden=true; strip.innerHTML=""; return; }
+  strip.hidden=false; strip.innerHTML="";
+  EV.days.forEach(function(day, i){
+    var b=document.createElement("button");
+    b.className="daychip"+(isToday(day.date)?" today":"");
+    b.setAttribute("aria-selected", i===curDay ? "true":"false");
+    b.innerHTML='<div class="d1">'+fmtDay(day.date,{weekday:"short"})+'</div>'+
+                '<div class="d2">'+fmtDay(day.date,{month:"numeric",day:"numeric"})+'</div>';
+    b.addEventListener("click", function(){ selectDay(i); });
+    strip.appendChild(b);
+    if(i===curDay) setTimeout(function(){ try{ b.scrollIntoView({inline:"center",block:"nearest"}); }catch(e){} }, 0);
+  });
+}
+function selectDay(i){
+  curDay=i;
+  renderDayStrip();
+  renderNow();
+  renderSchedule();
+  renderWeather();
+  if(map){ refreshMarkers(); fitDay(); }
+}
+
+/* ---------- now card ---------- */
 function placeSuffix(item){
   var p = item.place && placeById[item.place];
   return p ? " · "+p.name : "";
 }
-
 function renderNow(){
   var wrap = document.getElementById("nowWrap");
-  if(!isEventToday()){
-    wrap.innerHTML = '<div class="card now"><div class="label">Heads up</div>'+
-      '<div class="title">Not today</div>'+
-      '<div class="when">This day runs on '+eventDateAt("12:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})+
-      '. The live "now" tracker turns on that morning.</div></div>';
+  var day = EV.days[curDay];
+  var now = new Date();
+
+  if(!isToday(day.date)){
+    var when = fmtDay(day.date,{weekday:"long",month:"long",day:"numeric"});
+    var first = day.schedule[0];
+    var future = dateAt(day.date,"23:59").getTime() > now.getTime();
+    var body = first ? ((future?"Starts ":"Started ")+fmt12(first.start)+" · "+esc(first.title)) : "";
+    wrap.innerHTML='<div class="card now"><div class="label">'+(future?"Coming up":"Past day")+'</div>'+
+      '<div class="title">'+esc(day.title || when)+'</div>'+
+      '<div class="when">'+when+(body?". "+body:"")+'</div></div>';
     return;
   }
-  var now = new Date();
+
   var cur=null, nxt=null;
-  for(var i=0;i<EV.schedule.length;i++){
-    var st=statusOf(EV.schedule[i], now);
-    if(st==="now" && !cur){ cur=EV.schedule[i]; }
-    if(st==="future" && !nxt){ nxt=EV.schedule[i]; }
+  for(var i=0;i<day.schedule.length;i++){
+    var st=statusOf(day.schedule[i], day.date, now);
+    if(st==="now" && !cur){ cur=day.schedule[i]; }
+    if(st==="future" && !nxt){ nxt=day.schedule[i]; }
   }
   var html='<div class="card now">';
   if(cur){
-    html+='<div class="label">Right now</div>';
-    html+='<div class="title">'+esc(cur.title)+'</div>';
+    html+='<div class="label">Right now</div><div class="title">'+esc(cur.title)+'</div>';
     html+='<div class="when">'+fmtRange(cur.start,cur.end)+placeSuffix(cur)+'</div>';
-    html+='<div class="next">Wraps up in <span class="countdown" data-until="'+eventDateAt(cur.end).getTime()+'"></span>';
+    html+='<div class="next">Wraps up in <span class="countdown" data-until="'+dateAt(day.date,cur.end).getTime()+'"></span>';
     if(nxt) html+='. Next: <b>'+esc(nxt.title)+'</b> at '+fmt12(nxt.start);
     html+='.</div>';
   } else if(nxt){
-    html+='<div class="label">Up next</div>';
-    html+='<div class="title">'+esc(nxt.title)+'</div>';
+    html+='<div class="label">Up next</div><div class="title">'+esc(nxt.title)+'</div>';
     html+='<div class="when">'+fmtRange(nxt.start,nxt.end)+placeSuffix(nxt)+'</div>';
-    html+='<div class="next">Starts in <span class="countdown" data-until="'+eventDateAt(nxt.start).getTime()+'"></span>.</div>';
+    html+='<div class="next">Starts in <span class="countdown" data-until="'+dateAt(day.date,nxt.start).getTime()+'"></span>.</div>';
   } else {
-    var first=EV.schedule[0];
-    if(now.getTime()<eventDateAt(first.start).getTime()){
-      html+='<div class="label">Good morning</div><div class="title">'+esc(first.title)+' at '+fmt12(first.start)+'</div>'+
-            '<div class="when">Starts in <span class="countdown" data-until="'+eventDateAt(first.start).getTime()+'"></span>.</div>';
+    var first2=day.schedule[0];
+    if(first2 && now.getTime()<dateAt(day.date,first2.start).getTime()){
+      html+='<div class="label">Good morning</div><div class="title">'+esc(first2.title)+' at '+fmt12(first2.start)+'</div>'+
+            '<div class="when">Starts in <span class="countdown" data-until="'+dateAt(day.date,first2.start).getTime()+'"></span>.</div>';
     } else {
-      html+='<div class="label">That’s a wrap</div><div class="title">Day complete 🎉</div>'+
-            '<div class="when">Turn in your name tag for your patch and medal.</div>';
+      html+='<div class="label">That’s a wrap</div><div class="title">'+(isMulti?"Day complete 🎉":"Day complete 🎉")+'</div>'+
+            '<div class="when">'+esc(day.closingNote || EV.closingNote || "Nicely done. Enjoy the rest of your day.")+'</div>';
     }
   }
 
@@ -376,20 +472,20 @@ function renderNow(){
   tick();
 }
 
-/* Up-in-5: when the current block is nearly over and there is somewhere to go next,
-   show a loud banner so you start walking on time. In-app only, no notifications. */
+/* Up-in-5 nudge: always tied to the REAL current day, no matter which day tab is open. */
 var NUDGE_MIN = 5;
 function renderNudge(){
   var el=document.getElementById("nudge");
-  if(!isEventToday()){ el.innerHTML=""; return; }
-  var now=new Date(), cur=null, nxt=null;
-  for(var i=0;i<EV.schedule.length;i++){
-    var st=statusOf(EV.schedule[i], now);
-    if(st==="now" && !cur) cur=EV.schedule[i];
-    if(st==="future" && !nxt) nxt=EV.schedule[i];
+  var ti=todayIndex();
+  if(ti<0){ el.innerHTML=""; return; }
+  var day=EV.days[ti], now=new Date(), cur=null, nxt=null;
+  for(var i=0;i<day.schedule.length;i++){
+    var st=statusOf(day.schedule[i], day.date, now);
+    if(st==="now" && !cur) cur=day.schedule[i];
+    if(st==="future" && !nxt) nxt=day.schedule[i];
   }
   if(!cur || !nxt){ el.innerHTML=""; return; }
-  var minsLeft = (eventDateAt(cur.end).getTime()-now.getTime())/60000;
+  var minsLeft = (dateAt(day.date,cur.end).getTime()-now.getTime())/60000;
   var tp = nxt.place && placeById[nxt.place];
   if(minsLeft>0 && minsLeft<=NUDGE_MIN && tp){
     var m = Math.max(1, Math.ceil(minsLeft));
@@ -397,12 +493,10 @@ function renderNudge(){
     el.innerHTML='<div class="nudge"><span class="msg">⏰ '+m+' min left in '+esc(cur.title)+
       '. Head to '+esc(tp.name)+dist+'.</span>'+
       '<a class="btn" href="'+walkUrl(tp)+'" target="_blank" rel="noopener">🚶 Walk</a></div>';
-  } else {
-    el.innerHTML="";
-  }
+  } else { el.innerHTML=""; }
 }
 
-/* Weather via Open-Meteo (no API key). Best-effort: hide if offline or it fails. */
+/* ---------- weather (Open-Meteo, no key). Day-aware; hides if offline/out of range. ---------- */
 var WX_CODE = {
   0:["Clear","☀️"], 1:["Mostly clear","🌤️"], 2:["Partly cloudy","⛅"], 3:["Overcast","☁️"],
   45:["Fog","🌫️"], 48:["Fog","🌫️"], 51:["Drizzle","🌦️"], 53:["Drizzle","🌦️"], 55:["Drizzle","🌦️"],
@@ -412,39 +506,49 @@ var WX_CODE = {
 };
 function renderWeather(){
   var el=document.getElementById("wxStrip");
-  var loc=EV.location;
+  var day=EV.days[curDay], loc=day.location||EV.location;
+  if(!loc){ el.innerHTML=""; return; }
+  var today=isToday(day.date);
   var url="https://api.open-meteo.com/v1/forecast?latitude="+loc.lat+"&longitude="+loc.lng+
-    "&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max"+
-    "&temperature_unit=fahrenheit&timezone=auto&forecast_days=1";
+    "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code"+
+    "&temperature_unit=fahrenheit&timezone=auto&start_date="+day.date+"&end_date="+day.date+
+    (today?"&current=temperature_2m,weather_code":"");
   fetch(url).then(function(r){ return r.json(); }).then(function(d){
-    if(!d || !d.current){ el.innerHTML=""; return; }
-    var code=d.current.weather_code, wx=WX_CODE[code]||["",""];
-    var t=Math.round(d.current.temperature_2m);
+    if(!d || !d.daily || !d.daily.time || !d.daily.time.length){ el.innerHTML=""; return; }
+    var code = today && d.current ? d.current.weather_code : d.daily.weather_code[0];
+    var wx = WX_CODE[code]||["",""];
     var hi=Math.round(d.daily.temperature_2m_max[0]), lo=Math.round(d.daily.temperature_2m_min[0]);
     var pop=d.daily.precipitation_probability_max[0];
+    var nowT = today && d.current ? '<span class="now-t">'+Math.round(d.current.temperature_2m)+'°F</span> ' : "";
     el.innerHTML='<div class="wx"><span class="big">'+wx[1]+'</span>'+
-      '<span><span class="now-t">'+t+'°F</span> '+esc(wx[0])+
+      '<span>'+nowT+esc(wx[0])+
       '<br><span class="rest">High '+hi+'° · Low '+lo+'° · '+(pop!=null?pop+'% rain':'')+'</span></span></div>';
   }).catch(function(){ el.innerHTML=""; });
 }
 
+/* ---------- schedule ---------- */
 function renderSchedule(){
-  var now = new Date(), today = isEventToday();
+  var day=EV.days[curDay], now=new Date(), today=isToday(day.date);
+  document.getElementById("schedHead").textContent = isMulti
+    ? (day.title ? day.title : fmtDay(day.date,{weekday:"long",month:"long",day:"numeric"}))
+    : "Full schedule";
   var ol = document.getElementById("schedList");
   ol.innerHTML="";
-  EV.schedule.forEach(function(item){
+  if(!day.schedule.length){ ol.innerHTML='<li class="loading">No plans set for this day.</li>'; }
+  day.schedule.forEach(function(item){
     var li=document.createElement("li");
-    var st = today ? statusOf(item, now) : "";
-    var cls = [];
+    var st = today ? statusOf(item, day.date, now) : "";
+    var cls=[];
     if(st==="now") cls.push("is-now");
     else if(st==="past") cls.push("is-past");
     if(item.all) cls.push("is-all");
-    li.className = cls.join(" ");
+    li.className=cls.join(" ");
     var sess = item.session? '<span class="sesspill">'+item.session+'</span>' : (item.all?'<span class="sesspill" style="background:#6d4bd6">ALL</span>':'');
-    var sub = "";
+    var sub="";
     var p = item.place && placeById[item.place];
-    if(p) sub = p.name;
+    if(p) sub=p.name;
     if(item.also && placeById[item.also]) sub += (sub?" + ":"")+placeById[item.also].name;
+    if(item.note) sub += (sub?" · ":"")+item.note;
     li.innerHTML =
       '<span class="time">'+fmt12(item.start)+'<br>'+fmt12(item.end)+'</span>'+
       '<span class="what">'+sess+esc(item.title)+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</span>'+
@@ -454,29 +558,55 @@ function renderSchedule(){
   ol.querySelectorAll(".go").forEach(function(b){
     b.addEventListener("click", function(){ focusPlace(b.getAttribute("data-place")); });
   });
+  // per-day notes
+  var dn=document.getElementById("dayNotes");
+  if(day.notes && day.notes.length){
+    dn.innerHTML='<div class="card"><h2>Notes for this day</h2><ul class="plain">'+
+      day.notes.map(function(n){ return '<li>'+esc(n)+'</li>'; }).join("")+'</ul></div>';
+  } else { dn.innerHTML=""; }
 }
 
+/* ---------- info ---------- */
 function renderInfo(){
   var w=document.getElementById("infoWrap");
   w.className="";
-  var loc=EV.location;
-  var mapsUrl = "https://www.google.com/maps/search/?api=1&query="+loc.lat+","+loc.lng;
+  var center=currentCenter();
   var html="";
 
   html+='<div class="card"><h2>'+esc(EV.title)+'</h2>';
   if(EV.subtitle) html+='<p class="muted small" style="margin:0 0 8px">'+esc(EV.subtitle)+'</p>';
   html+='<dl class="kv">';
-  html+='<dt>Date</dt><dd>'+eventDateAt("12:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+'</dd>';
-  if(EV.team) html+='<dt>Team</dt><dd>'+esc(EV.team.rank)+' · '+esc(EV.team.name)+'</dd>';
-  html+='<dt>Where</dt><dd>'+esc(loc.name)+'</dd>';
-  if(loc.address) html+='<dt>Address</dt><dd>'+esc(loc.address)+'</dd>';
+  if(isMulti){
+    html+='<dt>Dates</dt><dd>'+fmtDay(EV.days[0].date,{month:"long",day:"numeric"})+' – '+
+      fmtDay(EV.days[EV.days.length-1].date,{month:"long",day:"numeric",year:"numeric"})+
+      ' ('+EV.days.length+' days)</dd>';
+  } else {
+    html+='<dt>Date</dt><dd>'+fmtDay(EV.days[0].date,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+'</dd>';
+  }
+  if(EV.team) html+='<dt>Team</dt><dd>'+esc(EV.team.rank)+(EV.team.name?' · '+esc(EV.team.name):'')+'</dd>';
+  if(EV.location){
+    html+='<dt>Where</dt><dd>'+esc(EV.location.name)+'</dd>';
+    if(EV.location.address) html+='<dt>Address</dt><dd>'+esc(EV.location.address)+'</dd>';
+  }
   html+='</dl>';
-  html+='<div style="margin-top:10px"><a class="btn primary" style="text-decoration:none" href="'+mapsUrl+'" target="_blank" rel="noopener">Open in Maps</a></div>';
+  html+='<div style="margin-top:10px"><a class="btn primary" style="text-decoration:none" href="'+searchUrl(center)+'" target="_blank" rel="noopener">Open in Maps</a></div>';
   if(EV.team && EV.team.note) html+='<p class="small muted" style="margin:10px 0 0">'+esc(EV.team.note)+'</p>';
   html+='</div>';
 
+  // Lodging (great for trips)
+  var lodging=EV.places.filter(function(p){ return p.kind==="lodging"; });
+  if(lodging.length){
+    html+='<div class="card"><h2>Where you’re staying</h2>';
+    lodging.forEach(function(p){
+      html+='<div class="lodge"><b>'+esc(p.name)+'</b>'+
+        (p.address?'<span class="muted small">'+esc(p.address)+'</span>':'')+
+        ' <a href="'+searchUrl(p)+'" target="_blank" rel="noopener">Directions</a></div>';
+    });
+    html+='</div>';
+  }
+
   if(EV.bring && EV.bring.length){
-    html+='<div class="card"><h2>Bring / checklist</h2><ul class="check" id="bringList">';
+    html+='<div class="card"><h2>'+(isMulti?"Packing":"Bring")+' / checklist</h2><ul class="check" id="bringList">';
     EV.bring.forEach(function(b,i){
       html+='<li><input type="checkbox" id="bring'+i+'"><label for="bring'+i+'">'+esc(b)+'</label></li>';
     });
@@ -490,14 +620,12 @@ function renderInfo(){
   }
 
   html+='<div class="card"><h2>About this app</h2>'+
-    '<p class="small muted" style="margin:0">This is a <b>Daykit</b>: a one-day pocket app built from photos of a paper schedule and map. '+
-    'Install it to your home screen and it runs offline all day. To make one for a different day, swap in a new <code>event.json</code>.</p></div>';
+    '<p class="small muted" style="margin:0">This is a <b>Daykit</b>: a pocket app for one day or a whole trip, built from photos of a paper schedule, map, or itinerary. '+
+    'Install it to your home screen and it runs offline. To make one for another day or trip, swap in a new <code>event.json</code>.</p></div>';
 
   w.innerHTML=html;
 
-  // checklist persistence
-  var key="daykit:"+EV.id+":bring";
-  var saved={};
+  var key="daykit:"+EV.id+":bring", saved={};
   try { saved = JSON.parse(localStorage.getItem(key)||"{}"); } catch(e){}
   w.querySelectorAll("#bringList input").forEach(function(cb){
     if(saved[cb.id]){ cb.checked=true; cb.closest("li").classList.add("done"); }
@@ -518,6 +646,38 @@ function mkPin(place){
     html:'<div class="pin" style="background:'+color+'"><span>'+glyph+'</span></div>'
   });
 }
+function placesForDay(idx){
+  if(!isMulti || showAllPins) return EV.places;
+  var day=EV.days[idx], refs={};
+  day.schedule.forEach(function(it){ if(it.place)refs[it.place]=1; if(it.also)refs[it.also]=1; });
+  return EV.places.filter(function(p){
+    if(refs[p.id]) return true;
+    if(p.days && p.days.length) return p.days.indexOf(day.date)!==-1;
+    if(p.kind==="service"||p.kind==="lodging") return true;  // ambient, show every day
+    return false;
+  });
+}
+function refreshMarkers(){
+  if(!map) return;
+  Object.keys(markers).forEach(function(id){ map.removeLayer(markers[id]); });
+  markers={};
+  placesForDay(curDay).forEach(function(p){
+    var m=L.marker([p.lat,p.lng],{icon:mkPin(p)}).addTo(map);
+    m.bindPopup("<b>"+esc(p.name)+"</b>"+(p.desc?"<br>"+esc(p.desc):"")+
+      '<br><a href="'+walkUrl(p)+'" target="_blank" rel="noopener">🚶 Walk here</a>');
+    markers[p.id]=m;
+  });
+  renderLegend(placesForDay(curDay));
+}
+function fitDay(){
+  if(!map) return;
+  var list=placesForDay(curDay);
+  if(list.length>1){
+    map.fitBounds(L.latLngBounds(list.map(function(p){ return [p.lat,p.lng]; })).pad(0.25));
+  } else {
+    var c=currentCenter(); map.setView([c.lat,c.lng], c.zoom||16);
+  }
+}
 function initMap(){
   if(map) return;
   if(typeof L === "undefined"){
@@ -527,23 +687,17 @@ function initMap(){
     document.getElementById("locStat").textContent = "Map library not loaded yet.";
     return;
   }
-  var loc=EV.location;
-  map = L.map("map", { zoomControl:true }).setView([loc.lat, loc.lng], loc.zoom||17);
+  var c=currentCenter();
+  map = L.map("map", { zoomControl:true }).setView([c.lat, c.lng], c.zoom||16);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom:19, attribution:"&copy; OpenStreetMap"
   }).addTo(map);
-  EV.places.forEach(function(p){
-    var m=L.marker([p.lat,p.lng],{icon:mkPin(p)}).addTo(map);
-    m.bindPopup("<b>"+esc(p.name)+"</b>"+(p.desc?"<br>"+esc(p.desc):"")+
-      '<br><a href="'+walkUrl(p)+'" target="_blank" rel="noopener">🚶 Walk here</a>');
-    markers[p.id]=m;
-  });
-  var c=getCar(); if(c) dropCarMarker(c);
-  renderLegend();
+  refreshMarkers();
+  fitDay();
+  var car=getCar(); if(car) dropCarMarker(car);
 }
 
 /* ---------- car finder ---------- */
-var carMarker=null;
 function carKey(){ return "daykit:"+EV.id+":car"; }
 function getCar(){ try { return JSON.parse(localStorage.getItem(carKey())||"null"); } catch(e){ return null; } }
 function dropCarMarker(c){
@@ -566,9 +720,10 @@ function markCar(){
   }, function(){ stat.textContent="Could not get a fix. Try again outside."; },
   { enableHighAccuracy:true, timeout:15000 });
 }
-function renderLegend(){
+function renderLegend(list){
+  list = list || EV.places;
   var used={};
-  EV.places.forEach(function(p){ used[p.kind]=true; });
+  list.forEach(function(p){ used[p.kind]=true; });
   var el=document.getElementById("legend"); el.innerHTML="";
   Object.keys(used).forEach(function(k){
     var s=document.createElement("span");
@@ -583,8 +738,10 @@ function focusPlace(id){
   showTab("map");
   setTimeout(function(){
     initMap(); if(!map) return; map.invalidateSize();
+    // if the pin is not on the current day, flip to showing all so it appears
+    if(!markers[id]){ showAllPins=true; syncAllPinsBtn(); refreshMarkers(); }
     var p=placeById[id]; if(!p) return;
-    map.setView([p.lat,p.lng], Math.max(map.getZoom(),18), {animate:true});
+    map.setView([p.lat,p.lng], Math.max(map.getZoom(),17), {animate:true});
     if(markers[id]) markers[id].openPopup();
   }, 60);
 }
@@ -598,14 +755,14 @@ function startFindMe(){
   watchId = navigator.geolocation.watchPosition(function(pos){
     var la=pos.coords.latitude, ln=pos.coords.longitude;
     myPos = { lat: la, lng: ln };
-    renderNow(); renderNudge();   // refresh distances now that we have a fix
+    renderNow(); renderNudge();
     if(!meMarker){
       meMarker = L.marker([la,ln], {icon:L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
         html:'<div class="pin me"><span></span></div>'})}).addTo(map);
-      map.setView([la,ln], 18);
+      map.setView([la,ln], 17);
     } else { meMarker.setLatLng([la,ln]); }
-    var best=null,bd=1e12;
-    EV.places.forEach(function(p){ var d=haversine(la,ln,p.lat,p.lng); if(d<bd){bd=d;best=p;} });
+    var pool=placesForDay(curDay), best=null, bd=1e12;
+    (pool.length?pool:EV.places).forEach(function(p){ var d=haversine(la,ln,p.lat,p.lng); if(d<bd){bd=d;best=p;} });
     stat.innerHTML = "You are here (±"+Math.round(pos.coords.accuracy)+"m)."+
       (best? " Nearest: <b>"+esc(best.name)+"</b>, "+fmtDist(bd)+" away." : "");
   }, function(err){
@@ -644,13 +801,23 @@ function startClock(){
   tick();
   tickTimer = setInterval(function(){
     tick();
-    if(Date.now() - lastRederive >= 20000){ lastRederive = Date.now(); renderNow(); renderSchedule(); renderNudge(); }
+    if(Date.now() - lastRederive >= 20000){ lastRederive = Date.now(); renderNow(); renderSchedule(); renderNudge(); renderDayStrip(); }
   }, 1000);
 }
 
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
 
 /* ---------- boot ---------- */
+function normalizeDays(data){
+  if(Array.isArray(data.days) && data.days.length){
+    return data.days.map(function(d,i){ return {
+      date:d.date, title:d.title||"", location:d.location||data.location,
+      schedule:d.schedule||[], notes:d.notes||[], closingNote:d.closingNote
+    };});
+  }
+  return [{ date:data.date, title:data.title, location:data.location,
+            schedule:data.schedule||[], notes:data.notes||[], closingNote:data.closingNote }];
+}
 function applyTheme(){
   if(!EV.theme) return;
   var r=document.documentElement.style, t=EV.theme;
@@ -661,25 +828,35 @@ function applyTheme(){
   if(t.ink)     r.setProperty("--ink", t.ink);
   if(t.bg)      r.setProperty("--bg", t.bg);
   if(t.card)    r.setProperty("--card", t.card);
-  if(t.water)   { KIND_COLOR.water = t.water; }
-  if(t.accent)  { KIND_COLOR.activity = t.accent; }
+  if(t.water)   KIND_COLOR.water = t.water;
+  if(t.accent)  KIND_COLOR.activity = t.accent;
   var tc=document.querySelector('meta[name="theme-color"]');
   if(tc && t.primary) tc.setAttribute("content", t.primary);
+}
+function syncAllPinsBtn(){
+  var btn=document.getElementById("allPinsBtn");
+  btn.hidden = !isMulti;
+  btn.textContent = showAllPins ? "This day only" : "Show all stops";
 }
 function boot(){
   fetch("event.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).then(function(data){
     EV = data;
     EV.places = EV.places || [];
-    EV.schedule = EV.schedule || [];
+    EV.days = normalizeDays(data);
+    isMulti = EV.days.length > 1;
     placeById = {};
     EV.places.forEach(function(p){ placeById[p.id]=p; });
+    var ti = todayIndex();
+    curDay = ti>=0 ? ti : 0;
     applyTheme();
     renderHeader();
+    renderDayStrip();
     renderNow();
     renderNudge();
     renderSchedule();
     renderInfo();
     renderWeather();
+    syncAllPinsBtn();
     document.getElementById("foot").textContent = "Daykit · map data © OpenStreetMap · offline-ready";
     startClock();
     var h=(location.hash||"").replace("#","");
@@ -697,8 +874,12 @@ document.querySelectorAll("nav.tabs button").forEach(function(b){
 });
 document.getElementById("findMe").addEventListener("click", startFindMe);
 document.getElementById("parkBtn").addEventListener("click", markCar);
+document.getElementById("allPinsBtn").addEventListener("click", function(){
+  showAllPins=!showAllPins; syncAllPinsBtn();
+  initMap(); if(map){ refreshMarkers(); fitDay(); }
+});
 document.getElementById("recenter").addEventListener("click", function(){
-  initMap(); if(map) map.setView([EV.location.lat, EV.location.lng], EV.location.zoom||17);
+  initMap(); if(map) fitDay();
 });
 
 /* PWA install */

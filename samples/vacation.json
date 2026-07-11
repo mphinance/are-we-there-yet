@@ -1,0 +1,71 @@
+{
+  "id": "door-county-getaway",
+  "title": "Door County Getaway",
+  "subtitle": "3-day Wisconsin coast trip",
+  "timezone": "America/Chicago",
+  "theme": {
+    "primary": "#1d9bd1", "accent": "#0e7ea6", "sun": "#4fc3e8",
+    "water": "#0e7ea6", "ink": "#0b2733", "bg": "#f0f9fc", "card": "#ffffff"
+  },
+  "location": { "name": "Fish Creek, Door County, WI", "lat": 45.1319, "lng": -87.2409, "zoom": 12 },
+  "team": { "emoji": "🚗", "rank": "The Hankos", "note": "Loose plan. Weather and ferry times can shuffle the days." },
+  "bring": [
+    "Layers and a rain shell (lake weather turns fast)",
+    "Swimsuits and towels for Nicolet Bay Beach",
+    "Hiking shoes for the bluff trails",
+    "Cooler and reusable water bottles",
+    "Sunscreen and bug spray"
+  ],
+  "notes": [
+    "Cherry season peaks in July. Grab a pie for the drive home.",
+    "Peninsula State Park needs a WI state park sticker at the gate.",
+    "Al Johnson's in Sister Bay has goats on the roof. Yes, really."
+  ],
+  "places": [
+    { "id": "inn",        "name": "Whistling Swan Inn",     "kind": "lodging",  "icon": "lodging",   "lat": 45.1316, "lng": -87.2412, "address": "4192 Main St, Fish Creek", "desc": "Home base for all three nights." },
+    { "id": "coffee",     "name": "Blue Horse Cafe",        "kind": "food",     "icon": "coffee",    "lat": 45.1332, "lng": -87.2416, "desc": "Morning coffee and pastries." },
+    { "id": "pennpark",   "name": "Peninsula State Park",   "kind": "sight",    "icon": "hike",      "lat": 45.1385, "lng": -87.2380, "desc": "Trails, tower, and the golf course." },
+    { "id": "lighthouse", "name": "Eagle Bluff Lighthouse", "kind": "sight",    "icon": "sight",     "lat": 45.1704, "lng": -87.2456, "desc": "1868 lighthouse tours on the hour." },
+    { "id": "beach",      "name": "Nicolet Bay Beach",      "kind": "water",    "icon": "beach",     "lat": 45.1520, "lng": -87.2280, "desc": "Sandy swim beach and kayak rental." },
+    { "id": "dinnerfc",   "name": "Pelletier's Fish Boil",  "kind": "food",     "icon": "food",      "lat": 45.1310, "lng": -87.2402, "desc": "The classic Door County fish boil." },
+    { "id": "sisterbay",  "name": "Al Johnson's, Sister Bay","kind": "food",    "icon": "food",      "lat": 45.1897, "lng": -87.1265, "desc": "Swedish pancakes. Goats on the roof." },
+    { "id": "cavepoint",  "name": "Cave Point County Park", "kind": "sight",    "icon": "sight",     "lat": 44.9330, "lng": -87.2660, "desc": "Wave-carved limestone cliffs." },
+    { "id": "sturgeon",   "name": "Sturgeon Bay downtown",  "kind": "shop",     "icon": "shop",      "lat": 44.8340, "lng": -87.3770, "desc": "Shops, maritime museum, lunch." },
+    { "id": "cherry",     "name": "Seaquist Orchards",      "kind": "shop",     "icon": "shop",      "lat": 45.2330, "lng": -87.1170, "desc": "Cherry pies and jam for the road." }
+  ],
+  "days": [
+    {
+      "date": "2026-07-17",
+      "title": "Arrive Fish Creek",
+      "notes": ["Check-in is 3pm. Park on Cottage Row if Main St is full."],
+      "schedule": [
+        { "start": "15:00", "end": "16:00", "title": "Check in at the inn", "place": "inn" },
+        { "start": "16:00", "end": "17:30", "title": "Walk Fish Creek village", "place": "coffee" },
+        { "start": "18:00", "end": "20:00", "title": "Fish boil dinner", "place": "dinnerfc" }
+      ]
+    },
+    {
+      "date": "2026-07-18",
+      "title": "Park + beach day",
+      "schedule": [
+        { "start": "08:30", "end": "09:15", "title": "Coffee and pastries", "place": "coffee" },
+        { "start": "09:30", "end": "12:00", "title": "Hike Peninsula State Park", "place": "pennpark" },
+        { "start": "12:15", "end": "13:00", "title": "Eagle Bluff Lighthouse tour", "place": "lighthouse" },
+        { "start": "13:30", "end": "16:30", "title": "Nicolet Bay Beach and kayaks", "place": "beach" },
+        { "start": "18:30", "end": "20:00", "title": "Dinner in Sister Bay", "place": "sisterbay" }
+      ]
+    },
+    {
+      "date": "2026-07-19",
+      "title": "Cave Point + drive home",
+      "closingNote": "Safe drive home. Cherry pie for the road is mandatory.",
+      "schedule": [
+        { "start": "09:00", "end": "10:00", "title": "Pack and check out", "place": "inn" },
+        { "start": "10:15", "end": "12:00", "title": "Cave Point cliffs", "place": "cavepoint" },
+        { "start": "12:30", "end": "14:00", "title": "Lunch in Sturgeon Bay", "place": "sturgeon" },
+        { "start": "14:15", "end": "14:45", "title": "Cherry pie stop", "place": "cherry" },
+        { "start": "15:00", "end": "18:00", "title": "Drive home", "note": "~2.5 hrs to Milwaukee" }
+      ]
+    }
+  ]
+}
