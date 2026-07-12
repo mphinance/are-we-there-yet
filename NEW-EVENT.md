@@ -63,6 +63,9 @@ corner.
 >   (hotels, tours, dinners, ferries, permits), each with a `status`
 >   (`confirmed`, `todo`, or `waitlist`) and a `by` book-by deadline where the
 >   thing sells out or has a cutoff.
+> - Geocode every place accurately. The drive-time chips between stops are only
+>   as good as the `lat`/`lng`, so precise coordinates make the "too far apart to
+>   share a day" timing check trustworthy.
 >
 > Output only the `event.json`.
 

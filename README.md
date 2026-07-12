@@ -79,6 +79,12 @@ Three tabs, no backend, no build step.
   when it's overdue, plus confirmation numbers, a booking link, and directions.
   A header count keeps "3 still to book" in front of you, and checking one off
   stays checked offline. Fully optional and data-driven.
+- **Drive-time and timing check** - Between consecutive stops the Schedule tab
+  shows a rough "~24 min drive" (or walk) chip, computed offline from the stops'
+  coordinates with a road-factor fudge, no routing API and no signal needed. When
+  a leg does not fit the gap between two stops it turns red and a "Timing check"
+  card calls out the days where two things are too far apart to share. Tune it
+  with an optional `travel` block, or leave it to sensible defaults.
 
 Times respect the event's `timezone`, so a trip in another zone still shows
 the right clock. The whole thing installs to the home screen and works offline.

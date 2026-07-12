@@ -35,6 +35,19 @@ Schema in `SPEC.md`, samples in `event.json` and `samples/vacation.json`.
 This is the most self-contained of the six and the one you feel first: the trip
 falls apart when the thing you wanted sells out while you were deciding.
 
+### Drive-time and timing check (pain points 2 and 3)
+
+Roadmap item 3, now shipped. Between consecutive stops the Schedule tab shows a
+rough "~24 min drive" or walk chip, computed offline from the stops' coordinates
+(straight-line distance times a road-factor, divided by an assumed speed), with
+no routing API and no signal. When a leg does not fit the gap between two stops it
+turns red and a "Timing check" card names the days where two things are too far
+apart to share. Tuned by an optional `travel` block (`roadFactor`, `mph`,
+`walkMph`, `walkUnderMi`, `graceMin`) with sensible defaults. `haversine()`
+already existed in the app, so this reused it rather than adding distance math.
+Full plan and build notes in
+[`docs/plans/03-drive-time.md`](docs/plans/03-drive-time.md).
+
 ## Next up (roadmap, roughly in build order)
 
 Each of these now has a build-ready implementation plan in
@@ -66,7 +79,8 @@ split up. Names come from an expanded `team.members[]`.
 
 ### 3. Drive time and "can these share a day" (pain points 2 and 3)
 
-Plan: [`docs/plans/03-drive-time.md`](docs/plans/03-drive-time.md).
+Shipped. See "Drive-time and timing check" under Shipped above, and
+[`docs/plans/03-drive-time.md`](docs/plans/03-drive-time.md) for the build notes.
 
 Every `place` already has `lat`/`lng`. A rough straight-line distance between
 consecutive stops (times a road-factor fudge) gives a good-enough drive estimate

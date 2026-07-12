@@ -15,7 +15,7 @@ offline with the bundled Chromium at `/opt/pw-browsers/chromium`.
 |---|------|----------------------|------------|
 | 1 | [Opening hours and windows](01-opening-hours.md) | Time-constrained things (hours, tide, daylight) | none |
 | 2 | [Who wants what](02-who-wants-what.md) | Traveling with others who want different things | none |
-| 3 | [Drive time and day-fit](03-drive-time.md) | Things too far apart or too close in time | none |
+| 3 | [Drive time and day-fit](03-drive-time.md) (shipped) | Things too far apart or too close in time | none |
 | 4 | [Flex vs fixed replan](04-flex-replan.md) | Plans that flex when you run behind | reservations (shipped) |
 | 5 | [Candidate pool and day-builder](05-day-builder.md) | Building the whole plan interactively | 1, 2, 3, 4 |
 

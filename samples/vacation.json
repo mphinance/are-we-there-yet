@@ -8,6 +8,7 @@
     "water": "#0e7ea6", "ink": "#0b2733", "bg": "#f0f9fc", "card": "#ffffff"
   },
   "location": { "name": "Fish Creek, Door County, WI", "lat": 45.1319, "lng": -87.2409, "zoom": 12 },
+  "travel": { "roadFactor": 1.3, "mph": 45, "walkUnderMi": 0.3 },
   "team": { "emoji": "🚗", "rank": "The Hankos", "note": "Loose plan. Weather and ferry times can shuffle the days." },
   "bring": [
     "Layers and a rain shell (lake weather turns fast)",

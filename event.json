@@ -25,6 +25,7 @@
     "lng": -88.40245,
     "zoom": 17
   },
+  "travel": { "walkUnderMi": 0.5 },
   "bring": [
     "Swimsuit and towel (Super Splash + Swimming)",
     "Sunscreen, hat, refillable water bottle",

@@ -180,6 +180,13 @@
   ol.sched li.is-now .what::after { content: " • NOW"; color: var(--accent); font-size: 11px; font-weight: 800; }
   ol.sched li.is-past { opacity: var(--pastdim); }
   ol.sched li.is-past .what { text-decoration: line-through; text-decoration-color: var(--line); }
+  ol.sched li.leg { display: block; padding: 2px 6px 8px 72px; border-bottom: 0; }
+  .legchip { display: inline-block; font-size: 11px; font-weight: 700; color: var(--muted);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+  .legchip.walk { color: var(--water); }
+  .legchip.bad { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .legwarn { font-size: 11px; font-weight: 800; color: var(--accent); margin-left: 6px; }
+  .daywarn h2 { color: var(--accent); }
   .sesspill { display:inline-block; min-width: 18px; text-align:center; background: var(--accent); color:#fff; font-size:10px; font-weight:800; border-radius:6px; padding:1px 5px; margin-right:5px; }
 
   /* Map */
@@ -721,7 +728,8 @@ function renderSchedule(){
   var ol=document.getElementById("schedList");
   ol.innerHTML="";
   if(!day.schedule.length){ ol.innerHTML='<li class="loading">No plans set for this day.</li>'; }
-  day.schedule.forEach(function(item){
+  var tz=dayTz(day), cfg=travelCfg(day), warnings=[];
+  day.schedule.forEach(function(item,i){
     var li=document.createElement("li");
     var st=today ? statusOf(item, day, now) : "";
     var cls=[];
@@ -740,15 +748,38 @@ function renderSchedule(){
       '<span class="what">'+sess+esc(item.title)+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</span>'+
       (p?'<button class="go" title="Show on map" data-place="'+p.id+'">🗺️</button>':'<span></span>');
     ol.appendChild(li);
+
+    // Connector to the next stop: rough drive/walk time, and a fit check against the gap.
+    var nxt=day.schedule[i+1];
+    if(nxt){
+      var leg=legEstimate(p, nxt.place && placeById[nxt.place], day);
+      if(leg && leg.mode!=="same"){
+        var gapMin=Math.round((zonedEpoch(day.date,nxt.start,tz)-zonedEpoch(day.date,item.end,tz))/60000);
+        var tight=leg.min-gapMin>cfg.graceMin;   // only flag a meaningful shortfall, not a 2 min walk into a 0 gap
+        var label=(leg.mode==="walk"?"~"+leg.min+" min walk":"~"+leg.min+" min drive")+" · "+fmtDist(leg.road);
+        var warn=tight ? '<span class="legwarn">does not fit '+(gapMin<0?"(overlaps)":"(only "+gapMin+" min)")+'</span>' : "";
+        var lg=document.createElement("li");
+        lg.className="leg"+(tight?" tight":"");
+        lg.innerHTML='<span class="legchip '+leg.mode+(tight?" bad":"")+'">'+label+'</span>'+warn;
+        ol.appendChild(lg);
+        if(tight) warnings.push(esc(item.title)+" to "+esc(nxt.title)+" needs ~"+leg.min+" min but "+
+          (gapMin<0?"the times overlap.":"only "+gapMin+" min is set aside."));
+      }
+    }
   });
   ol.querySelectorAll(".go").forEach(function(b){
     b.addEventListener("click", function(){ focusPlace(b.getAttribute("data-place")); });
   });
-  var dn=document.getElementById("dayNotes");
+  var dn=document.getElementById("dayNotes"), dnHtml="";
+  if(warnings.length){
+    dnHtml+='<div class="card daywarn"><h2>Timing check</h2><ul class="plain">'+
+      warnings.map(function(w){ return '<li>'+w+'</li>'; }).join("")+'</ul></div>';
+  }
   if(day.notes && day.notes.length){
-    dn.innerHTML='<div class="card"><h2>Notes for this day</h2><ul class="plain">'+
+    dnHtml+='<div class="card"><h2>Notes for this day</h2><ul class="plain">'+
       day.notes.map(function(n){ return '<li>'+esc(n)+'</li>'; }).join("")+'</ul></div>';
-  } else { dn.innerHTML=""; }
+  }
+  dn.innerHTML=dnHtml;
 }
 
 /* ---------- info ---------- */
@@ -1121,6 +1152,29 @@ function haversine(la1,ln1,la2,ln2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 function fmtDist(m){ return m<950 ? Math.round(m)+" m" : (m/1609.34).toFixed(1)+" mi"; }
+
+/* Travel tuning, day-level first then event-level, with good-enough offline defaults. */
+function travelCfg(day){
+  var t=(day && day.travel) || (EV && EV.travel) || {};
+  return {
+    roadFactor: +t.roadFactor>0 ? +t.roadFactor : 1.3,   // roads run ~1.3x the straight line
+    mph:        +t.mph>0        ? +t.mph        : 45,     // blended town + highway
+    walkMph:    +t.walkMph>0    ? +t.walkMph    : 3,
+    walkUnder:  (t.walkUnderMi!=null ? +t.walkUnderMi : 0.3) * 1609.34,
+    graceMin:   +t.graceMin>=0  ? +t.graceMin   : 5       // slack before a short hop is flagged tight
+  };
+}
+
+/* Rough offline travel estimate between two places. No routing API, coords only.
+   Returns {mode:"same"|"walk"|"drive", min, road} or null when coords are missing. */
+function legEstimate(a, b, day){
+  if(!a || !b || a.lat==null || a.lng==null || b.lat==null || b.lng==null) return null;
+  var crow=haversine(a.lat, a.lng, b.lat, b.lng);
+  if(crow<25) return { mode:"same", min:0, road:0 };     // effectively the same spot
+  var c=travelCfg(day), road=crow*c.roadFactor;
+  var walk=road<c.walkUnder, mps=(walk?c.walkMph:c.mph)*1609.34/3600;
+  return { mode:walk?"walk":"drive", min:Math.round(road/mps/60), road:road };
+}
 
 /* ---------- tabs ---------- */
 function showTab(name){

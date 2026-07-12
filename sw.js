@@ -3,7 +3,7 @@
    Caches the app shell plus event.json so the whole day still loads with no signal.
    Map tiles saved via "Save offline" live in a separate cache (TILES) that survives updates. */
 
-var CACHE = 'daykit-v9';
+var CACHE = 'daykit-v10';
 var TILES = 'daykit-tiles';   // written by the app's "Save offline" button; kept across activations
 
 // Same-origin shell (relative to scope). These must all fetch for install to succeed.

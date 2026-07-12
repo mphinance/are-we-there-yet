@@ -179,6 +179,33 @@ single-day files, every place shows.
 `flight`, `train`, `hike`, `beach`, `shop`, `star`, `pin` (fallback). Add
 more by editing the `ICONS` map in `index.html`.
 
+## `travel` (drive-time estimates)
+
+Optional. Tunes the rough travel estimate the Schedule tab shows between
+consecutive stops. The app takes the straight-line distance between two stops'
+places (using their `lat`/`lng`), multiplies by a road-factor to approximate the
+real route, and divides by an assumed speed. It is a good-enough offline guess
+with no routing API and no network, meant to catch "these two are too far apart to
+share a day", not to give a turn-by-turn ETA. Between each pair of stops with
+coordinates it renders a "~24 min drive" (or walk) chip, and when the travel time
+does not fit the gap between the stops it flags the leg and adds a "Timing check"
+card for that day.
+
+```jsonc
+"travel": {
+  "roadFactor": 1.3,     // route distance vs straight line. Default 1.3.
+  "mph": 45,             // assumed driving speed. Default 45 (blends town + highway).
+  "walkMph": 3,          // assumed walking speed. Default 3.
+  "walkUnderMi": 0.3,    // legs under this road distance render as a walk. Default 0.3.
+  "graceMin": 5          // slack before a short leg is flagged as not fitting. Default 5.
+}
+```
+
+Can also be set per day inside a `days[]` entry, which overrides the trip-level
+value for that day. Every key is optional; omit `travel` entirely and the
+defaults apply. Stops without coordinates, or consecutive stops at the same
+place, render no chip.
+
 ## Live behavior
 
 - On a day that is today, the Schedule tab shows a live "right now / up next"
