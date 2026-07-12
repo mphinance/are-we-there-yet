@@ -128,6 +128,10 @@ Three tabs, no backend, no build step.
   1,750 ft" glance under the heading.
 - **Map route** - The Map draws the day's stops as an ordered line and shows the
   day's total driving time, so a scatter of pins reads as an actual route.
+- **Nearby food** - Optional (`"nearby": { "food": true }` in `config.json`). A
+  long lunch or dinner gap with nothing food-related planned gets a "find a place
+  to eat" button that lists restaurants near that stop, using the free, keyless
+  OpenStreetMap Overpass API (no key, degrades offline).
 - **Quality-of-life** - The Schedule opens on your current block and floats a
   "Now" pill to jump back to it, the active "Who wants" filter shows a clear
   banner, and every animation respects your reduce-motion setting.

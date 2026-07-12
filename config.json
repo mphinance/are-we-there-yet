@@ -17,6 +17,8 @@
 
   "home": { "name": "Colgate, WI", "lat": 43.215, "lng": -88.246 },
 
+  "nearby": { "food": true },
+
   "trips": [
     {
       "slug": "zion",

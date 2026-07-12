@@ -24,12 +24,24 @@ once in the root `config.json`. This is the full field reference. Times are
   "home": {                            // a shared map pin trips can point at
     "name": "Colgate, WI", "lat": 43.215, "lng": -88.246
   },
+  "nearby": {                          // optional; nearby-food suggestions, see below
+    "food": true, "radiusKm": 2, "minGapMin": 45
+  },
   "trips": [                           // one entry per trip, rendered as a hub card
     { "slug": "zion", "title": "Red Rock Road Trip", "subtitle": "3 days in Zion",
       "dates": "Jul 18 to 20, 2026", "emoji": "🏜️", "primary": "#c1502e" }
   ]
 }
 ```
+
+**Nearby food (`nearby`):** when `nearby.food` is true, a long lunch or dinner gap
+with nothing food-related already planned gets a "find a place to eat" button on
+the Schedule. Tapping it queries the free, keyless OpenStreetMap Overpass API for
+restaurants, cafes, and fast food near that stop and lists the closest few with
+distance and a map link. It needs a connection only when tapped, and does nothing
+offline or when disabled. `radiusKm` (default 2) and `minGapMin` (default 45)
+tune it. Put `nearby` in `config.json` for all trips, or in a single trip's
+`event.json` to override (a trip's `nearby` wins over the shared one).
 
 **Inheritance:** when a trip's `event.json` omits `team.members`, the app fills
 them from `family.members`. When `home` is set, the app adds a place with id
