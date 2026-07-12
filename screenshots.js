@@ -33,11 +33,13 @@ function serve() {
   });
 }
 
+// One tidy phone screen per shot (cropped to the viewport, not the full scroll).
+const VIEW = { width: 390, height: 780 };
 const SHOTS = [
-  { name: 'schedule', tab: 'schedule', full: true },
-  { name: 'kids',     tab: 'kids',     full: true },
-  { name: 'map',      tab: 'map',      full: false, wait: 1800 },
-  { name: 'info',     tab: 'info',     full: true }
+  { name: 'schedule', tab: 'schedule' },
+  { name: 'kids',     tab: 'kids' },
+  { name: 'map',      tab: 'map', wait: 1800 },
+  { name: 'info',     tab: 'info' }
 ];
 
 (async () => {
@@ -46,34 +48,30 @@ const SHOTS = [
   const base = 'http://localhost:' + server.address().port + '/index.html';
   const browser = await chromium.launch({ executablePath: process.env.PWEXEC || undefined });
 
-  // Sticky header/tabs render at odd offsets in a fullPage capture; pin them in normal flow.
-  const UNSTICK = 'header.app,nav.tabs{position:static !important}';
-
-  async function shoot(ctx, name, tab, full, wait) {
+  async function shoot(ctx, name, tab, wait) {
     const page = await ctx.newPage();
     await page.goto(base, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(900);
     await page.click('nav.tabs button[data-tab="' + tab + '"]');
     await page.waitForTimeout(wait || 500);
-    if (full) await page.addStyleTag({ content: UNSTICK });
-    await page.screenshot({ path: path.join(ROOT, 'docs', 'screenshot-' + name + '.png'), fullPage: !!full });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: path.join(ROOT, 'docs', 'screenshot-' + name + '.png') }); // viewport crop
     console.log('wrote docs/screenshot-' + name + '.png');
     await page.close();
   }
 
-  // Light theme
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
-  for (const s of SHOTS) await shoot(ctx, s.name, s.tab, s.full, s.wait);
+  // Light theme, one phone screen each
+  const ctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: 1 });
+  for (const s of SHOTS) await shoot(ctx, s.name, s.tab, s.wait);
   await ctx.close();
 
   // Dark theme (schedule)
-  const dctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: 'dark' });
+  const dctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: 1, colorScheme: 'dark' });
   const dp = await dctx.newPage();
   await dp.addInitScript(() => { try { localStorage.setItem('daykit:theme', 'dark'); } catch (e) {} });
   await dp.goto(base, { waitUntil: 'domcontentloaded' });
   await dp.waitForTimeout(1000);
-  await dp.addStyleTag({ content: UNSTICK });
-  await dp.screenshot({ path: path.join(ROOT, 'docs', 'screenshot-dark.png'), fullPage: true });
+  await dp.screenshot({ path: path.join(ROOT, 'docs', 'screenshot-dark.png') }); // viewport crop
   console.log('wrote docs/screenshot-dark.png');
   await dctx.close();
 
