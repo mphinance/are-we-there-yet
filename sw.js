@@ -4,12 +4,12 @@
    trip's offline cache (caches.keys() is per-origin). */
 
 var PREFIX = 'awty-hub-';
-var CACHE = PREFIX + 'v1';
+var CACHE = PREFIX + 'v2';
 
 var CORE = [
   './',
   './index.html',
-  './trips.json',
+  './config.json',
   './manifest.json',
   './assets/icon-192.png',
   './assets/icon-512.png',
@@ -39,16 +39,16 @@ self.addEventListener('fetch', function (e) {
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
 
-  // trips.json: network first so a new trip shows up, cache as offline fallback.
-  if (url.origin === self.location.origin && /trips\.json$/.test(url.pathname)) {
+  // config.json: network first so a new trip shows up, cache as offline fallback.
+  if (url.origin === self.location.origin && /config\.json$/.test(url.pathname)) {
     e.respondWith((async function () {
       try {
         var res = await fetch(req);
         var c = await caches.open(CACHE);
-        c.put('./trips.json', res.clone());
+        c.put('./config.json', res.clone());
         return res;
       } catch (err) {
-        return (await caches.match('./trips.json')) || Response.error();
+        return (await caches.match('./config.json')) || Response.error();
       }
     })());
     return;

@@ -1,0 +1,38 @@
+{
+  "site": {
+    "title": "Are We There Yet?",
+    "tagline": "A pocket app for a day or a whole trip. Pick one."
+  },
+
+  "family": {
+    "rank": "The Hankos",
+    "members": [
+      { "name": "Kilian", "emoji": "🎂" },
+      { "name": "Mom" },
+      { "name": "Dad" },
+      { "name": "Grandma" },
+      { "name": "Grandpa" }
+    ]
+  },
+
+  "home": { "name": "Colgate, WI", "lat": 43.215, "lng": -88.246 },
+
+  "trips": [
+    {
+      "slug": "zion",
+      "title": "Red Rock Road Trip",
+      "subtitle": "3 days in Zion and Bryce Canyon",
+      "dates": "Jul 18 to 20, 2026",
+      "emoji": "🏜️",
+      "primary": "#c1502e"
+    },
+    {
+      "slug": "callahan",
+      "title": "Operation Callahan",
+      "subtitle": "Kilian's 8th birthday at Cedar Point",
+      "dates": "Jun 18 to 20, 2026",
+      "emoji": "🎢",
+      "primary": "#ff2e88"
+    }
+  ]
+}

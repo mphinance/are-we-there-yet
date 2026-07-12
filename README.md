@@ -20,8 +20,9 @@ as a complete, independently installable copy of the app:
 - **[`/callahan/`](callahan/)** - Operation Callahan, Kilian's 8th birthday at
   Cedar Point (the trip this whole thing grew out of).
 
-To add another, drop a folder with an `event.json` next to those and add a line
-to [`trips.json`](trips.json). See [CLAUDE.md](CLAUDE.md) for the exact steps.
+You set up your **family and home once** in [`config.json`](config.json), and
+every trip inherits them. Adding a trip is `./new-trip.sh <slug>`, then filling
+in that trip's `event.json`. The full walkthrough is in [SETUP.md](SETUP.md).
 
 ## The idea
 
@@ -187,26 +188,31 @@ not include.
 
 ## Make it your own day or trip
 
-1. Read [NEW-EVENT.md](NEW-EVENT.md).
-2. Photograph the schedule, map, or itinerary.
-3. Hand the photos to Claude with the prompt in that file. You get a fresh
-   `event.json` (single-day or multi-day).
-4. Drop it in, bump `CACHE` in `sw.js`, update `manifest.json`, and redeploy.
+The short version (full walkthrough in [SETUP.md](SETUP.md)):
+
+1. Put your people and home base in [`config.json`](config.json), once.
+2. `./new-trip.sh <slug> "Trip Title"` to scaffold a trip folder.
+3. Fill in `<slug>/event.json`, by hand ([SPEC.md](SPEC.md)) or from photos
+   with Claude ([NEW-EVENT.md](NEW-EVENT.md)).
+4. Add the trip to `config.json`, commit, and push.
 
 ## Files
 
 | File | What it is |
 |------|------------|
-| `index.html` | The entire app: shell, three tabs, map, live clock, day switcher, timezone logic, PWA wiring. Data-driven, never edited per event. |
-| `event.json` | The one file that describes a day or a trip. Swap this to change events. |
+| `config.json` | Set-up-once config: your family, your home, and the list of trips for the hub. Trips inherit family and home from here. |
+| `index.html` (root) | The hub landing page. Reads `config.json` and links to each trip. |
+| `<trip>/index.html` | The entire app for one trip: shell, four tabs, map, live clock, day switcher, PWA wiring. Data-driven; identical in every trip folder (edit `zion/`, copy to the rest). |
+| `<trip>/event.json` | The one file that describes that trip. Family and home come from `config.json`. |
+| `<trip>/manifest.json` | That trip's PWA name, icon, and color. |
+| `<trip>/sw.js` | Service worker. Identical everywhere; derives its own offline cache name from the folder. |
+| `new-trip.sh` | Scaffolds a new trip folder from `zion/`. |
 | `samples/vacation.json` | A 3-day multi-day trip example. |
-| `manifest.json` | PWA metadata (name, icons, colors). |
-| `sw.js` | Service worker. Caches the shell, `event.json`, and any tiles you save offline. |
-| `gen-icons.js` | Regenerates the app icons via Playwright. |
-| `screenshots.js` | Captures the `docs/` screenshots via Playwright (`npm run shots`). |
-| `NEW-EVENT.md` | How to turn photos into a new `event.json` with Claude. |
-| `SPEC.md` | The `event.json` schema, field by field. |
-| `.nojekyll` | Lets GitHub Pages serve the `assets/` folder. |
+| `SETUP.md` | The human setup walkthrough. |
+| `NEW-EVENT.md` | How to turn photos into an `event.json` with Claude. |
+| `SPEC.md` | The `event.json` and `config.json` schema, field by field. |
+| `gen-icons.js` / `screenshots.js` | Regenerate icons / `docs/` screenshots via Playwright. |
+| `.nojekyll` | Lets GitHub Pages serve the `assets/` folders. |
 
 ## Credits
 

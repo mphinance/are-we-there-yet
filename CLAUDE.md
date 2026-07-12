@@ -15,24 +15,38 @@ generalized into a reusable day/trip kit.
 
 ## Site layout (multi-trip)
 
-The deployed site is a **hub plus one folder per trip**:
+The deployed site is a **hub plus one folder per trip**, with one shared config.
+The human-facing walkthrough is `SETUP.md`; this is the map for working in here.
 
-- **`/index.html`** is the hub: a small landing page that reads **`/trips.json`**
-  and renders a card linking to each trip folder. It is NOT the app.
+- **`/config.json`** is the single set-up-once file: `site` (hub title/tagline),
+  `family` (the reused roster of `members`), `home` (a shared home place), and
+  `trips` (the list the hub renders). This is the source of truth for the family
+  and home so a trip's `event.json` does not repeat them.
+- **`/index.html`** is the hub: a small landing page that reads `config.json` and
+  renders a card linking to each trip folder. It is NOT the app.
 - **`/<trip>/`** (e.g. `zion/`, `callahan/`) each hold a **complete, self-
   contained copy of the app**: `index.html`, that trip's `event.json`,
   `manifest.json`, `sw.js`, and `assets/`. Each is independently installable and
   offline-capable, and all its paths are relative so the folder just works.
 - The **canonical app source is `zion/index.html`.** To change app behavior,
   edit it and copy it to the other trip folders (`cp zion/index.html
-  callahan/index.html`). The single-file app is the same in every trip folder;
-  only the `event.json`, `manifest.json` name/theme, and `sw.js` cache prefix
-  differ.
+  callahan/index.html`, same for `sw.js`). The app and `sw.js` are byte-identical
+  in every trip folder; only `event.json` and `manifest.json` differ.
 
-**To add a trip:** make a folder, copy the app files in
-(`cp zion/{index.html,sw.js} newtrip/` and `cp -r zion/assets newtrip/`), write
-its `event.json`, give `manifest.json` a name/theme and `sw.js` a unique
-`PREFIX` (e.g. `awty-newtrip-`), and add an entry to `/trips.json`.
+**Config inheritance:** the app's `boot()` fetches `../config.json` and
+`applyConfig()` fills in ONLY what the trip's `event.json` omits, the family
+`team.members` and a `home` place. A trip that lists its own members or a `home`
+place overrides the shared ones. Absent config is a no-op (nothing breaks).
+
+**`sw.js` needs no editing per trip:** it derives its cache prefix
+(`awty-<folder>-`) from `self.location.pathname`, so the same file works in every
+folder. It also precaches `../config.json` and serves it offline (the trip's SW
+controls the trip page, so it intercepts that cross-folder fetch).
+
+**To add a trip:** `./new-trip.sh <slug> "Title"` scaffolds the folder from
+`zion/` (app + `sw.js` + `assets` + starter `event.json`/`manifest.json`). Then
+fill in `<slug>/event.json`, set the name/theme in its `manifest.json`, and add a
+line to the `trips` array in `config.json`. No `sw.js` edit needed.
 
 ## Architecture (the app)
 
@@ -131,10 +145,14 @@ backend.
 
 1. Keep the app (`<trip>/index.html`) generic and data-driven.
 2. Edit the canonical `zion/index.html`, then copy it to the other trip folders
-   so they stay identical (`cp zion/index.html callahan/index.html`).
+   so they stay identical (`cp zion/index.html callahan/index.html`; same for
+   `sw.js` if you touch it). Verify the copies match (`md5sum`).
 3. If you add an `event.json` field: document it in `SPEC.md`, add a sample to a
    trip's `event.json` and to `samples/vacation.json`, mention it in
    `README.md`, and add a prompt hint in `NEW-EVENT.md` so generated files
-   include it.
-4. Bump `CACHE` in each changed trip's `sw.js` (its `awty-<trip>-vN`).
+   include it. If it is shared-across-trips data (like family or home), it
+   belongs in `config.json` and `applyConfig()`, and is documented in `SPEC.md`.
+4. Bump the shared trip `CACHE` version in `sw.js` (the `PREFIX + 'vN'` line)
+   when you change the app or assets. Pure `event.json` / `config.json` edits
+   need no bump, they are fetched network-first.
 5. Regenerate `docs/` screenshots if the change is visible.

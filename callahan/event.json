@@ -17,14 +17,7 @@
   "team": {
     "emoji": "🎢",
     "rank": "Team Callahan",
-    "note": "Grandparents, Mom, Dad, and the birthday boy. Kilian just cleared 51 inches, so the big coasters are finally on the table.",
-    "members": [
-      { "name": "Kilian", "color": "#ff2e88", "emoji": "🎂" },
-      { "name": "Mom", "color": "#a855f7" },
-      { "name": "Dad", "color": "#0e8fb0" },
-      { "name": "Grandma" },
-      { "name": "Grandpa" }
-    ]
+    "note": "Grandparents, Mom, Dad, and the birthday boy. Kilian just cleared 51 inches, so the big coasters are finally on the table."
   },
   "bring": [
     "Wrapped gifts hidden in a bag Kilian won't dig into",
@@ -78,7 +71,6 @@
   ],
   "closingNote": "Home safe. Happy 8th, bud. You're gonna remember this one.",
   "places": [
-    { "id": "home",       "name": "Home base, Colgate WI",     "kind": "hub",     "icon": "flag",    "lat": 43.215,  "lng": -88.246,  "desc": "Roll out around 1pm Central." },
     { "id": "essenhaus",  "name": "Das Dutchman Essenhaus",    "kind": "food",    "icon": "food",    "lat": 41.6745, "lng": -85.6905, "desc": "Amish family-style and pie in Middlebury, Indiana." },
     { "id": "packos",     "name": "Tony Packo's",              "kind": "food",    "icon": "food",    "lat": 41.6620, "lng": -83.5110, "desc": "Famous Hungarian hot dogs in Toledo." },
     { "id": "tofts",      "name": "Toft's Ice Cream",          "kind": "food",    "icon": "coffee",  "lat": 41.4470, "lng": -82.7080, "desc": "Birthday cone HQ in Sandusky." },

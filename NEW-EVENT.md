@@ -5,6 +5,12 @@ couple of photos and let Claude turn them into structured data with real GPS
 coordinates. This works for a single day (a camp, a conference) or a whole
 trip (a vacation, a road trip).
 
+This makes one trip's `<slug>/event.json`. The mechanics around it (the trip
+folder, the family and home in `config.json`, the hub) are in `SETUP.md`. Your
+family and home base live in `config.json` and are inherited, so the prompts
+below only mention who wants what when a stop is for **some** of the group, not
+to re-list everyone.
+
 ## 1. Gather the inputs
 
 Clearer is better, but Claude tolerates glare, angles, and a thumb in the
@@ -42,9 +48,9 @@ corner.
 > - If a stop is only open certain hours (a tour on the hour, a timed session),
 >   give its place an `open` window like `"10:00-16:00"`, or put a `window` on
 >   the schedule item when that one stop differs.
-> - If more than one person is going and they want different things, list the
->   people in `team.members[]` (just names is fine) and add a `who` to the
->   schedule items and `lists` entries that only some of them care about.
+> - The family comes from `config.json`, so do not re-list everyone. Only add a
+>   `who` (e.g. `["Kilian"]`) to the schedule items and `lists` entries that just
+>   some of the group care about.
 > - If a block could slide when the day runs late (a free-play or cool-off
 >   session), mark it `"flex": true`. Leave fixed-time things (a timed session,
 >   a ceremony) anchored by omitting the flag.
@@ -78,10 +84,11 @@ corner.
 > - For any stop with limited hours (a lighthouse tour, a tide window, a timed
 >   entry), add an `open` window to its place like `"10:00-16:00"`, or a `window`
 >   on the schedule item when a single day differs.
-> - List the travelers in `team.members[]` (a bare name string works, or add a
->   `color`/`emoji`) and tag the schedule items, `lists` goals, and `bookings`
->   that only some of them want with a `who` like `["Dad", "Ivy"]` or
->   `"Everyone"`, so the group can filter to one person's wants.
+> - The travelers come from `config.json` (`family.members`), so do not re-list
+>   them. Tag only the schedule items, `lists` goals, and `bookings` that some of
+>   the group want with a `who` like `["Dad", "Ivy"]` or `"Everyone"`, so the
+>   group can filter to one person's wants. Reference the home base with
+>   `"place": "home"` for the leave-the-house and drive-home stops.
 > - Mark the loose blocks that can slide when the day runs behind (a hike, a
 >   beach, an open afternoon) with `"flex": true`, and leave the booked,
 >   fixed-time things (a tour, a dinner seating, a ferry) anchored by omitting

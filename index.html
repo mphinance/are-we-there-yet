@@ -59,7 +59,7 @@
     <div class="trips" id="trips"><div class="loading">Loading trips…</div></div>
     <footer>
       Each trip is its own offline app. Add to your home screen.<br>
-      New trip? Drop an <code>event.json</code> in a folder and add it to <code>trips.json</code>.
+      Set up the family and home once in <code>config.json</code>. New trip? See <code>SETUP.md</code>.
     </footer>
   </div>
 
@@ -74,16 +74,17 @@
       (t.dates?'<span class="dt">'+esc(t.dates)+'</span>':'')+
       '<span class="go" aria-hidden="true">›</span></a>';
   }
-  fetch("trips.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).then(function(d){
-    if(d.title) document.getElementById("hubTitle").textContent = d.title;
-    if(d.tagline) document.getElementById("hubTag").textContent = d.tagline;
-    document.title = d.title || "Are We There Yet?";
+  fetch("config.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).then(function(d){
+    var site = d.site || {};
+    if(site.title) document.getElementById("hubTitle").textContent = site.title;
+    if(site.tagline) document.getElementById("hubTag").textContent = site.tagline;
+    document.title = site.title || "Are We There Yet?";
     var list = (d.trips||[]);
     document.getElementById("trips").innerHTML = list.length
       ? list.map(card).join("")
-      : '<div class="loading">No trips yet. Add one to trips.json.</div>';
+      : '<div class="loading">No trips yet. Add one to config.json.</div>';
   }).catch(function(){
-    document.getElementById("trips").innerHTML = '<div class="loading">Could not load trips.json.</div>';
+    document.getElementById("trips").innerHTML = '<div class="loading">Could not load config.json.</div>';
   });
   if("serviceWorker" in navigator){
     window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });

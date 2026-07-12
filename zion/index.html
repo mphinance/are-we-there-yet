@@ -472,6 +472,7 @@
 <script>
 /* ---------- Are We There Yet? : a drop-in day OR multi-day trip PWA driven by event.json ---------- */
 var EV = null;
+var CONFIG = {};                           // shared setup from ../config.json (family, home)
 var placeById = {};
 var isMulti = false;
 var curDay = 0;
@@ -2136,7 +2137,7 @@ function renderSpot(){
   var got=load("spot", {});
   var area=document.getElementById("gameArea");
   var found=SPOT_ITEMS.filter(function(x){ return got[x]; }).length;
-  area.innerHTML='<div class="gamebar"><b>Spot It — found '+found+' of '+SPOT_ITEMS.length+'</b><button class="btn ghost" id="spotReset">Reset</button></div><ul class="spotlist" id="spotList"></ul>';
+  area.innerHTML='<div class="gamebar"><b>Spot It, found '+found+' of '+SPOT_ITEMS.length+'</b><button class="btn ghost" id="spotReset">Reset</button></div><ul class="spotlist" id="spotList"></ul>';
   var ul=document.getElementById("spotList");
   SPOT_ITEMS.forEach(function(x){
     var li=document.createElement("li");
@@ -2183,10 +2184,33 @@ function syncAllPinsBtn(){
   btn.hidden=!isMulti;
   btn.textContent=showAllPins ? "This day only" : "Show all stops";
 }
+/* Shared setup (../config.json) fills in only what a trip's event.json leaves
+   out: the family roster and a home place. A trip that lists its own people or
+   places overrides the shared ones, so nothing here is required. */
+function applyConfig(cfg){
+  if(!cfg || typeof cfg!=="object") return;
+  CONFIG=cfg;
+  if(cfg.family){
+    EV.team=EV.team||{};
+    if(!EV.team.members && cfg.family.members) EV.team.members=cfg.family.members;
+    if(!EV.team.rank && cfg.family.rank) EV.team.rank=cfg.family.rank;
+    if(!EV.team.emoji && cfg.family.emoji) EV.team.emoji=cfg.family.emoji;
+  }
+  var h=cfg.home;
+  if(h && h.lat!=null && h.lng!=null && !EV.places.some(function(p){ return p.id==="home"; })){
+    EV.places.push({ id:"home", name:h.name||"Home", kind:h.kind||"hub",
+      icon:h.icon||"flag", lat:h.lat, lng:h.lng, desc:h.desc||"Home base." });
+  }
+}
 function boot(){
-  fetch("event.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).then(function(data){
+  Promise.all([
+    fetch("event.json", {cache:"no-cache"}).then(function(r){ return r.json(); }),
+    fetch("../config.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).catch(function(){ return null; })
+  ]).then(function(res){
+    var data=res[0];
     EV=data;
     EV.places=EV.places||[];
+    applyConfig(res[1]);
     EV.days=normalizeDays(data);
     isMulti=EV.days.length>1;
     placeById={};

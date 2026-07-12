@@ -1,8 +1,41 @@
-# Are We There Yet?: the `event.json` schema
+# Are We There Yet?: the `event.json` and `config.json` schema
 
-The app (`index.html`) is generic. Everything specific to a day or trip lives
-in `event.json`. This is the full field reference. Times are 24-hour
-`"HH:MM"` strings interpreted as local wall-clock on each day's date.
+The app (`<trip>/index.html`) is generic. Everything specific to a day or trip
+lives in that trip's `event.json`; the reused bits (your family, your home) live
+once in the root `config.json`. This is the full field reference. Times are
+24-hour `"HH:MM"` strings interpreted as local wall-clock on each day's date.
+
+## `config.json` (shared, set up once)
+
+`config.json` at the site root holds the pieces reused across every trip, so an
+`event.json` never repeats them. All fields are optional.
+
+```jsonc
+{
+  "site": {                            // the hub landing page
+    "title": "Are We There Yet?",
+    "tagline": "Pick a trip."
+  },
+  "family": {                          // reused roster; see "Who wants what"
+    "rank": "The Hankos",              // optional label
+    "emoji": "🚗",                     // optional
+    "members": [ { "name": "Kilian", "emoji": "🎂" }, { "name": "Mom" } ]
+  },
+  "home": {                            // a shared map pin trips can point at
+    "name": "Colgate, WI", "lat": 43.215, "lng": -88.246
+  },
+  "trips": [                           // one entry per trip, rendered as a hub card
+    { "slug": "zion", "title": "Red Rock Road Trip", "subtitle": "3 days in Zion",
+      "dates": "Jul 18 to 20, 2026", "emoji": "🏜️", "primary": "#c1502e" }
+  ]
+}
+```
+
+**Inheritance:** when a trip's `event.json` omits `team.members`, the app fills
+them from `family.members`. When `home` is set, the app adds a place with id
+`home` (kind `hub`) that any schedule item can reference with `"place": "home"`.
+A trip that defines its own `team.members`, `team.rank`, or a `home` place
+overrides the shared value. Absent `config.json` changes nothing.
 
 ## Single day vs multi-day
 
@@ -65,9 +98,11 @@ same internal shape, so single-day files never need a `days` array.
 ## Who wants what (`team.members` and `who`)
 
 Optional. When you travel with a group, different people want different things.
-List the people once in `team.members[]`, then tag schedule items, trip-goal
-entries, and bookings with a `who`. The app draws small initial chips and adds a
-filter above the Schedule and Trip goals so the group can see where wants overlap
+List the people in `team.members[]` (or once in `config.json` `family.members`,
+which every trip inherits when it omits its own), then tag schedule items,
+trip-goal entries, and bookings with a `who`. The app draws small initial chips
+and adds a filter above the Schedule and Trip goals so the group can see where
+wants overlap
 ("what does everyone agree on") and where they will split up ("just Dad's").
 
 ```jsonc

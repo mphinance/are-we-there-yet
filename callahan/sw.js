@@ -1,10 +1,12 @@
-/* Per-trip service worker (Operation Callahan). Scope is this trip's folder, so it caches only
-   this trip's shell and event.json. The cache name is trip-prefixed, and the
-   activate cleanup only removes old versions of THIS prefix, so sibling trips at
-   other paths keep their own offline caches (caches.keys() is per-origin). */
+/* Per-trip service worker. IDENTICAL in every trip folder: it derives its cache
+   name from its own folder, so you copy it in and never edit it. Scope is this
+   trip's folder, so it caches this trip's shell plus the shared ../config.json.
+   The activate cleanup is prefix-scoped, so sibling trips at other paths keep
+   their own offline caches (caches.keys() is per-origin). */
 
-var PREFIX = 'awty-callahan-';
-var CACHE = PREFIX + 'v1';
+var SLUG = (self.location.pathname.match(/\/([^\/]+)\/sw\.js$/) || [])[1] || 'trip';
+var PREFIX = 'awty-' + SLUG + '-';
+var CACHE = PREFIX + 'v2';
 var TILES = 'daykit-tiles';   // shared across trips; map tiles saved via "Save offline"
 
 var CORE = [
@@ -12,6 +14,7 @@ var CORE = [
   './index.html',
   './event.json',
   './manifest.json',
+  '../config.json',            // shared family + home, filled in when the event omits them
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/icon-maskable-512.png'
@@ -24,7 +27,7 @@ var EXTRA = [
 self.addEventListener('install', function (e) {
   e.waitUntil((async function () {
     var c = await caches.open(CACHE);
-    await c.addAll(CORE);
+    await Promise.allSettled(CORE.map(function (u) { return c.add(u); }));
     await Promise.allSettled(EXTRA.map(function (u) { return c.add(u); }));
     await self.skipWaiting();
   })());
@@ -65,15 +68,17 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  if (url.origin === self.location.origin && /event\.json$/.test(url.pathname)) {
+  // event.json and the shared config.json: network first (fresh copy wins online),
+  // fall back to cache offline.
+  if (url.origin === self.location.origin && /(event|config)\.json$/.test(url.pathname)) {
     e.respondWith((async function () {
       try {
         var res = await fetch(req);
         var c = await caches.open(CACHE);
-        c.put('./event.json', res.clone());
+        c.put(req, res.clone());
         return res;
       } catch (err) {
-        return (await caches.match('./event.json')) || Response.error();
+        return (await caches.match(req)) || Response.error();
       }
     })());
     return;
