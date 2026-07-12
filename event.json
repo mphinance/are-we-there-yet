@@ -89,7 +89,7 @@
       "notes": ["Check-in is 3pm. Park once and take the shuttle from here on."],
       "schedule": [
         { "start": "14:00", "end": "15:00", "title": "Check in at the lodge", "place": "lodge_zion" },
-        { "start": "15:30", "end": "18:00", "title": "Shuttle up the canyon and Emerald Pools", "place": "emerald", "also": "visitor_zion", "who": "Everyone", "flex": true, "note": "Easy first hike to shake out the drive." },
+        { "start": "15:30", "end": "18:00", "title": "Shuttle up the canyon and Emerald Pools", "place": "emerald", "also": "visitor_zion", "who": "Everyone", "flex": true, "dist": 3, "gain": 200, "level": "easy", "note": "Easy first hike to shake out the drive." },
         { "start": "19:00", "end": "20:30", "title": "Dinner at Oscar's Cafe", "place": "oscars", "booking": "Table for 4" }
       ]
     },
@@ -99,9 +99,9 @@
       "notes": ["The group splits in the morning and meets back up for the Narrows."],
       "schedule": [
         { "start": "07:00", "end": "07:40", "title": "Coffee and first shuttle", "place": "visitor_zion", "who": "Everyone" },
-        { "start": "10:30", "end": "13:30", "title": "Angels Landing and the chains", "place": "grotto", "who": ["Sam", "Theo"], "window": "06:00-10:00", "note": "Permit hike. Start early, it bakes and backs up by late morning." },
-        { "start": "10:30", "end": "13:00", "title": "Lower and Middle Emerald Pools", "place": "emerald", "who": ["Maya", "Ana"], "flex": true, "note": "The mellow parallel plan while the others climb." },
-        { "start": "14:30", "end": "17:30", "title": "Wade the Narrows", "place": "narrows", "who": "Everyone", "flex": true, "note": "Check the flash flood forecast before heading up." },
+        { "start": "10:30", "end": "13:30", "title": "Angels Landing and the chains", "place": "grotto", "who": ["Sam", "Theo"], "window": "06:00-10:00", "dist": 5.4, "gain": 1500, "level": "strenuous", "note": "Permit hike. Start early, it bakes and backs up by late morning." },
+        { "start": "10:30", "end": "13:00", "title": "Lower and Middle Emerald Pools", "place": "emerald", "who": ["Maya", "Ana"], "flex": true, "dist": 2, "gain": 150, "level": "easy", "note": "The mellow parallel plan while the others climb." },
+        { "start": "14:30", "end": "17:30", "title": "Wade the Narrows", "place": "narrows", "who": "Everyone", "flex": true, "dist": 4, "gain": 100, "level": "moderate", "note": "Check the flash flood forecast before heading up." },
         { "start": "19:00", "end": "20:15", "title": "Casual dinner in Springdale", "place": "oscars", "who": "Everyone", "flex": true }
       ]
     },
@@ -113,7 +113,7 @@
       "schedule": [
         { "start": "07:30", "end": "08:30", "title": "Pack and check out", "place": "lodge_zion" },
         { "start": "10:00", "end": "11:00", "title": "First light at Bryce Sunrise Point", "place": "bryce_sunrise", "who": "Everyone", "note": "Golden hour on the hoodoos." },
-        { "start": "11:30", "end": "13:30", "title": "Navajo Loop into the amphitheater", "place": "navajo", "who": "Everyone", "flex": true },
+        { "start": "11:30", "end": "13:30", "title": "Navajo Loop into the amphitheater", "place": "navajo", "who": "Everyone", "flex": true, "dist": 1.5, "gain": 550, "level": "moderate" },
         { "start": "13:45", "end": "14:45", "title": "Lunch at Ruby's Inn", "place": "rubys" },
         { "start": "15:00", "end": "18:00", "title": "Drive home", "note": "Fill the tank in Panguitch. Long haul from here." }
       ]

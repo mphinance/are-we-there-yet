@@ -263,10 +263,19 @@ reservation from sliding, and adds nothing to the bookings schema.
   "who": ["Dad", "Ivy"],  // optional, who wants this (see "Who wants what")
   "flex": true,          // optional. This block can slide later when you run behind.
                          // Absent or false means anchored (a fixed-time thing).
-  "booking": "WSI-88213" // optional. Ties this block to a bookings[] entry by ref
+  "booking": "WSI-88213", // optional. Ties this block to a bookings[] entry by ref
                          // or exact title. A confirmed booking forces it anchored.
+  "dist": 5.4,           // optional trail distance in miles (number), or a free string.
+  "gain": 1500,          // optional elevation gain in feet (number), or a free string.
+  "level": "strenuous"   // optional difficulty: easy / moderate / strenuous (any string).
 }
 ```
+
+`dist`, `gain`, and `level` render as a compact stat line under the title and in
+the map popup. When `dist` and `gain` are numbers they are also summed into a
+"Today: 11.4 mi, 1,750 ft" glance line under the schedule heading. Difficulty is
+color-coded (easy green, moderate amber, strenuous red). All three are optional
+and render nothing when absent.
 
 ## `places`
 
@@ -353,7 +362,19 @@ place, render no chip.
 - "Find me" and "Mark my car" use `navigator.geolocation`, so they need HTTPS
   or localhost and the user's permission.
 - Weather (Open-Meteo, no key) shows for the selected day when its date is
-  within forecast range, and hides otherwise.
+  within forecast range, and hides otherwise. On a rainy day (50%+ chance) it
+  adds a "pack the rain shell" hint, and any schedule block whose hours line up
+  with high rain odds gets a "🌧 60%" badge.
+- Sunrise, sunset, and the evening golden hour show for the selected day,
+  computed offline from the location's coordinates (no API), so they work with
+  no signal.
+- The Schedule tab lands you on the current block when you open it, and floats a
+  "Now" pill when that block scrolls out of view. Tapping it jumps back.
+- When the "Who wants" filter is active, a banner spells out whose stops are
+  showing, with one tap to clear it.
+- The Map draws the selected day's stops as an ordered route line and notes the
+  day's total driving time in the legend.
+- All animations respect the operating system's reduce-motion setting.
 
 ## Stack
 

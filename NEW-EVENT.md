@@ -87,6 +87,10 @@ corner.
 >   fixed-time things (a tour, a dinner seating, a ferry) anchored by omitting
 >   the flag. Where a block is a reservation, tie it with `"booking"` to that
 >   `bookings[]` entry's `ref` or title so a confirmed one stays put.
+> - For hikes or big walks, add `dist` (miles), `gain` (feet), and `level`
+>   (easy/moderate/strenuous) to the schedule item for trail stats and a daily
+>   distance total. Sunrise, sunset, and weather come for free from the
+>   coordinates, so keep every `lat`/`lng` accurate.
 >
 > Output only the `event.json`.
 

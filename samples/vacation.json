@@ -89,7 +89,7 @@
       "title": "Park + beach day",
       "schedule": [
         { "start": "08:30", "end": "09:15", "title": "Coffee and pastries", "place": "coffee", "flex": true },
-        { "start": "09:30", "end": "12:00", "title": "Hike Peninsula State Park", "place": "pennpark", "who": ["Dad","Ivy","Theo"], "flex": true },
+        { "start": "09:30", "end": "12:00", "title": "Hike Peninsula State Park", "place": "pennpark", "who": ["Dad","Ivy","Theo"], "flex": true, "dist": 3.5, "gain": 350, "level": "moderate" },
         { "start": "12:15", "end": "13:00", "title": "Eagle Bluff Lighthouse tour", "place": "lighthouse", "who": ["Mom","Dad"] },
         { "start": "13:30", "end": "16:30", "title": "Nicolet Bay Beach and kayaks", "place": "beach", "who": "Everyone", "flex": true },
         { "start": "18:30", "end": "20:00", "title": "Dinner in Sister Bay", "place": "sisterbay" }
@@ -101,7 +101,7 @@
       "closingNote": "Safe drive home. Cherry pie for the road is mandatory.",
       "schedule": [
         { "start": "09:00", "end": "10:00", "title": "Pack and check out", "place": "inn" },
-        { "start": "10:15", "end": "12:00", "title": "Cave Point cliffs", "place": "cavepoint", "window": "11:00-14:00" },
+        { "start": "10:15", "end": "12:00", "title": "Cave Point cliffs", "place": "cavepoint", "window": "11:00-14:00", "dist": 2, "gain": 120, "level": "easy" },
         { "start": "12:30", "end": "14:00", "title": "Lunch in Sturgeon Bay", "place": "sturgeon" },
         { "start": "14:15", "end": "14:45", "title": "Cherry pie stop", "place": "cherry" },
         { "start": "15:00", "end": "18:00", "title": "Drive home", "note": "~2.5 hrs to Milwaukee" }

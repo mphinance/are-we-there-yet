@@ -222,6 +222,29 @@
   .legchip.bad { color: #fff; background: var(--accent); border-color: var(--accent); }
   .legwarn { font-size: 11px; font-weight: 800; color: var(--accent); margin-left: 6px; }
   .daywarn h2 { color: var(--accent); }
+  /* sun times line */
+  .sunstrip { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12.5px; color: var(--muted); font-weight: 600; margin: 0 0 10px; padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .sunstrip b { color: var(--ink); font-weight: 800; }
+  /* day at a glance (effort) */
+  .dayglance { font-size: 12px; color: var(--muted); font-weight: 700; margin: -4px 0 10px; }
+  .dayglance b { color: var(--ink); }
+  /* stop detail badges */
+  .statline { display: block; font-weight: 600; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .statline .lvl { text-transform: capitalize; font-weight: 800; }
+  .statline .lvl.easy { color: #2e9e5b; }
+  .statline .lvl.moderate { color: #c9791f; }
+  .statline .lvl.hard { color: #d64545; }
+  .rainbadge { display: inline-block; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 999px; color: #fff; background: #3d7bd6; white-space: nowrap; margin-left: 5px; vertical-align: 1px; }
+  .wxhint { font-size: 12px; font-weight: 700; color: #3d7bd6; margin-top: 6px; }
+  /* who filter active summary */
+  .wfsummary { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12.5px; color: var(--ink); font-weight: 600; margin: 6px 0 12px; padding: 7px 11px; background: var(--bg); background: color-mix(in srgb, var(--accent) 10%, var(--card)); border: 1px solid var(--line); border-radius: 10px; }
+  .wfsummary b { font-weight: 800; }
+  /* jump-to-now floating pill */
+  #jumpNow { position: fixed; right: 16px; bottom: 18px; z-index: 40; border: 0; border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 800; color: #fff; background: var(--accent); box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; }
+  #jumpNow[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  }
   .sesspill { display:inline-block; min-width: 18px; text-align:center; background: var(--accent); color:#fff; font-size:10px; font-weight:800; border-radius:6px; padding:1px 5px; margin-right:5px; }
 
   /* Who wants what: per-person initial chips and the filter row */
@@ -389,13 +412,16 @@
   <section class="tab active" id="tab-schedule">
     <div class="daystrip" id="dayStrip" hidden></div>
     <div id="wxStrip"></div>
+    <div id="sunStrip"></div>
     <div id="nudge"></div>
     <div id="nowWrap"></div>
     <div id="whoFilter"></div>
     <div class="card">
       <h2 id="schedHead">Full schedule</h2>
+      <div id="dayGlance"></div>
       <ol class="sched" id="schedList"><li class="loading">Loading schedule...</li></ol>
     </div>
+    <button id="jumpNow" hidden>Now ↓</button>
     <div id="dayNotes"></div>
   </section>
 
@@ -450,7 +476,9 @@ var placeById = {};
 var isMulti = false;
 var curDay = 0;
 var showAllPins = false;
-var map = null, meMarker = null, markers = {}, watchId = null, carMarker = null;
+var map = null, meMarker = null, markers = {}, watchId = null, carMarker = null, routeLine = null;
+var WX = {};                               // per-date weather cache (daily + hourly rain), filled online
+var autoScrolledKey = "";                  // guards the jump-to-now auto-scroll to once per day view
 var tickTimer = null;
 var myPos = null;
 var MEMBERS = [];                          // normalized team.members[]
@@ -623,12 +651,16 @@ function whoFilterMarkup(){
       '" style="background:'+esc(m.color)+'" title="'+esc(m.name)+'">'+esc(lab)+
       '<span class="wfname">'+esc(m.name)+'</span></button>';
   }).join("");
-  var out='<div class="whofilter"><span class="wflabel">Who wants</span>'+chips;
+  var out='<div class="whofilter"><span class="wflabel">Who wants</span>'+chips+'</div>';
   if(whoFilter.names.length){
-    out+='<button type="button" class="wfmode" data-wfmode="1">'+(whoFilter.mode==="all"?"Everyone agrees":"Anyone")+'</button>'+
-         '<button type="button" class="wfbtn" data-wfclear="1">Clear</button>';
+    var joined = whoFilter.names.length===1 ? whoFilter.names[0]
+      : whoFilter.names.slice(0,-1).join(", ")+" and "+whoFilter.names[whoFilter.names.length-1];
+    var lead = whoFilter.mode==="all" ? "Showing stops everyone agrees on:" : "Showing stops for:";
+    out+='<div class="wfsummary"><span>'+lead+' <b>'+esc(joined)+'</b></span>'+
+      '<button type="button" class="wfmode" data-wfmode="1">'+(whoFilter.mode==="all"?"Everyone agrees":"Anyone")+'</button>'+
+      '<button type="button" class="wfbtn" data-wfclear="1">Show all</button></div>';
   }
-  return out+'</div>';
+  return out;
 }
 function renderWhoFilters(){
   var html=whoFilterMarkup();
@@ -861,7 +893,9 @@ function selectDay(i){
   renderHeader();
   renderNow();
   renderSchedule();
+  renderSun();
   renderWeather();
+  scrollToNow(true);
   if(map){ refreshMarkers(); fitDay(); }
 }
 
@@ -1112,7 +1146,8 @@ function renderWeather(){
   var today=isTodayD(day);
   var url="https://api.open-meteo.com/v1/forecast?latitude="+loc.lat+"&longitude="+loc.lng+
     "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code"+
-    "&temperature_unit=fahrenheit&timezone=auto&start_date="+day.date+"&end_date="+day.date+
+    "&hourly=precipitation_probability&temperature_unit=fahrenheit&timezone=auto"+
+    "&start_date="+day.date+"&end_date="+day.date+
     (today?"&current=temperature_2m,weather_code":"");
   fetch(url).then(function(r){ return r.json(); }).then(function(d){
     if(!d || !d.daily || !d.daily.time || !d.daily.time.length){ el.innerHTML=""; return; }
@@ -1120,11 +1155,84 @@ function renderWeather(){
     var wx=WX_CODE[code]||["",""];
     var hi=Math.round(d.daily.temperature_2m_max[0]), lo=Math.round(d.daily.temperature_2m_min[0]);
     var pop=d.daily.precipitation_probability_max[0];
+    // Cache the hourly rain odds by clock hour so the schedule can flag wet blocks.
+    var hourly={};
+    if(d.hourly && d.hourly.time){
+      d.hourly.time.forEach(function(t,i){ var h=parseInt(String(t).slice(11,13),10); if(!isNaN(h)) hourly[h]=d.hourly.precipitation_probability[i]; });
+    }
+    WX[day.date]={ pop:pop, hourly:hourly };
     var nowT=today && d.current ? '<span class="now-t">'+Math.round(d.current.temperature_2m)+'°F</span> ' : "";
+    var hint = (pop!=null && pop>=50) ? '<div class="wxhint">☔ '+pop+'% rain today. Pack the rain shell and keep an eye on the outdoor blocks.</div>' : "";
     el.innerHTML='<div class="wx"><span class="big">'+wx[1]+'</span>'+
-      '<span>'+nowT+esc(wx[0])+'<br><span class="rest">High '+hi+'° · Low '+lo+'° · '+(pop!=null?pop+'% rain':'')+'</span></span></div>';
+      '<span>'+nowT+esc(wx[0])+'<br><span class="rest">High '+hi+'° · Low '+lo+'° · '+(pop!=null?pop+'% rain':'')+'</span></span></div>'+hint;
+    renderSchedule();   // let the wet-block badges appear now that hourly data is in
   }).catch(function(){ el.innerHTML=""; });
 }
+
+/* Peak rain odds (percent) during a schedule item's hours, or null when no data. */
+function itemRain(day, item){
+  var w=WX[day.date];
+  if(!w || !w.hourly || !item.start || !item.end) return null;
+  var h0=Math.floor(hmMin(item.start)/60), h1=Math.ceil(hmMin(item.end)/60), best=null;
+  for(var h=h0; h<h1; h++){ var v=w.hourly[h]; if(v!=null && (best==null || v>best)) best=v; }
+  return best;
+}
+
+/* ---------- sun times (offline, no API) ----------
+   Sunrise, sunset, and the evening golden hour from the classic solar algorithm.
+   Pure math from date + lat/lng, so it works with no signal. */
+function sunEvent(y, mo, d, lat, lng, zenith, rising){
+  var RAD=Math.PI/180, DEG=180/Math.PI;
+  var N1=Math.floor(275*mo/9), N2=Math.floor((mo+9)/12);
+  var N3=(1+Math.floor((y-4*Math.floor(y/4)+2)/3));
+  var N=N1-(N2*N3)+d-30;                       // day of year
+  var lngHour=lng/15;
+  var t=rising ? N+((6-lngHour)/24) : N+((18-lngHour)/24);
+  var M=(0.9856*t)-3.289;
+  var L=M+(1.916*Math.sin(M*RAD))+(0.020*Math.sin(2*M*RAD))+282.634; L=(L%360+360)%360;
+  var RA=DEG*Math.atan(0.91764*Math.tan(L*RAD)); RA=(RA%360+360)%360;
+  RA=RA+(Math.floor(L/90)*90-Math.floor(RA/90)*90); RA=RA/15;
+  var sinDec=0.39782*Math.sin(L*RAD), cosDec=Math.cos(Math.asin(sinDec));
+  var cosH=(Math.cos(zenith*RAD)-(sinDec*Math.sin(lat*RAD)))/(cosDec*Math.cos(lat*RAD));
+  if(cosH>1 || cosH<-1) return null;           // sun never rises/sets that day at this zenith
+  var H=rising ? 360-DEG*Math.acos(cosH) : DEG*Math.acos(cosH); H=H/15;
+  var T=H+RA-(0.06571*t)-6.622;
+  var UT=(T-lngHour)%24; UT=(UT+24)%24;         // hours UTC
+  return Date.UTC(y, mo-1, d)+Math.round(UT*3600000);
+}
+function fmtSun(epoch, tz){
+  if(epoch==null) return "";
+  var opts={ hour:"numeric", minute:"2-digit" }; if(tz) opts.timeZone=tz;
+  return new Intl.DateTimeFormat(undefined, opts).format(new Date(epoch)).replace(/\s?([AP])M/,function(_,p){ return p.toLowerCase(); });
+}
+function renderSun(){
+  var el=document.getElementById("sunStrip"); if(!el) return;
+  var day=EV.days[curDay], loc=day.location||EV.location;
+  if(!loc){ el.innerHTML=""; return; }
+  var p=day.date.split("-"), y=+p[0], mo=+p[1], d=+p[2], tz=dayTz(day);
+  var rise=sunEvent(y,mo,d,loc.lat,loc.lng,90.833,true);
+  var set=sunEvent(y,mo,d,loc.lat,loc.lng,90.833,false);
+  var gold=sunEvent(y,mo,d,loc.lat,loc.lng,84,false);   // sun 6 deg up: golden hour begins
+  if(rise==null && set==null){ el.innerHTML=""; return; }
+  var bits=[];
+  if(rise!=null) bits.push('🌅 Sunrise <b>'+fmtSun(rise,tz)+'</b>');
+  if(set!=null) bits.push('🌇 Sunset <b>'+fmtSun(set,tz)+'</b>');
+  if(gold!=null && set!=null) bits.push('✨ Golden hour <b>'+fmtSun(gold,tz)+' to '+fmtSun(set,tz)+'</b>');
+  el.innerHTML='<div class="sunstrip">'+bits.join('<span aria-hidden="true">·</span>')+'</div>';
+}
+
+/* Stop detail badges (distance, elevation gain, difficulty) and the day effort total. */
+function fmtMiles(v){ return (typeof v==="number") ? (Math.round(v*10)/10)+" mi" : esc(String(v)); }
+function fmtFeet(v){ return (typeof v==="number") ? v.toLocaleString()+" ft" : esc(String(v)); }
+function levelClass(s){ s=String(s).toLowerCase(); return /easy|light/.test(s)?"easy":(/mod|medium/.test(s)?"moderate":(/hard|strenu|tough|diff/.test(s)?"hard":"")); }
+function stopStats(item){
+  var det=[];
+  if(item.dist!=null) det.push('🥾 '+fmtMiles(item.dist));
+  if(item.gain!=null) det.push('↑ '+fmtFeet(item.gain));
+  if(item.level) det.push('<span class="lvl '+levelClass(item.level)+'">'+esc(item.level)+'</span>');
+  return det.length ? '<span class="statline">'+det.join(' · ')+'</span>' : "";
+}
+function fmtDur(mins){ mins=Math.round(mins); if(mins<60) return mins+" min"; var h=Math.floor(mins/60), m=mins%60; return h+"h"+(m?pad2(m):""); }
 
 /* ---------- schedule ---------- */
 function renderSchedule(){
@@ -1169,9 +1277,10 @@ function renderSchedule(){
     var slipBadge="";
     if(D>0 && st!=="past" && !isAnchored(item))
       slipBadge='<span class="slipped" title="Projected if you slide">→ '+fmt12(shiftHM(item.start,D))+' – '+fmt12(shiftHM(item.end,D))+'</span>';
+    var rain=itemRain(day, item), rainBadge=(rain!=null && rain>=50) ? '<span class="rainbadge" title="Rain likely during this block">🌧 '+rain+'%</span>' : "";
     li.innerHTML =
       '<span class="time">'+fmt12(item.start)+'<br>'+fmt12(item.end)+'</span>'+
-      '<span class="what">'+sess+esc(item.title)+winPill+flexPill+slipBadge+whoChips(item.who)+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</span>'+
+      '<span class="what">'+sess+esc(item.title)+winPill+flexPill+rainBadge+slipBadge+whoChips(item.who)+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+stopStats(item)+'</span>'+
       (p?'<button class="go" title="Show on map" data-place="'+p.id+'">🗺️</button>':'<span></span>');
     ol.appendChild(li);
 
@@ -1202,6 +1311,15 @@ function renderSchedule(){
   ol.querySelectorAll(".go").forEach(function(b){
     b.addEventListener("click", function(){ focusPlace(b.getAttribute("data-place")); });
   });
+  // Day at a glance: total trail distance and elevation gain, when the data is there.
+  var gl=document.getElementById("dayGlance"), dist=0, gain=0, drive=dayDriveMinutes(day);
+  day.schedule.forEach(function(it){ if(typeof it.dist==="number") dist+=it.dist; if(typeof it.gain==="number") gain+=it.gain; });
+  var glBits=[];
+  if(dist>0) glBits.push('🥾 <b>'+(Math.round(dist*10)/10)+' mi</b>');
+  if(gain>0) glBits.push('↑ <b>'+gain.toLocaleString()+' ft</b>');
+  if(drive>0) glBits.push('🚗 <b>'+fmtDur(drive)+'</b> driving');
+  gl.innerHTML = glBits.length ? '<div class="dayglance">Today: '+glBits.join(' · ')+'</div>' : "";
+  updateJumpNow();
   var dn=document.getElementById("dayNotes"), dnHtml="";
   if(warnings.length){
     dnHtml+='<div class="card daywarn"><h2>Timing check</h2><ul class="plain">'+
@@ -1212,6 +1330,30 @@ function renderSchedule(){
       day.notes.map(function(n){ return '<li>'+esc(n)+'</li>'; }).join("")+'</ul></div>';
   }
   dn.innerHTML=dnHtml;
+}
+
+/* ---------- jump to now ----------
+   Land the reader on the current block, and float a "Now" pill when it scrolls
+   out of view. Auto-scroll happens once per day view, never on the ticking
+   re-render, so it never yanks the page while you are reading. */
+function nowEl(){ return document.querySelector('#schedList li.is-now'); }
+function scrollToNow(auto){
+  var el=nowEl();
+  if(!el) return;
+  var key=EV.id+":"+curDay;
+  if(auto){ if(autoScrolledKey===key) return; autoScrolledKey=key; }
+  try { el.scrollIntoView({ behavior: auto?"auto":"smooth", block:"center" }); } catch(e){ el.scrollIntoView(); }
+  updateJumpNow();
+}
+function updateJumpNow(){
+  var btn=document.getElementById("jumpNow"), el=nowEl();
+  if(!btn) return;
+  var onSched=document.getElementById("tab-schedule").classList.contains("active");
+  if(!el || !onSched){ btn.hidden=true; return; }
+  var r=el.getBoundingClientRect();
+  var above=r.bottom < 96, below=r.top > window.innerHeight - 40;
+  btn.hidden = !(above || below);
+  btn.textContent = above ? "Now ↑" : "Now ↓";
 }
 
 /* ---------- info ---------- */
@@ -1450,6 +1592,13 @@ function refreshMarkers(){
     m.bindPopup(popupHtml(p));
     markers[p.id]=m;
   });
+  // Draw the day's route as an ordered dashed line through its stops.
+  if(routeLine){ map.removeLayer(routeLine); routeLine=null; }
+  var coords=dayRouteCoords(EV.days[curDay]);
+  if(coords.length>1){
+    var accent=(EV.theme && EV.theme.accent) || "#e4562b";
+    routeLine=L.polyline(coords, { color:accent, weight:3, opacity:.55, dashArray:"6 7" }).addTo(map);
+  }
   renderLegend(placesForDay(curDay));
 }
 function fitDay(){
@@ -1551,6 +1700,12 @@ function renderLegend(list){
   var me=document.createElement("span");
   me.innerHTML='<span class="dot" style="background:var(--water)"></span>You';
   el.appendChild(me);
+  var drive=dayDriveMinutes(EV.days[curDay]);
+  if(drive>0){
+    var dr=document.createElement("span");
+    dr.innerHTML='<span class="dot" style="background:'+((EV.theme&&EV.theme.accent)||"#e4562b")+'"></span>Route · '+fmtDur(drive)+' driving';
+    el.appendChild(dr);
+  }
 }
 function focusPlace(id){
   showTab("map");
@@ -1617,6 +1772,29 @@ function legEstimate(a, b, day){
   return { mode:walk?"walk":"drive", min:Math.round(road/mps/60), road:road };
 }
 
+/* The day's stops in schedule order as [lat,lng], deduping repeats, for the map route. */
+function dayRouteCoords(day){
+  var out=[], last=null;
+  (day.schedule||[]).forEach(function(it){
+    var p=it.place && placeById[it.place];
+    if(!p || p.lat==null || p.lng==null) return;
+    if(last && last[0]===p.lat && last[1]===p.lng) return;
+    last=[p.lat, p.lng]; out.push(last);
+  });
+  return out;
+}
+/* Total driving minutes for a day: the forward drive legs between consecutive stops. */
+function dayDriveMinutes(day){
+  var sched=day.schedule||[], total=0;
+  for(var i=0;i<sched.length-1;i++){
+    var a=sched[i].place && placeById[sched[i].place], b=sched[i+1].place && placeById[sched[i+1].place];
+    if(!sched[i].start || !sched[i+1].start || hmMin(sched[i+1].start)<=hmMin(sched[i].start)) continue;
+    var leg=legEstimate(a, b, day);
+    if(leg && leg.mode==="drive") total+=leg.min;
+  }
+  return total;
+}
+
 /* ---------- tabs ---------- */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(function(b){
@@ -1627,6 +1805,8 @@ function showTab(name){
   });
   if(name==="map"){ initMap(); setTimeout(function(){ if(map) map.invalidateSize(); },60); }
   if(name==="kids"){ renderKids(); }
+  if(name==="schedule"){ setTimeout(function(){ scrollToNow(true); updateJumpNow(); }, 40); }
+  else { var jb=document.getElementById("jumpNow"); if(jb) jb.hidden=true; }
   try { history.replaceState(null,"","#"+name); } catch(e){}
 }
 
@@ -1787,15 +1967,6 @@ function updateThemeBtn(){
   var b=document.getElementById("themeBtn"); if(!b) return;
   var t=storedTheme();
   b.textContent = t==="dark" ? "🌙 Dark" : t==="light" ? "☀️ Light" : "🌗 Auto";
-}
-
-/* ---------- auto-focus current/next block ---------- */
-function scrollToNow(){
-  var day=EV.days[curDay];
-  if(!isTodayD(day)) return;
-  if(!document.getElementById("tab-schedule").classList.contains("active")) return;
-  var el=document.querySelector("#schedList li.is-now") || document.querySelector("#schedList li:not(.is-past)");
-  if(el){ try{ el.scrollIntoView({block:"center", behavior:"smooth"}); }catch(e){ el.scrollIntoView(); } }
 }
 
 /* ---------- kid mode ---------- */
@@ -2034,6 +2205,7 @@ function boot(){
     renderSchedule();
     renderInfo();
     renderWhoFilters();
+    renderSun();
     renderWeather();
     renderKids();
     syncAllPinsBtn();
@@ -2042,7 +2214,7 @@ function boot(){
     if(notifEnabled()) scheduleNotifs();
     var h=(location.hash||"").replace("#","");
     if(h==="map"||h==="info") showTab(h);
-    else setTimeout(scrollToNow, 350);
+    else setTimeout(function(){ scrollToNow(true); }, 350);
   }).catch(function(e){
     document.getElementById("hdrTitle").textContent="Could not load event.json";
     document.getElementById("schedList").innerHTML='<li class="loading">Add an <code>event.json</code> next to index.html.</li>';
@@ -2065,6 +2237,8 @@ document.getElementById("recenter").addEventListener("click", function(){ initMa
 document.querySelectorAll('.games [data-game]').forEach(function(b){
   b.addEventListener("click", function(){ openGame(b.getAttribute("data-game")); });
 });
+document.getElementById("jumpNow").addEventListener("click", function(){ scrollToNow(false); });
+window.addEventListener("scroll", function(){ updateJumpNow(); }, { passive:true });
 
 /* react to system light/dark changes when on Auto */
 if(window.matchMedia){

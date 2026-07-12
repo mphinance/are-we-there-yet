@@ -104,6 +104,20 @@ Three tabs, no backend, no build step.
   Schedule and Trip goals: pick a person to see just their wants, or "Everyone
   agrees" to see only what the whole group is on. Fully optional; nothing shows
   until there are two or more members.
+- **Sun times and golden hour** - Sunrise, sunset, and the evening golden hour
+  for the selected day, computed offline from the location's coordinates with no
+  API, so they work in a canyon with no signal.
+- **Weather-aware plan** - The forecast we already fetch becomes signal: a "pack
+  the rain shell" hint on rainy days, and a "🌧 60%" badge on any block whose
+  hours line up with high rain odds, so you can move the outdoor stuff.
+- **Trail stats** - Optional `dist`, `gain`, and `level` on a schedule item show
+  a distance / elevation / difficulty line and add up to a "Today: 11.4 mi,
+  1,750 ft" glance under the heading.
+- **Map route** - The Map draws the day's stops as an ordered line and shows the
+  day's total driving time, so a scatter of pins reads as an actual route.
+- **Quality-of-life** - The Schedule opens on your current block and floats a
+  "Now" pill to jump back to it, the active "Who wants" filter shows a clear
+  banner, and every animation respects your reduce-motion setting.
 
 Times respect the event's `timezone`, so a trip in another zone still shows
 the right clock. The whole thing installs to the home screen and works offline.
