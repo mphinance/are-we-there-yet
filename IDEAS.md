@@ -37,7 +37,14 @@ falls apart when the thing you wanted sells out while you were deciding.
 
 ## Next up (roadmap, roughly in build order)
 
+Each of these now has a build-ready implementation plan in
+[`docs/plans/`](docs/plans/README.md), researched against the actual code:
+schema, the ES5 helpers to add, exact render hooks, CSS, edge cases, and how to
+verify offline. The short version is below; follow the link for the detail.
+
 ### 1. Opening hours and windows (pain point 1)
+
+Plan: [`docs/plans/01-opening-hours.md`](docs/plans/01-opening-hours.md).
 
 Add an optional `open` window to a `place`, or an `earliest`/`latest` to a
 schedule item: "the lighthouse only does tours on the hour, 10 to 4," "tide is
@@ -48,6 +55,8 @@ constraints it's already implicitly built around.
 
 ### 2. Wants and who's-in (pain point 4)
 
+Plan: [`docs/plans/02-who-wants-what.md`](docs/plans/02-who-wants-what.md).
+
 Let a schedule item, goal, or a new `candidates[]` pool carry a `who` list of
 names drawn from `team`. Render little initial chips, and add a filter on the
 Schedule and Goals tabs: "show me just Dad's must-dos," "what does everyone
@@ -56,6 +65,8 @@ makes it per-person so the group can see where wants overlap and where they'll
 split up. Names come from an expanded `team.members[]`.
 
 ### 3. Drive time and "can these share a day" (pain points 2 and 3)
+
+Plan: [`docs/plans/03-drive-time.md`](docs/plans/03-drive-time.md).
 
 Every `place` already has `lat`/`lng`. A rough straight-line distance between
 consecutive stops (times a road-factor fudge) gives a good-enough drive estimate
@@ -67,6 +78,8 @@ apart" and "too close together."
 
 ### 4. Flexible vs fixed, and a replan nudge (pain point 6)
 
+Plan: [`docs/plans/04-flex-replan.md`](docs/plans/04-flex-replan.md).
+
 Mark a schedule item `flex: true` (can move) vs anchored (a booked tour at a
 fixed time). When the live countdown shows you're running behind, offer to slide
 the flexible blocks later and tell you which fixed ones that now threatens: "push
@@ -75,6 +88,9 @@ closes at 4." The app already tracks live time and the next stop; this turns tha
 into a lightweight replanner.
 
 ### 5. Candidate pool and day-builder (pain points 2, 3, 4 together)
+
+Plan: [`docs/plans/05-day-builder.md`](docs/plans/05-day-builder.md), including a
+four-slice delivery so it lands incrementally rather than as a big-bang rewrite.
 
 A pre-trip mode: instead of a fixed `schedule`, start from a `candidates[]` list
 of everything you might do, each tagged with duration, hours, who wants it, and
