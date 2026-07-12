@@ -11,6 +11,18 @@ This began as a fork of Operation Callahan (a one-off Cedar Point trip app)
 and grew into a reusable thing for any day-to-week outing. The name is the
 question every kid asks from the back seat.
 
+## Trips
+
+The site is a small **hub** that lists the trips, each living in its own folder
+as a complete, independently installable copy of the app:
+
+- **[`/zion/`](zion/)** - Red Rock Road Trip, 3 days in Zion and Bryce Canyon.
+- **[`/callahan/`](callahan/)** - Operation Callahan, Kilian's 8th birthday at
+  Cedar Point (the trip this whole thing grew out of).
+
+To add another, drop a folder with an `event.json` next to those and add a line
+to [`trips.json`](trips.json). See [CLAUDE.md](CLAUDE.md) for the exact steps.
+
 ## The idea
 
 The app code never changes. A single `event.json` describes the whole thing:
@@ -124,13 +136,13 @@ the right clock. The whole thing installs to the home screen and works offline.
 
 ## Screenshots
 
-| Schedule | Kids mode |
+| Hub | Schedule |
 |:--:|:--:|
-| ![Schedule tab](docs/screenshot-schedule.png) | ![Kids tab](docs/screenshot-kids.png) |
-| **Info** | **Trip goals** |
-| ![Info tab](docs/screenshot-info.png) | ![Trip goals](docs/screenshot-goals.png) |
-| **Dark mode** | |
-| ![Dark mode](docs/screenshot-dark.png) | |
+| ![Trip hub](docs/screenshot-hub.png) | ![Schedule tab](docs/screenshot-schedule.png) |
+| **Kids mode** | **Info** |
+| ![Kids tab](docs/screenshot-kids.png) | ![Info tab](docs/screenshot-info.png) |
+| **Trip goals** | **Dark mode** |
+| ![Trip goals](docs/screenshot-goals.png) | ![Dark mode](docs/screenshot-dark.png) |
 
 Regenerate them anytime with `npm run shots` (or `node screenshots.js`). The
 script serves the repo, drives each tab, and writes the PNGs to `docs/`. Run

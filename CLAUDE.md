@@ -5,28 +5,54 @@ Guidance for Claude Code (and other AI assistants) working in this repo.
 ## What this is
 
 "Are We There Yet?" is a single-file, zero-backend PWA for one day or a whole
-trip. All app logic lives in `index.html`; everything specific to a given event
-lives in one `event.json`. Swap that file and you have a different event. The
-app runs fully offline once installed (service worker + cached tiles), so it
+trip. All app logic lives in one `index.html`; everything specific to a given
+event lives in one `event.json`. Swap that file and you have a different event.
+The app runs fully offline once installed (service worker + cached tiles), so it
 works in a field or national park with no signal.
 
 Origin: a fork of a one-off Cedar Point trip app ("Operation Callahan"),
 generalized into a reusable day/trip kit.
 
-## Architecture
+## Site layout (multi-trip)
 
-- **`index.html`** is the entire app: HTML shell, all CSS in one `<style>`, and
-  all JS in one `<script>`. No framework, no build step, no bundler. Plain ES5-
-  flavored JS (`var`, `function`, no modules). It fetches `event.json` at load,
-  normalizes single-day and multi-day shapes into one internal form, and renders
-  four tabs: Schedule, Map, Kids, Info.
-- **`event.json`** is the only file you edit per event. Full schema in
+The deployed site is a **hub plus one folder per trip**:
+
+- **`/index.html`** is the hub: a small landing page that reads **`/trips.json`**
+  and renders a card linking to each trip folder. It is NOT the app.
+- **`/<trip>/`** (e.g. `zion/`, `callahan/`) each hold a **complete, self-
+  contained copy of the app**: `index.html`, that trip's `event.json`,
+  `manifest.json`, `sw.js`, and `assets/`. Each is independently installable and
+  offline-capable, and all its paths are relative so the folder just works.
+- The **canonical app source is `zion/index.html`.** To change app behavior,
+  edit it and copy it to the other trip folders (`cp zion/index.html
+  callahan/index.html`). The single-file app is the same in every trip folder;
+  only the `event.json`, `manifest.json` name/theme, and `sw.js` cache prefix
+  differ.
+
+**To add a trip:** make a folder, copy the app files in
+(`cp zion/{index.html,sw.js} newtrip/` and `cp -r zion/assets newtrip/`), write
+its `event.json`, give `manifest.json` a name/theme and `sw.js` a unique
+`PREFIX` (e.g. `awty-newtrip-`), and add an entry to `/trips.json`.
+
+## Architecture (the app)
+
+- **`<trip>/index.html`** is the entire app: HTML shell, all CSS in one
+  `<style>`, and all JS in one `<script>`. No framework, no build step, no
+  bundler. Plain ES5-flavored JS (`var`, `function`, no modules). It fetches
+  `event.json` (relative, so its own folder's) at load, normalizes single-day
+  and multi-day shapes into one internal form, and renders four tabs: Schedule,
+  Map, Kids, Info.
+- **`<trip>/event.json`** is the only file you edit per event. Full schema in
   `SPEC.md`. Never hardcode event specifics into `index.html`; add a field and
   drive it from data instead.
-- **`sw.js`** is the service worker. It caches the shell, `event.json`, and any
-  map tiles the user saves offline. **Bump the `CACHE` version (e.g.
-  `daykit-vN`) whenever you change `index.html`, `event.json`, or other cached
-  assets**, or installed clients keep serving the old version.
+- **`<trip>/sw.js`** is the service worker. It caches the shell, `event.json`,
+  and any map tiles the user saves offline. Each trip's cache name is
+  **prefixed** (`awty-<trip>-vN`) and its activate cleanup only deletes its own
+  prefix, so sibling trips keep their offline caches (`caches.keys()` is
+  per-origin). **Bump that trip's `CACHE` version whenever you change its
+  `index.html`, `event.json`, or other cached assets**, or installed clients
+  keep serving the old version. The root `sw.js` (prefix `awty-hub-`) caches the
+  hub and `trips.json`.
 - **`manifest.json`** is PWA metadata. **`gen-icons.js`** regenerates icons and
   **`screenshots.js`** regenerates the `docs/` showcase images, both via
   Playwright.
@@ -64,14 +90,21 @@ checklist), `lists[]` (trip-goal checklists: `must` and `stretch` tones),
 
 ## Running and verifying
 
-Serve statically (geolocation needs localhost or HTTPS, not `file://`):
+Serve the repo root statically (geolocation needs localhost or HTTPS, not
+`file://`), then open a trip folder:
 
 ```
 npx serve .            # or: python -m http.server 8000
+# hub at /  ·  a trip at /zion/  ·  /callahan/
 ```
 
-To preview the multi-day sample: `cp samples/vacation.json event.json` (restore
-with git afterward).
+Note: some static servers rewrite `/<trip>/index.html` and drop the trailing
+slash, which breaks the app's relative `event.json` fetch. Open the folder URL
+`/<trip>/` (trailing slash) instead, which is what the hub links to and what
+GitHub Pages serves.
+
+To preview `samples/vacation.json`, copy it over a trip's event
+(`cp samples/vacation.json zion/event.json`, restore with git afterward).
 
 To verify a UI change, drive the app headless with Playwright and observe the
 real rendered result rather than trusting the code alone. The bundled Chromium
@@ -96,9 +129,12 @@ backend.
 
 ## When you change things
 
-1. Keep `index.html` generic and data-driven.
-2. If you add an `event.json` field: document it in `SPEC.md`, add a sample to
-   `event.json` and `samples/vacation.json`, mention it in `README.md`, and add
-   a prompt hint in `NEW-EVENT.md` so generated files include it.
-3. Bump `CACHE` in `sw.js`.
-4. Regenerate `docs/` screenshots if the change is visible.
+1. Keep the app (`<trip>/index.html`) generic and data-driven.
+2. Edit the canonical `zion/index.html`, then copy it to the other trip folders
+   so they stay identical (`cp zion/index.html callahan/index.html`).
+3. If you add an `event.json` field: document it in `SPEC.md`, add a sample to a
+   trip's `event.json` and to `samples/vacation.json`, mention it in
+   `README.md`, and add a prompt hint in `NEW-EVENT.md` so generated files
+   include it.
+4. Bump `CACHE` in each changed trip's `sw.js` (its `awty-<trip>-vN`).
+5. Regenerate `docs/` screenshots if the change is visible.

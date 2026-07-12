@@ -1,13 +1,13 @@
 {
-  "name": "Are We There Yet?",
-  "short_name": "AreWeThereYet",
-  "description": "A pocket app for a day or a whole trip. Pick a trip: a live schedule, drive times, reservations, and an offline map.",
+  "name": "Red Rock Road Trip",
+  "short_name": "Red Rock",
+  "description": "3 days in Zion and Bryce Canyon: live schedule, drive times, reservations, and an offline map.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fff7ea",
-  "theme_color": "#f28c1a",
+  "background_color": "#fbf3ea",
+  "theme_color": "#c1502e",
   "icons": [
     { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

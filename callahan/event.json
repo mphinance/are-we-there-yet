@@ -1,0 +1,125 @@
+{
+  "id": "operation-callahan",
+  "title": "Operation Callahan",
+  "subtitle": "Kilian's 8th birthday at Cedar Point",
+  "timezone": "America/New_York",
+  "theme": {
+    "primary": "#ff2e88",
+    "accent": "#a855f7",
+    "sun": "#ffd23f",
+    "water": "#0e8fb0",
+    "ink": "#2a1038",
+    "bg": "#fff5fb",
+    "card": "#ffffff"
+  },
+  "location": { "name": "Cedar Point, Sandusky, Ohio", "lat": 41.478, "lng": -82.683, "zoom": 8 },
+  "travel": { "roadFactor": 1.25, "mph": 60, "walkUnderMi": 0.3 },
+  "team": {
+    "emoji": "🎢",
+    "rank": "Team Callahan",
+    "note": "Grandparents, Mom, Dad, and the birthday boy. Kilian just cleared 51 inches, so the big coasters are finally on the table.",
+    "members": [
+      { "name": "Kilian", "color": "#ff2e88", "emoji": "🎂" },
+      { "name": "Mom", "color": "#a855f7" },
+      { "name": "Dad", "color": "#0e8fb0" },
+      { "name": "Grandma" },
+      { "name": "Grandpa" }
+    ]
+  },
+  "bring": [
+    "Wrapped gifts hidden in a bag Kilian won't dig into",
+    "The 'it's my day' birthday shirt for Friday, plus candles and a lighter",
+    "Small park bag only (8 x 12 x 4 in, or rent a locker) and SPF 50",
+    "Refillable water bottles and Ziplocs for phones on the water rides",
+    "Broken-in shoes for 10-plus miles of walking",
+    "Hoodies and long sleeves for the mid-50s campground nights",
+    "Swimsuits, a packable rain poncho, and a portable battery",
+    "Cash and one credit card (ride lockers are credit-only)",
+    "Groceries and a firewood plan for the cabin, and the s'mores kit"
+  ],
+  "bookings": [
+    { "title": "Sandusky Bayshore KOA, deluxe cabin", "status": "confirmed", "when": "Jun 18 to 20", "ref": "KOA-CALLAHAN", "place": "koa", "who": "Everyone", "note": "Cabin has the kitchen, linens, and towels. No tent, no bedding needed." },
+    { "title": "Cedar Point tickets and Fast Lane", "status": "todo", "by": "2026-06-18", "who": "Everyone", "url": "https://www.cedarpoint.com", "note": "Pre-buy and scan on the cabin wifi Thursday night, not in a dead-zone line at the gate." },
+    { "title": "Birthday cupcakes near Sandusky", "status": "todo", "by": "2026-06-18", "note": "Bake-ahead or grab them Thursday evening for a campsite candle moment." }
+  ],
+  "lists": [
+    {
+      "tone": "must",
+      "title": "Kilian's ride list",
+      "note": "At 51 inches he clears the whole 48-inch tier. Hit these before the lines build.",
+      "who": ["Kilian"],
+      "items": [
+        "Magnum XL-200, the legendary hyper coaster",
+        "Valravn, the B and M dive coaster",
+        "Siren's Curse, the new tilt coaster",
+        "Gemini or Blue Streak for a classic",
+        "Cedar Creek Mine Ride",
+        { "text": "Giant Wheel over Lake Erie at sunset", "who": "Everyone" }
+      ]
+    },
+    {
+      "tone": "stretch",
+      "title": "Bonus wins",
+      "note": "Would be awesome if the day and the legs cooperate.",
+      "items": [
+        "Get soaked on Snake River Falls and Thunder Canyon",
+        "Wilderness Run kids' coaster in Camp Snoopy",
+        "Snake River Expedition boat ride",
+        "S'mores and the jumping pillow back at the KOA"
+      ]
+    }
+  ],
+  "notes": [
+    "Thursday is the wind day, gusts to 37 on I-90. The deluxe cabin means you just unload and settle in.",
+    "Cedar Point ride lockers are credit-only. Keep a real card on the lead adult.",
+    "Lost-kid plan: a morning photo of Kilian's outfit, your number in his pocket, and a meetup landmark.",
+    "Bring drinking water. Reviews ding the KOA tap.",
+    "Nearest ER is Firelands Regional Medical Center on Hayes Ave, about 10 minutes from the cabin."
+  ],
+  "closingNote": "Home safe. Happy 8th, bud. You're gonna remember this one.",
+  "places": [
+    { "id": "home",       "name": "Home base, Colgate WI",     "kind": "hub",     "icon": "flag",    "lat": 43.215,  "lng": -88.246,  "desc": "Roll out around 1pm Central." },
+    { "id": "essenhaus",  "name": "Das Dutchman Essenhaus",    "kind": "food",    "icon": "food",    "lat": 41.6745, "lng": -85.6905, "desc": "Amish family-style and pie in Middlebury, Indiana." },
+    { "id": "packos",     "name": "Tony Packo's",              "kind": "food",    "icon": "food",    "lat": 41.6620, "lng": -83.5110, "desc": "Famous Hungarian hot dogs in Toledo." },
+    { "id": "tofts",      "name": "Toft's Ice Cream",          "kind": "food",    "icon": "coffee",  "lat": 41.4470, "lng": -82.7080, "desc": "Birthday cone HQ in Sandusky." },
+    { "id": "koa",        "name": "Sandusky Bayshore KOA",     "kind": "lodging", "icon": "lodging", "lat": 41.466,  "lng": -82.656,  "address": "2311 Cleveland Rd, Sandusky, OH 44870", "desc": "Deluxe cabin, a mile east of the park. Jumping pillow, gem mine, fire pit." },
+    { "id": "cedarpoint", "name": "Cedar Point",               "kind": "sight",   "icon": "star",    "lat": 41.478,  "lng": -82.683,  "open": "10:00-22:00", "desc": "18 coasters on a Lake Erie peninsula. Gates typically open 10am." },
+    { "id": "er",         "name": "Firelands Regional ER",     "kind": "service", "icon": "aid",     "lat": 41.455,  "lng": -82.712,  "desc": "Nearest emergency room, Hayes Ave. Map it before you need it." }
+  ],
+  "days": [
+    {
+      "date": "2026-06-18",
+      "title": "Travel and cabin",
+      "notes": ["Buy and scan tickets plus Fast Lane on the cabin wifi tonight."],
+      "schedule": [
+        { "start": "14:00", "end": "14:15", "title": "Roll out of Colgate", "place": "home", "who": "Everyone", "note": "1pm Central. Windy, expect crosswinds on I-90 by the lake." },
+        { "start": "18:00", "end": "19:00", "title": "Lunch at Das Dutchman Essenhaus", "place": "essenhaus", "who": "Everyone", "flex": true, "note": "Family-style and a slice of pie to break up the drive." },
+        { "start": "22:30", "end": "23:00", "title": "Check in at the KOA cabin", "place": "koa", "who": "Everyone", "note": "Long haul with the time change. Unload, light the fire pit, cupcakes and candles for the birthday-eve." }
+      ]
+    },
+    {
+      "date": "2026-06-19",
+      "title": "Birthday at Cedar Point",
+      "notes": ["Rope-drop the coasters, retreat to Camp Snoopy and the water rides for the hot midday, save the Giant Wheel for a birthday-evening photo."],
+      "schedule": [
+        { "start": "08:00", "end": "08:45", "title": "Birthday breakfast at the cabin", "place": "koa", "who": "Everyone", "note": "It's-my-day shirt on. Presents before the park." },
+        { "start": "10:00", "end": "10:30", "title": "Gates and the free birthday button", "place": "cedarpoint", "who": "Everyone", "note": "Ask Guest Services for the It's My Birthday button. Photo at the front sign first." },
+        { "start": "10:30", "end": "12:30", "title": "Rope-drop the big coasters", "place": "cedarpoint", "who": ["Kilian", "Dad"], "flex": true, "note": "Magnum, Valravn, and Siren's Curse before the lines build." },
+        { "start": "12:30", "end": "15:00", "title": "Camp Snoopy and the water rides", "place": "cedarpoint", "who": "Everyone", "flex": true, "note": "Hot midday. Ziploc the phones for Snake River Falls and Thunder Canyon." },
+        { "start": "18:00", "end": "19:00", "title": "Birthday dinner in the park", "place": "cedarpoint", "who": "Everyone" },
+        { "start": "20:30", "end": "21:00", "title": "Giant Wheel at golden hour", "place": "cedarpoint", "who": "Everyone", "note": "Birthday photo over Lake Erie to close it out." }
+      ]
+    },
+    {
+      "date": "2026-06-20",
+      "title": "Drive home",
+      "closingNote": "Home safe. Happy 8th, bud.",
+      "notes": ["Slight storm chance after 2pm, so get on the road in the morning and beat it."],
+      "schedule": [
+        { "start": "09:00", "end": "10:00", "title": "Pack up and check out", "place": "koa", "who": "Everyone" },
+        { "start": "12:30", "end": "13:30", "title": "Lunch at Tony Packo's, Toledo", "place": "packos", "who": "Everyone", "flex": true, "note": "Hungarian dogs on the way out of Ohio." },
+        { "start": "13:30", "end": "18:30", "title": "Drive home to Colgate", "note": "About 4 more hours, plus the hour back to Central time." }
+      ]
+    }
+  ]
+}

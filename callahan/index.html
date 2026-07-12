@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Are We There Yet?</title>
+<meta name="description" content="A drop-in day or trip pocket app: schedule, live map, arrival countdown, and offline itinerary." />
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#2f80c4" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Are We There Yet?" />
+<link rel="apple-touch-icon" href="assets/icon-192.png" />
+
+<!-- Set stored light/dark before first paint to avoid a flash -->
+<script>(function(){try{var t=localStorage.getItem('daykit:theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+<style>
+  :root {
+    --primary: #2f80c4;
+    --accent: #ef7d3b;
+    --sun: #ffc24b;
+    --water: #2f9fd0;
+    --ink: #1a2230;
+    --bg: #f3f6fb;
+    --card: #ffffff;
+    --muted: #6a7686;
+    --line: #e2e8f2;
+    --good: #2e9e5b;
+    --nowtint: #eef6ff;
+    --alltint: #f0edff;
+    --codebg: #eef2f8;
+    --sheet: #1b2431;
+    --pastdim: 0.5;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e7edf5; --bg: #10141b; --card: #1a212c; --muted: #95a2b4; --line: #2a3340;
+      --nowtint: #202a3b; --alltint: #251f36; --codebg: #28313f; --sheet: #232d3b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #e7edf5; --bg: #10141b; --card: #1a212c; --muted: #95a2b4; --line: #2a3340;
+    --nowtint: #202a3b; --alltint: #251f36; --codebg: #28313f; --sheet: #232d3b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+
+  /* Header */
+  header.app {
+    position: sticky; top: 0; z-index: 500;
+    padding: calc(var(--safe-top) + 12px) 16px 12px;
+    background: linear-gradient(135deg, var(--sun), var(--primary) 55%, var(--accent));
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.18);
+  }
+  header.app .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; opacity: .92; font-weight: 700; }
+  header.app h1 { margin: 2px 0 4px; font-size: 21px; line-height: 1.1; }
+  header.app .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.35);
+    padding: 2px 9px; border-radius: 999px; font-weight: 700; font-size: 12px;
+  }
+
+  /* Tabs */
+  nav.tabs {
+    position: sticky; top: 0; z-index: 480;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: var(--card); border-bottom: 1px solid var(--line);
+  }
+  nav.tabs button {
+    appearance: none; border: 0; background: none; cursor: pointer;
+    padding: 11px 2px 9px; font-size: 12px; font-weight: 700; color: var(--muted);
+    border-bottom: 3px solid transparent; font-family: inherit;
+  }
+  nav.tabs button .ic { display: block; font-size: 18px; line-height: 1; margin-bottom: 3px; }
+  nav.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+  main { padding: 14px 16px calc(28px + var(--safe-bottom)); max-width: 720px; margin: 0 auto; }
+  section.tab { display: none; }
+  section.tab.active { display: block; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px; margin: 0 0 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .card h2 { margin: 0 0 8px; font-size: 15px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+
+  /* Day switcher (multi-day trips) */
+  .daystrip {
+    display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px 10px; padding: 2px 16px 10px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .daystrip::-webkit-scrollbar { display: none; }
+  .daychip {
+    flex: 0 0 auto; border: 1px solid var(--line); background: var(--card); border-radius: 12px;
+    padding: 7px 13px; cursor: pointer; text-align: center; font-family: inherit; line-height: 1.15; color: var(--ink);
+  }
+  .daychip .d1 { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .daychip .d2 { font-size: 14px; font-weight: 800; }
+  .daychip[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .daychip[aria-selected="true"] .d1 { color: rgba(255,255,255,.85); }
+  .daychip.today .d2::after { content: " •"; color: var(--good); font-weight: 900; }
+  .daychip[aria-selected="true"].today .d2::after { color: #fff; }
+
+  /* Now banner */
+  .now { background: linear-gradient(135deg, var(--card), var(--nowtint)); border: 2px solid var(--primary); }
+  .now .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; color: var(--accent); }
+  .now .title { font-size: 22px; font-weight: 800; margin: 2px 0; }
+  .now .when { font-size: 14px; color: var(--muted); font-weight: 600; }
+  .now .next { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 14px; }
+  .now .next b { color: var(--ink); }
+  .countdown { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--accent); }
+  .now .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .now .actions .btn { padding: 10px 13px; font-size: 14px; }
+
+  /* Progress bar (are we there yet) */
+  .prog { height: 9px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 12px; }
+  .prog > i { display: block; height: 100%; background: linear-gradient(90deg, var(--sun), var(--accent)); border-radius: 999px; transition: width .6s ease; }
+  .progcap { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 6px; }
+
+  /* Weather strip */
+  .wx {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 12px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: 14px;
+  }
+  .wx .big { font-size: 24px; }
+  .wx .now-t { font-weight: 800; font-size: 16px; }
+  .wx .rest { color: var(--muted); font-size: 13px; }
+
+  /* Up-in-5 nudge */
+  .nudge {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 12px; flex-wrap: wrap;
+    background: var(--accent); color: #fff; border-radius: 12px; padding: 12px 14px;
+    box-shadow: 0 3px 12px rgba(239,125,59,.32); animation: pulse 1.6s ease-in-out infinite;
+  }
+  .nudge .msg { flex: 1; font-weight: 700; font-size: 14px; min-width: 160px; }
+  .nudge .btn { background: #fff; color: var(--accent); padding: 8px 12px; text-decoration: none; }
+  @keyframes pulse { 0%,100%{ box-shadow: 0 3px 12px rgba(239,125,59,.30);} 50%{ box-shadow: 0 3px 20px rgba(239,125,59,.55);} }
+
+  /* Flex replan: a calm, actionable slip panel (no pulse, so it never competes
+     with the true up-in-5 .nudge). Reuses the .nudge shape without the animation. */
+  .slip { margin: 12px 0 0; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .slip-chip {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-family: inherit;
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px;
+  }
+  .slip-chip .caret { color: var(--muted); font-weight: 800; }
+  .slip-panel { margin-top: 10px; }
+  .slip .opts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+  .slip .opts button {
+    appearance: none; font-family: inherit; cursor: pointer; font-size: 13px; font-weight: 800;
+    border-radius: 999px; padding: 6px 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  }
+  .slip .opts button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .slip .opts button.reset { color: var(--muted); }
+  .slip .tradeoff { font-size: 13.5px; line-height: 1.5; }
+  .slip .lede { font-weight: 700; margin-bottom: 3px; }
+  .slip .ok { color: #2e9e5b; font-weight: 800; }
+  .slip .warn { color: #d64545; font-weight: 800; }
+
+  /* Flex vs fixed row pills, and the projected-time overlay badge. */
+  .flexpill, .anchorpill {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .02em;
+    padding: 1px 7px; border-radius: 999px; white-space: nowrap; margin-left: 5px; vertical-align: 1px;
+  }
+  .flexpill { color: #fff; background: var(--water); }
+  .anchorpill { color: #fff; background: #2e9e5b; }
+  .slipped {
+    display: inline-block; font-size: 11px; font-weight: 800; color: var(--accent);
+    background: var(--nowtint); border: 1px solid var(--primary); border-radius: 999px;
+    padding: 1px 7px; margin-left: 6px; vertical-align: 1px; white-space: nowrap;
+  }
+
+  /* All-group blocks stand out */
+  ol.sched li.is-all { background: var(--alltint); box-shadow: inset 3px 0 0 #6d4bd6; border-radius: 8px; }
+  ol.sched li.is-all.is-now { background: var(--nowtint); }
+
+  /* Schedule list */
+  ol.sched { list-style: none; margin: 0; padding: 0; }
+  ol.sched li {
+    display: grid; grid-template-columns: 62px 1fr auto; gap: 10px; align-items: center;
+    padding: 11px 6px; border-bottom: 1px solid var(--line);
+  }
+  ol.sched li:last-child { border-bottom: 0; }
+  ol.sched .time { font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  ol.sched .what { font-weight: 700; font-size: 15px; }
+  ol.sched .what .sub { display: block; font-weight: 500; font-size: 12px; color: var(--muted); }
+  ol.sched .go {
+    appearance: none; border: 1px solid var(--line); background: var(--card); border-radius: 9px;
+    width: 34px; height: 34px; font-size: 15px; cursor: pointer; color: var(--accent);
+  }
+  ol.sched li.is-now { background: var(--nowtint); border-radius: 10px; box-shadow: inset 0 0 0 2px var(--primary); }
+  ol.sched li.is-now .what::after { content: " • NOW"; color: var(--accent); font-size: 11px; font-weight: 800; }
+  ol.sched li.is-past { opacity: var(--pastdim); }
+  ol.sched li.is-past .what { text-decoration: line-through; text-decoration-color: var(--line); }
+  ol.sched li.leg { display: block; padding: 2px 6px 8px 72px; border-bottom: 0; }
+  .legchip { display: inline-block; font-size: 11px; font-weight: 700; color: var(--muted);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+  .legchip.walk { color: var(--water); }
+  .legchip.bad { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .legwarn { font-size: 11px; font-weight: 800; color: var(--accent); margin-left: 6px; }
+  .daywarn h2 { color: var(--accent); }
+  /* sun times line */
+  .sunstrip { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12.5px; color: var(--muted); font-weight: 600; margin: 0 0 10px; padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .sunstrip b { color: var(--ink); font-weight: 800; }
+  /* day at a glance (effort) */
+  .dayglance { font-size: 12px; color: var(--muted); font-weight: 700; margin: -4px 0 10px; }
+  .dayglance b { color: var(--ink); }
+  /* stop detail badges */
+  .statline { display: block; font-weight: 600; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .statline .lvl { text-transform: capitalize; font-weight: 800; }
+  .statline .lvl.easy { color: #2e9e5b; }
+  .statline .lvl.moderate { color: #c9791f; }
+  .statline .lvl.hard { color: #d64545; }
+  .rainbadge { display: inline-block; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 999px; color: #fff; background: #3d7bd6; white-space: nowrap; margin-left: 5px; vertical-align: 1px; }
+  .wxhint { font-size: 12px; font-weight: 700; color: #3d7bd6; margin-top: 6px; }
+  /* who filter active summary */
+  .wfsummary { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12.5px; color: var(--ink); font-weight: 600; margin: 6px 0 12px; padding: 7px 11px; background: var(--bg); background: color-mix(in srgb, var(--accent) 10%, var(--card)); border: 1px solid var(--line); border-radius: 10px; }
+  .wfsummary b { font-weight: 800; }
+  /* jump-to-now floating pill */
+  #jumpNow { position: fixed; right: 16px; bottom: 18px; z-index: 40; border: 0; border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 800; color: #fff; background: var(--accent); box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; }
+  #jumpNow[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  }
+  .sesspill { display:inline-block; min-width: 18px; text-align:center; background: var(--accent); color:#fff; font-size:10px; font-weight:800; border-radius:6px; padding:1px 5px; margin-right:5px; }
+
+  /* Who wants what: per-person initial chips and the filter row */
+  .whorow { display: inline-flex; gap: 4px; vertical-align: 1px; margin-left: 6px; }
+  .whochip {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px;
+    padding: 0 5px; border-radius: 999px; font-size: 10px; font-weight: 800; line-height: 1;
+    color: #fff; background: var(--muted); border: 1px solid transparent; white-space: nowrap;
+  }
+  .whochip.allchip { letter-spacing: .04em; }
+  .whochip.unknown { color: var(--muted); background: transparent; border: 1px dashed var(--muted); }
+  .whofilter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 12px; }
+  .whofilter .wflabel { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .whofilter .wfchip { cursor: pointer; font-family: inherit; height: 24px; padding: 0 9px; gap: 5px; border: 2px solid transparent; opacity: .5; }
+  .whofilter .wfchip .wfname { font-size: 11px; font-weight: 700; }
+  .whofilter .wfchip.active { opacity: 1; border-color: var(--ink); }
+  .wfmode, .wfbtn { appearance: none; font-family: inherit; cursor: pointer; font-size: 11px; font-weight: 800;
+    border-radius: 999px; padding: 4px 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+  .wfmode { color: var(--accent); border-color: var(--accent); }
+
+  /* Map */
+  #map { height: 62vh; min-height: 340px; border-radius: 14px; border: 1px solid var(--line); }
+  .maprow { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .btn {
+    appearance: none; border: 0; border-radius: 10px; padding: 11px 14px; font-weight: 700;
+    font-size: 14px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.ghost { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+  .btn:active { transform: translateY(1px); }
+  .locstat { font-size: 13px; margin-top: 8px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 2px solid var(--card); box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+
+  .pin {
+    display:flex; align-items:center; justify-content:center;
+    width: 30px; height: 30px; border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,.35);
+    font-size: 15px;
+  }
+  .pin.hasnote { box-shadow: 0 0 0 3px var(--sun), 0 2px 5px rgba(0,0,0,.35); }
+  .pin > span { transform: rotate(45deg); }
+  .pin.me { border-radius: 50%; background: var(--water); }
+
+  /* Info */
+  ul.plain { margin: 6px 0 0; padding-left: 18px; }
+  ul.plain li { margin: 4px 0; }
+  .check { list-style: none; margin: 0; padding: 0; }
+  .check li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+  .check li:last-child { border-bottom: 0; }
+  .check input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--accent); flex: 0 0 auto; }
+  .check label { font-size: 14px; }
+  .check li.done label { text-decoration: line-through; color: var(--muted); }
+
+  /* Trip goal lists (must-do vs would-be-awesome) */
+  .goallist { margin: 0 0 16px; }
+  .goallist:last-child { margin-bottom: 0; }
+  .goallist h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0 0 3px; }
+  .goallist h3 .gemoji { font-size: 17px; }
+  .goalpill { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; color: #fff; background: var(--muted); }
+  .goallist .goalnote { font-size: 12.5px; color: var(--muted); margin: 0 0 8px; }
+  .goallist.must h3 { color: var(--accent); }
+  .goallist.must .goalpill { background: var(--accent); }
+  .goallist.must .check input { accent-color: var(--accent); }
+  .goallist.stretch h3 { color: var(--water); }
+  .goallist.stretch .goalpill { background: var(--water); }
+  .goallist.stretch .check input { accent-color: var(--water); }
+  .goalprog { font-size: 11px; color: var(--muted); font-weight: 700; margin: 4px 0 0; }
+  .bksum { font-size: 12px; color: var(--muted); font-weight: 700; margin: 0 0 10px; }
+  .bklist { list-style: none; margin: 0; padding: 0; }
+  .bk { display: flex; gap: 10px; align-items: flex-start; padding: 11px 2px; border-bottom: 1px solid var(--line); }
+  .bk:last-child { border-bottom: 0; }
+  .bk input { width: 20px; height: 20px; margin-top: 2px; accent-color: #2e9e5b; flex: 0 0 auto; }
+  .bk .bkmain { flex: 1 1 auto; min-width: 0; }
+  .bk .bktop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .bk .bkname { font-size: 14px; font-weight: 700; }
+  .bk.done .bkname { text-decoration: line-through; color: var(--muted); }
+  .bkpill { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; color: #fff; background: var(--muted); white-space: nowrap; }
+  .bkpill.confirmed { background: #2e9e5b; }
+  .bkpill.waitlist { background: #e0922f; }
+  .bkpill.todo { background: var(--accent); }
+  .bkmeta { font-size: 12px; color: var(--muted); margin: 3px 0 0; }
+  .bkmeta a { color: var(--water); font-weight: 600; }
+  .bkby { font-weight: 700; }
+  .bkby.soon { color: #c9791f; }
+  .bkby.over { color: #d64545; }
+  /* Opening-hours pill on a windowed stop, and the live outside-window warning. */
+  .winpill { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .02em; padding: 1px 7px; border-radius: 999px; color: var(--muted); background: var(--bg); border: 1px solid var(--line); white-space: nowrap; margin-left: 5px; vertical-align: 1px; }
+  .winpill.warn { color: #fff; background: #d64545; border-color: #d64545; }
+  .winwarn { color: #d64545; font-weight: 700; font-size: 13px; margin-top: 8px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; margin: 0; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; font-weight: 600; }
+  .lodge { border-bottom: 1px solid var(--line); padding: 9px 0; font-size: 14px; }
+  .lodge:last-child { border-bottom: 0; }
+  .lodge b { display: block; }
+  .actrow { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .installbar {
+    position: fixed; left: 12px; right: 12px; bottom: calc(12px + var(--safe-bottom)); z-index: 700;
+    background: var(--sheet); color: #fff; border-radius: 12px; padding: 12px 14px;
+    display: none; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    max-width: 700px; margin: 0 auto;
+  }
+  .installbar.show { display: flex; }
+  .installbar p { margin: 0; font-size: 13px; flex: 1; }
+  .installbar .btn { padding: 8px 12px; }
+  .installbar .x { background: none; border: 0; color: #fff; font-size: 20px; cursor: pointer; opacity: .8; }
+
+  .loading { text-align: center; padding: 40px 0; color: var(--muted); }
+  footer { text-align: center; font-size: 11px; color: var(--muted); padding: 8px 0 4px; }
+  code { background: var(--codebg); padding: 1px 4px; border-radius: 4px; font-size: 12px; }
+
+  /* Kid mode */
+  .hero { text-align: center; background: linear-gradient(160deg, var(--card), var(--nowtint)); border: 2px solid var(--primary); border-radius: 18px; padding: 20px 14px; margin: 0 0 12px; }
+  .hero .kidq { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .hero .kidbig { font-size: 34px; font-weight: 900; line-height: 1.02; margin: 6px 0 2px; }
+  .hero .kidsub { color: var(--muted); font-weight: 700; font-size: 15px; }
+  .road { position: relative; height: 60px; margin: 18px 2px 2px; border-radius: 12px; background: #5b6675; overflow: hidden; }
+  .road::before { content: ""; position: absolute; top: 50%; left: 8px; right: 8px; height: 4px; transform: translateY(-50%); background: repeating-linear-gradient(90deg, #ffd24d 0 16px, transparent 16px 32px); }
+  .road .flag { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 28px; }
+  .road .car { position: absolute; left: 4%; top: 50%; transform: translate(-50%,-50%); font-size: 32px; transition: left 1.2s ease; }
+  .road .car.rev { transform: translate(-50%,-50%) scaleX(-1); }
+  .talkbtn { margin-top: 16px; font-size: 17px; padding: 15px 20px; }
+  .stickers { display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px; }
+  .sticker { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; background: var(--nowtint); border: 2px solid var(--sun); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .games .btn { margin-right: 8px; margin-bottom: 4px; }
+  .games .btn[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .bingo { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .bingo .cell { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 10px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10.5px; font-weight: 700; padding: 3px; cursor: pointer; background: var(--card); line-height: 1.05; }
+  .bingo .cell.marked { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .bingo .cell.free { background: var(--sun); color: #3a2a00; }
+  .spotlist { list-style: none; margin: 0; padding: 0; }
+  .spotlist li { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); font-size: 15px; font-weight: 700; cursor: pointer; }
+  .spotlist li:last-child { border-bottom: 0; }
+  .spotlist li.got { color: var(--muted); }
+  .spotlist li.got .lbl { text-decoration: line-through; }
+  .spotlist li .box { width: 24px; height: 24px; border: 2px solid var(--line); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; color: #fff; }
+  .spotlist li.got .box { background: var(--good); border-color: var(--good); }
+  .ispy { text-align: center; font-size: 24px; font-weight: 900; padding: 18px 6px; line-height: 1.2; }
+  .gamebar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
+  .gamebar .btn { padding: 8px 12px; font-size: 13px; }
+  .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 900; overflow: hidden; }
+  .confetti span { position: absolute; top: -8%; font-size: 22px; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(115vh) rotate(400deg); opacity: .85; } }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="eyebrow" id="hdrEyebrow">Are We There Yet?</div>
+  <h1 id="hdrTitle">Loading...</h1>
+  <div class="meta" id="hdrMeta"></div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="schedule"><span class="ic">🗓️</span>Schedule</button>
+  <button role="tab" aria-selected="false" data-tab="map"><span class="ic">🗺️</span>Map</button>
+  <button role="tab" aria-selected="false" data-tab="kids"><span class="ic">🚗</span>Kids</button>
+  <button role="tab" aria-selected="false" data-tab="info"><span class="ic">ℹ️</span>Info</button>
+</nav>
+
+<main>
+  <section class="tab active" id="tab-schedule">
+    <div class="daystrip" id="dayStrip" hidden></div>
+    <div id="wxStrip"></div>
+    <div id="sunStrip"></div>
+    <div id="nudge"></div>
+    <div id="nowWrap"></div>
+    <div id="whoFilter"></div>
+    <div class="card">
+      <h2 id="schedHead">Full schedule</h2>
+      <div id="dayGlance"></div>
+      <ol class="sched" id="schedList"><li class="loading">Loading schedule...</li></ol>
+    </div>
+    <button id="jumpNow" hidden>Now ↓</button>
+    <div id="dayNotes"></div>
+  </section>
+
+  <section class="tab" id="tab-map">
+    <div class="maprow">
+      <button class="btn primary" id="findMe">📍 Find me</button>
+      <button class="btn ghost" id="parkBtn">🚗 Mark my car</button>
+      <button class="btn ghost" id="allPinsBtn" hidden>Show all stops</button>
+      <button class="btn ghost" id="saveTilesBtn">⤓ Save offline</button>
+      <button class="btn ghost" id="recenter">Recenter</button>
+    </div>
+    <div id="map"></div>
+    <div class="locstat muted" id="locStat">Tap "Find me" to drop your live location. Tap a pin to add a note.</div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="tab" id="tab-kids">
+    <div id="kidHero"></div>
+    <div class="card">
+      <h2>My stickers <span class="muted small" id="stickCount"></span></h2>
+      <div class="stickers" id="stickers"></div>
+      <p class="small muted" id="stickHint" style="margin:8px 0 0">Reach each stop to collect a sticker.</p>
+    </div>
+    <div class="card games">
+      <h2>Boredom busters</h2>
+      <div>
+        <button class="btn ghost" data-game="bingo">🎉 Bingo</button>
+        <button class="btn ghost" data-game="spot">🚙 Spot It</button>
+        <button class="btn ghost" data-game="ispy">👀 I Spy</button>
+      </div>
+      <div id="gameArea" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-info">
+    <div id="infoWrap" class="loading">Loading...</div>
+  </section>
+</main>
+
+<div class="installbar" id="installBar">
+  <p><b>Install this</b> to your home screen. Works offline.</p>
+  <button class="btn primary" id="installBtn">Install</button>
+  <button class="x" id="installX" aria-label="Dismiss">&times;</button>
+</div>
+
+<footer id="foot"></footer>
+
+<script>
+/* ---------- Are We There Yet? : a drop-in day OR multi-day trip PWA driven by event.json ---------- */
+var EV = null;
+var placeById = {};
+var isMulti = false;
+var curDay = 0;
+var showAllPins = false;
+var map = null, meMarker = null, markers = {}, watchId = null, carMarker = null, routeLine = null;
+var WX = {};                               // per-date weather cache (daily + hourly rain), filled online
+var autoScrolledKey = "";                  // guards the jump-to-now auto-scroll to once per day view
+var tickTimer = null;
+var myPos = null;
+var MEMBERS = [];                          // normalized team.members[]
+var memberBy = {};                         // lower-case name -> member
+var whoFilter = { names:[], mode:"any" };  // in-memory who filter, shared across tabs
+
+function walkUrl(p){ return "https://www.google.com/maps/dir/?api=1&destination="+p.lat+","+p.lng+"&travelmode=walking"; }
+function searchUrl(o){ return "https://www.google.com/maps/search/?api=1&query="+o.lat+","+o.lng; }
+function clamp(n){ return Math.max(0, Math.min(100, n)); }
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+var ICONS = {
+  flag:"🚩", compass:"🧭", water:"💦", truck:"🚚", target:"🎯", rocket:"🚀",
+  aid:"⛑️", rest:"🚻", lunch:"🥪", parking:"🅿️",
+  lodging:"🏨", food:"🍽️", coffee:"☕", sight:"📸", transport:"🚗", flight:"✈️",
+  train:"🚆", hike:"🥾", beach:"🏖️", shop:"🛍️", star:"⭐", pin:"📍"
+};
+var KIND_COLOR = {
+  hub:"#6d4bd6", activity:"#ef7d3b", water:"#2f9fd0", service:"#2e9e5b",
+  lodging:"#b8558f", food:"#e8892b", sight:"#3f7fd6", travel:"#5a5550"
+};
+var KIND_LABEL = {
+  hub:"Hub", activity:"Activity", water:"Water", service:"Services",
+  lodging:"Lodging", food:"Food", sight:"Sights", travel:"Travel"
+};
+
+/* Trip-goal list tones. "must" is the point of the trip, "stretch" is bonus. */
+var LIST_TONES = {
+  must:    { emoji:"🎯", label:"The whole point", pill:"Must do" },
+  stretch: { emoji:"✨", label:"Bonus adventures", pill:"If we get time" },
+  other:   { emoji:"📍", label:"List", pill:"List" }
+};
+
+/* Accept a few shapes for EV.lists and normalize to [{title,tone,note,items[]}]. */
+function normalizeLists(raw){
+  if(!raw) return [];
+  var out=[];
+  if(Array.isArray(raw)){
+    raw.forEach(function(l){
+      if(!l) return;
+      var items=l.items || l.list || [];
+      if(items.length) out.push({ title:l.title||"", tone:l.tone||"other", note:l.note||"", who:(l.who!=null?l.who:null), items:items });
+    });
+  } else if(typeof raw==="object"){
+    // Object form: { must:[...], stretch:[...] } or { must:{title,items} }
+    Object.keys(raw).forEach(function(tone){
+      var v=raw[tone];
+      var items=Array.isArray(v) ? v : (v && v.items) || [];
+      if(items.length) out.push({ title:(v&&v.title)||"", tone:tone, note:(v&&v.note)||"", items:items });
+    });
+  }
+  return out;
+}
+
+/* ---------- who wants what (team members + per-person chips + filter) ----------
+   Members come from an optional team.members[]. A who tag on schedule items,
+   goals, and bookings resolves to initial chips. All fields degrade to nothing
+   when absent, so old files render exactly as before. */
+
+/* Stable offline color from a name: hash the characters to a hue. No network. */
+function personHue(name){
+  var s=String(name||""), h=0;
+  for(var i=0;i<s.length;i++){ h=(h*31 + s.charCodeAt(i)) % 360; }
+  return h;
+}
+function personColor(name){ return "hsl("+personHue(name)+",58%,44%)"; }
+/* "Mary Beth" -> "MB", "Ivy" -> "I". Falls back to "?" for an empty name. */
+function deriveInitials(name){
+  var parts=String(name||"").trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return "?";
+  if(parts.length===1) return parts[0].slice(0,1).toUpperCase();
+  return (parts[0].slice(0,1)+parts[parts.length-1].slice(0,1)).toUpperCase();
+}
+/* Normalize team.members[] to [{name,color,initials,emoji,key}]. Bare strings ok. */
+function normalizeMembers(team){
+  if(!team || !Array.isArray(team.members)) return [];
+  var out=[];
+  team.members.forEach(function(m){
+    if(typeof m==="string") m={ name:m };
+    if(!m || !m.name) return;
+    out.push({
+      name:m.name,
+      color:m.color || personColor(m.name),
+      initials:m.initials || deriveInitials(m.name),
+      emoji:m.emoji || "",
+      key:String(m.name).toLowerCase()
+    });
+  });
+  return out;
+}
+/* Split a who value into name tokens. Array elements, or a comma-split string. */
+function whoTokens(who){
+  if(who==null) return [];
+  if(Array.isArray(who)) return who.filter(function(x){ return x!=null && x!==""; }).map(String);
+  return String(who).split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+}
+function isEveryone(tok){ return /^(everyone|all|all of us)$/i.test(tok); }
+/* Resolve a who value to chip descriptors. "Everyone" expands to every member.
+   Unknown names get unknown:true. Returns [] when absent. */
+function normalizeWho(who){
+  var toks=whoTokens(who);
+  if(!toks.length) return [];
+  if(toks.length===1 && isEveryone(toks[0])){
+    return MEMBERS.map(function(m){ return { name:m.name, color:m.color, initials:m.initials, emoji:m.emoji, unknown:false }; });
+  }
+  return toks.map(function(t){
+    var m=memberBy[t.toLowerCase()];
+    if(m) return { name:m.name, color:m.color, initials:m.initials, emoji:m.emoji, unknown:false };
+    return { name:t, color:personColor(t), initials:deriveInitials(t), emoji:"", unknown:true };
+  });
+}
+/* True only when every token resolves to a known member (used to decide whether a
+   free-text booking who becomes chips or stays plain text). */
+function whoResolves(who){
+  var toks=whoTokens(who);
+  if(!toks.length) return false;
+  if(toks.length===1 && isEveryone(toks[0])) return MEMBERS.length>0;
+  return toks.every(function(t){ return !!memberBy[t.toLowerCase()]; });
+}
+/* Render the initial-chip row for a who value. Nothing until there are 2+ members. */
+function whoChips(who){
+  if(MEMBERS.length<2) return "";
+  var list=normalizeWho(who);
+  if(!list.length) return "";
+  if(list.length===MEMBERS.length && list.every(function(d){ return !d.unknown; })){
+    var names={}; list.forEach(function(d){ names[d.name.toLowerCase()]=1; });
+    if(MEMBERS.every(function(m){ return names[m.key]; })){
+      return '<span class="whorow"><span class="whochip allchip" title="Everyone">ALL</span></span>';
+    }
+  }
+  var chips=list.map(function(d){
+    var lab=d.emoji || d.initials;
+    var style=d.unknown ? "" : ' style="background:'+esc(d.color)+'"';
+    return '<span class="whochip'+(d.unknown?" unknown":"")+'"'+style+' title="'+esc(d.name)+'">'+esc(lab)+'</span>';
+  }).join("");
+  return '<span class="whorow">'+chips+'</span>';
+}
+/* Filter predicate. any-mode: claimed by at least one selected person. all-mode:
+   every selected person is on this item (they all agree). No filter -> always true. */
+function matchesWho(who){
+  if(!whoFilter.names.length) return true;
+  var have={};
+  normalizeWho(who).forEach(function(d){ have[d.name.toLowerCase()]=1; });
+  if(whoFilter.mode==="all"){
+    return whoFilter.names.every(function(n){ return have[n.toLowerCase()]; });
+  }
+  return whoFilter.names.some(function(n){ return have[n.toLowerCase()]; });
+}
+
+/* ---- who filter control (shared across the Schedule and Info tabs) ---- */
+function whoFilterKey(){ return "daykit:"+EV.id+":whofilter"; }
+function loadWhoFilter(){
+  whoFilter={ names:[], mode:"any" };
+  try {
+    var v=JSON.parse(localStorage.getItem(whoFilterKey())||"null");
+    if(v && Array.isArray(v.names)){
+      whoFilter.names=v.names.filter(function(n){ return !!memberBy[String(n).toLowerCase()]; })
+        .map(function(n){ return memberBy[String(n).toLowerCase()].name; });
+      whoFilter.mode = v.mode==="all" ? "all" : "any";
+    }
+  } catch(e){}
+}
+function saveWhoFilter(){ try { localStorage.setItem(whoFilterKey(), JSON.stringify(whoFilter)); } catch(e){} }
+function whoFilterMarkup(){
+  if(MEMBERS.length<2) return "";
+  var chips=MEMBERS.map(function(m){
+    var on=whoFilter.names.indexOf(m.name)!==-1;
+    var lab=m.emoji || m.initials;
+    return '<button type="button" class="whochip wfchip'+(on?" active":"")+'" data-who="'+esc(m.name)+
+      '" style="background:'+esc(m.color)+'" title="'+esc(m.name)+'">'+esc(lab)+
+      '<span class="wfname">'+esc(m.name)+'</span></button>';
+  }).join("");
+  var out='<div class="whofilter"><span class="wflabel">Who wants</span>'+chips+'</div>';
+  if(whoFilter.names.length){
+    var joined = whoFilter.names.length===1 ? whoFilter.names[0]
+      : whoFilter.names.slice(0,-1).join(", ")+" and "+whoFilter.names[whoFilter.names.length-1];
+    var lead = whoFilter.mode==="all" ? "Showing stops everyone agrees on:" : "Showing stops for:";
+    out+='<div class="wfsummary"><span>'+lead+' <b>'+esc(joined)+'</b></span>'+
+      '<button type="button" class="wfmode" data-wfmode="1">'+(whoFilter.mode==="all"?"Everyone agrees":"Anyone")+'</button>'+
+      '<button type="button" class="wfbtn" data-wfclear="1">Show all</button></div>';
+  }
+  return out;
+}
+function renderWhoFilters(){
+  var html=whoFilterMarkup();
+  ["whoFilter","whoFilterGoals"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    el.innerHTML=html;
+    if(!html) return;
+    el.querySelectorAll("[data-who]").forEach(function(b){
+      b.addEventListener("click", function(){ toggleWhoName(b.getAttribute("data-who")); });
+    });
+    var mb=el.querySelector("[data-wfmode]");
+    if(mb) mb.addEventListener("click", function(){ whoFilter.mode = whoFilter.mode==="all"?"any":"all"; saveWhoFilter(); applyWhoFilter(); });
+    var cb=el.querySelector("[data-wfclear]");
+    if(cb) cb.addEventListener("click", function(){ whoFilter.names=[]; saveWhoFilter(); applyWhoFilter(); });
+  });
+}
+function toggleWhoName(name){
+  var i=whoFilter.names.indexOf(name);
+  if(i===-1) whoFilter.names.push(name); else whoFilter.names.splice(i,1);
+  saveWhoFilter(); applyWhoFilter();
+}
+function applyWhoFilter(){
+  renderSchedule();
+  renderInfo();
+  renderWhoFilters();
+}
+
+/* Reservation statuses. "todo" needs booking, "confirmed" is locked, "waitlist" is pending. */
+var BOOK_STATUS = {
+  todo:      { pill:"To book" },
+  confirmed: { pill:"Confirmed" },
+  waitlist:  { pill:"Waitlist" }
+};
+
+/* Accept a few shapes for EV.bookings and normalize to [{title,status,...}]. */
+function normalizeBookings(raw){
+  if(!Array.isArray(raw)) return [];
+  return raw.map(function(b){
+    if(typeof b==="string") return { title:b, status:"todo", when:"", by:"", ref:"", url:"", place:"", who:"", note:"" };
+    if(!b || !b.title) return null;
+    var status=String(b.status||"todo").toLowerCase();
+    if(!BOOK_STATUS[status]) status="todo";
+    return {
+      title:b.title, status:status,
+      when:b.when||"", by:b.by||"", ref:b.ref||"", url:b.url||"",
+      place:b.place||"", who:b.who||"", note:b.note||""
+    };
+  }).filter(Boolean);
+}
+
+/* ---- opening hours / time windows. Compared as wall-clock minutes since
+   midnight, so they are timezone-correct with no tz math (never zonedEpoch). ---- */
+function isHM(s){ return /^\d{1,2}:\d{2}$/.test(String(s)); }
+function hmMin(s){ var p=String(s).split(":"); return (+p[0])*60 + (+p[1]); }
+function minHM(mins){ mins=((mins%1440)+1440)%1440; return pad2(Math.floor(mins/60))+":"+pad2(mins%60); }
+
+/* Normalize a place.open or item.window value to [{s,e,label}] (minutes since
+   midnight). Tolerant of "10:00-16:00", ["10:00","16:00"], [["10:00","16:00"],..],
+   and { label, windows:[...] }. Returns [] when absent or malformed. */
+function normalizeWindows(raw){
+  if(raw==null) return [];
+  var label="";
+  if(typeof raw==="object" && !Array.isArray(raw)){
+    label=raw.label||"";
+    raw=raw.windows;
+    if(raw==null) return [];
+  }
+  var out=[];
+  function add(s,e){ s=String(s).trim(); e=String(e).trim(); if(isHM(s) && isHM(e)) out.push({ s:hmMin(s), e:hmMin(e), label:label }); }
+  function addStr(str){ var m=String(str).split("-"); if(m.length===2) add(m[0], m[1]); }
+  if(typeof raw==="string"){ addStr(raw); }
+  else if(Array.isArray(raw)){
+    if(raw.length===2 && typeof raw[0]==="string" && typeof raw[1]==="string" && isHM(raw[0]) && isHM(raw[1])){
+      add(raw[0], raw[1]);   // pair form ["10:00","16:00"]
+    } else {
+      raw.forEach(function(w){
+        if(typeof w==="string") addStr(w);
+        else if(Array.isArray(w) && w.length===2) add(w[0], w[1]);
+      });
+    }
+  }
+  return out;
+}
+/* Effective windows for a schedule item: item constraint wins over place.open. */
+function itemWindows(item){
+  if(!item) return [];
+  var w = item.window!=null ? item.window
+        : (item.earliest!=null || item.latest!=null) ? [[item.earliest||"00:00", item.latest||"23:59"]]
+        : null;
+  if(w!=null) return normalizeWindows(w);
+  var p = item.place && placeById[item.place];
+  if(p && p.open!=null) return normalizeWindows(p.open);
+  return [];
+}
+/* True if wall-clock minutes t falls inside any window (handles overnight wrap). */
+function inWindows(wins, t){
+  if(!wins || !wins.length) return true;
+  for(var i=0;i<wins.length;i++){
+    var s=wins[i].s, e=wins[i].e;
+    if(s<=e){ if(t>=s && t<=e) return true; }
+    else if(t>=s || t<=e) return true;   // overnight wrap
+  }
+  return false;
+}
+/* Time-range text ("11:00 to 14:00", comma-joined) for the warning line. */
+function winTimes(wins){ return wins.map(function(w){ return minHM(w.s)+" to "+minHM(w.e); }).join(", "); }
+/* Pill text: the descriptive label if the window carries one, else the times. */
+function winLabel(wins){ return (wins.length && wins[0].label) ? wins[0].label : winTimes(wins); }
+
+/* Whole days from local midnight until a yyyy-mm-dd date. Negative means past. */
+function daysUntil(ymd){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd))) return null;
+  var target=dateAt(ymd,"00:00"), now=new Date();
+  now.setHours(0,0,0,0);
+  return Math.round((target-now)/86400000);
+}
+
+/* ---- time helpers. Schedule times are wall-clock in the event's timezone. ---- */
+function hm(t){ var p=t.split(":"); return {h:+p[0], m:+p[1]}; }
+function dateAt(dateStr, t){ var d=dateStr.split("-"), x=hm(t); return new Date(+d[0], +d[1]-1, +d[2], x.h, x.m, 0, 0); }
+function dayTz(day){ return (day && day.timezone) || (EV && EV.timezone) || null; }
+function tzOffsetMs(date, tz){
+  var dtf=new Intl.DateTimeFormat("en-US",{ timeZone:tz, hour12:false, year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" });
+  var m={}; dtf.formatToParts(date).forEach(function(p){ m[p.type]=p.value; });
+  var h = m.hour==="24" ? 0 : +m.hour;
+  var asUTC=Date.UTC(+m.year, +m.month-1, +m.day, h, +m.minute, +m.second);
+  return asUTC - date.getTime();
+}
+/* Absolute epoch (ms) for a wall-clock time on dateStr, interpreted in tz (or device-local if no tz). */
+function zonedEpoch(dateStr, timeStr, tz){
+  if(!tz) return dateAt(dateStr, timeStr).getTime();
+  var d=dateStr.split("-"), t=timeStr.split(":");
+  var asUTC=Date.UTC(+d[0], +d[1]-1, +d[2], +t[0], +t[1], 0);
+  var off=tzOffsetMs(new Date(asUTC), tz);
+  var utc=asUTC-off;
+  var off2=tzOffsetMs(new Date(utc), tz);
+  if(off2!==off) utc=asUTC-off2;   // refine across a DST boundary
+  return utc;
+}
+function todayStrTz(tz){
+  if(!tz){ var n=new Date(); return n.getFullYear()+"-"+pad2(n.getMonth()+1)+"-"+pad2(n.getDate()); }
+  return new Intl.DateTimeFormat("en-CA",{ timeZone:tz, year:"numeric", month:"2-digit", day:"2-digit" }).format(new Date());
+}
+function isTodayD(day){ return day.date === todayStrTz(dayTz(day)); }
+function tzAbbr(day){
+  var tz=dayTz(day); if(!tz) return "";
+  try {
+    var parts=new Intl.DateTimeFormat("en-US",{ timeZone:tz, timeZoneName:"short" }).formatToParts(new Date(zonedEpoch(day.date,"12:00",tz)));
+    var p=parts.filter(function(x){ return x.type==="timeZoneName"; })[0];
+    return p ? p.value : "";
+  } catch(e){ return ""; }
+}
+function fmt12(t){ var x=hm(t), ap=x.h>=12?"pm":"am", h=x.h%12; if(h===0)h=12; return h+(x.m?(":"+pad2(x.m)):"")+ap; }
+function fmtRange(a,b){ return fmt12(a)+" – "+fmt12(b); }
+function fmtDay(dateStr, opts){ return dateAt(dateStr,"12:00").toLocaleDateString(undefined, opts); }
+function todayIndex(){ for(var i=0;i<EV.days.length;i++){ if(isTodayD(EV.days[i])) return i; } return -1; }
+function statusOf(item, day, now){
+  var s=zonedEpoch(day.date, item.start, dayTz(day)), e=zonedEpoch(day.date, item.end, dayTz(day)), t=now.getTime();
+  if(t>=e) return "past";
+  if(t>=s) return "now";
+  return "future";
+}
+function fmtCountdown(ms){
+  if(ms<0) ms=0;
+  var s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  if(h>0) return h+"h "+m+"m";
+  if(m>0) return m+"m "+pad2(ss)+"s";
+  return ss+"s";
+}
+function tripStatus(){
+  var now=Date.now(), d0=EV.days[0], dN=EV.days[EV.days.length-1];
+  var firstStart=zonedEpoch(d0.date,"00:00",dayTz(d0));
+  var lastEnd=zonedEpoch(dN.date,"23:59",dayTz(dN));
+  if(now<firstStart) return { phase:"pre", days:Math.ceil((firstStart-now)/86400000) };
+  if(now>lastEnd) return { phase:"post" };
+  var ti=todayIndex();
+  return { phase:"during", dayNum:(ti>=0?ti+1:null), total:EV.days.length };
+}
+function currentCenter(){
+  var day=EV.days[curDay];
+  if(day && day.location) return day.location;
+  if(EV.location) return EV.location;
+  var list=placesForDay(curDay);
+  if(list.length) return { lat:list[0].lat, lng:list[0].lng, zoom:14 };
+  return { lat:0, lng:0, zoom:2 };
+}
+
+/* ---------- header ---------- */
+function renderHeader(){
+  document.title = EV.title + (EV.team? " · "+EV.team.rank : "");
+  document.getElementById("hdrEyebrow").textContent = EV.subtitle || (isMulti ? "Trip itinerary" : "Are we there yet?");
+  document.getElementById("hdrTitle").textContent = EV.title;
+  var meta = document.getElementById("hdrMeta");
+  meta.innerHTML = "";
+  function add(txt){ var s=document.createElement("span"); s.className="badge"; s.textContent=txt; meta.appendChild(s); }
+  if(isMulti){
+    add("📅 "+fmtDay(EV.days[0].date,{month:"short",day:"numeric"})+" – "+fmtDay(EV.days[EV.days.length-1].date,{month:"short",day:"numeric"}));
+    var ts=tripStatus();
+    if(ts.phase==="pre") add("⏳ Starts in "+ts.days+" day"+(ts.days===1?"":"s"));
+    else if(ts.phase==="post") add("✓ Trip complete");
+    else add(ts.dayNum ? "Day "+ts.dayNum+" of "+ts.total : "In progress");
+  } else {
+    add("📅 "+fmtDay(EV.days[0].date,{weekday:"long",month:"long",day:"numeric"}));
+  }
+  var ab=tzAbbr(EV.days[curDay]); if(ab) add("🕘 "+ab);
+  if(EV.team) add((EV.team.emoji||"👥")+" "+EV.team.rank+(EV.team.name?" · "+EV.team.name:""));
+  if(EV.location) add("📍 "+EV.location.name);
+}
+
+/* ---------- day switcher ---------- */
+function renderDayStrip(){
+  var strip=document.getElementById("dayStrip");
+  if(!isMulti){ strip.hidden=true; strip.innerHTML=""; return; }
+  strip.hidden=false; strip.innerHTML="";
+  EV.days.forEach(function(day, i){
+    var b=document.createElement("button");
+    b.className="daychip"+(isTodayD(day)?" today":"");
+    b.setAttribute("aria-selected", i===curDay ? "true":"false");
+    b.innerHTML='<div class="d1">'+fmtDay(day.date,{weekday:"short"})+'</div>'+
+                '<div class="d2">'+fmtDay(day.date,{month:"numeric",day:"numeric"})+'</div>';
+    b.addEventListener("click", function(){ selectDay(i); });
+    strip.appendChild(b);
+    if(i===curDay) setTimeout(function(){ try{ b.scrollIntoView({inline:"center",block:"nearest"}); }catch(e){} }, 0);
+  });
+}
+function selectDay(i){
+  curDay=i;
+  renderDayStrip();
+  renderHeader();
+  renderNow();
+  renderSchedule();
+  renderSun();
+  renderWeather();
+  scrollToNow(true);
+  if(map){ refreshMarkers(); fitDay(); }
+}
+
+/* ---------- flex replan (slip) ----------
+   A schedule item is anchored by default. Only flex:true items may slide when you
+   run behind, and a confirmed booking always re-anchors one. The slide is
+   ephemeral: it never mutates event.json or rewrites printed times. The user's
+   declared slip lives per-day under daykit:<id>:slip:<date>; projected times show
+   as overlay badges only. Absent flex fields keep the whole feature inert. */
+function slipKey(date){ return "daykit:"+EV.id+":slip:"+date; }
+function loadSlip(date){ try { var v=parseInt(localStorage.getItem(slipKey(date)),10); return (v>0)?v:0; } catch(e){ return 0; } }
+function saveSlip(date, mins){ try { if(mins>0) localStorage.setItem(slipKey(date), String(mins)); else localStorage.removeItem(slipKey(date)); } catch(e){} }
+var slipExpanded = false;   // collapsed by default so it stays a calm one-liner
+
+/* A confirmed booking (matched by item.booking against a ref or exact title, or a
+   confirmed booking at the same place) forces an item anchored even if it is flex. */
+function bookingConfirmed(item){
+  if(!item) return false;
+  var bks=normalizeBookings(EV.bookings), i;
+  if(item.booking){
+    for(i=0;i<bks.length;i++){
+      if((bks[i].ref && bks[i].ref===item.booking) || bks[i].title===item.booking) return bks[i].status==="confirmed";
+    }
+  }
+  if(item.place){
+    for(i=0;i<bks.length;i++){ if(bks[i].place===item.place && bks[i].status==="confirmed") return true; }
+  }
+  return false;
+}
+/* Default is anchored: only flex:true slides, and a confirmed booking wins. */
+function isAnchored(item){ return !item || !item.flex || bookingConfirmed(item); }
+/* Shift a wall-clock HH:MM by dMin minutes, clamped so it never rolls past 23:59. */
+function shiftHM(t, dMin){ var m=hmMin(t)+dMin; if(m>1439)m=1439; if(m<0)m=0; return minHM(m); }
+
+/* Auto-detected overrun (minutes) of the flex block we should still be in: the
+   most recently started block, when it is flex and now is past its printed end. */
+function slipAuto(day, now){
+  var tz=dayTz(day), t=now.getTime(), sched=day.schedule||[], last=null, lastS=-1;
+  sched.forEach(function(it){
+    if(!it.start || !it.end) return;
+    var s=zonedEpoch(day.date, it.start, tz);
+    if(s<=t && s>lastS){ last=it; lastS=s; }
+  });
+  if(last && !isAnchored(last)){
+    var over=Math.round((t - zonedEpoch(day.date, last.end, tz))/60000);
+    if(over>0) return over;
+  }
+  return 0;
+}
+/* Effective slip for a day = max(auto overrun, user-declared). Today only. */
+function slipMinutes(day, now){
+  if(!isTodayD(day)) return 0;
+  return Math.max(slipAuto(day, now||new Date()), loadSlip(day.date));
+}
+/* Freeze past blocks, split the rest into movable (flex) vs anchored, then for
+   each downstream anchored block A test whether the latest movable block before it
+   projects (end + D, pure epoch so DST-correct) past A's start. */
+function computeSlide(day, now, D){
+  var tz=dayTz(day), t=now.getTime(), sched=day.schedule||[], movable=[], anchored=[];
+  sched.forEach(function(it){
+    if(!it.start || !it.end) return;
+    if(t>=zonedEpoch(day.date, it.end, tz)) return;   // frozen: past block, never rewritten
+    (isAnchored(it) ? anchored : movable).push(it);
+  });
+  if(!movable.length || D<=0) return { active:false, D:(D>0?D:0), movable:movable, anchored:anchored, safe:[], threatened:[] };
+  var safe=[], threatened=[];
+  anchored.forEach(function(A){
+    var aStart=zonedEpoch(day.date, A.start, tz), prev=null, prevS=-1;
+    movable.forEach(function(m){
+      var mS=zonedEpoch(day.date, m.start, tz);
+      if(mS<aStart && mS>prevS){ prev=m; prevS=mS; }
+    });
+    if(!prev){ safe.push(A); return; }
+    if(zonedEpoch(day.date, prev.end, tz) + D*60000 > aStart) threatened.push(A); else safe.push(A);
+  });
+  return { active:true, D:D, movable:movable, anchored:anchored, safe:safe, threatened:threatened };
+}
+/* "a and b" / "a, b, and c". Titles are esc()'d before joining. */
+function joinTitles(items){
+  var t=items.map(function(it){ return esc(it.title); });
+  if(t.length<=1) return t.join("");
+  if(t.length===2) return t[0]+" and "+t[1];
+  return t.slice(0,-1).join(", ")+", and "+t[t.length-1];
+}
+function joinAnchors(items){ return items.map(function(A){ return esc(A.title)+" ("+fmt12(A.start)+")"; }).join(", "); }
+function slipTradeoff(day, sl){
+  if(!sl.active) return '<span class="lede">Pick a delay above to see what still fits.</span>';
+  var out='<div class="lede">Slide '+joinTitles(sl.movable)+' by '+sl.D+' min:</div>';
+  if(sl.threatened.length) out+='<div class="warn">⚠ At risk: '+joinAnchors(sl.threatened)+'.</div>';
+  if(sl.safe.length) out+='<div class="ok">✓ Still make: '+joinAnchors(sl.safe)+'.</div>';
+  if(!sl.threatened.length && !sl.safe.length) out+='<div class="ok">✓ Nothing booked is at risk.</div>';
+  return out;
+}
+/* Markup for the collapsible slip, appended into the now card. Empty when the day
+   has no remaining flexible block (covers all-fixed and old files). */
+function slipMarkup(day, now){
+  var movableAll=computeSlide(day, now, 0).movable;
+  if(!movableAll.length){ if(loadSlip(day.date)) saveSlip(day.date, 0); return ""; }   // auto-clear when the day is over
+  var userD=loadSlip(day.date), D=slipMinutes(day, now), sl=computeSlide(day, now, D);
+  var chip = D>0 ? ("Running ~"+D+" min behind. Slide flex blocks?") : "Running behind? Slide the flexible blocks.";
+  var html='<div class="slip"><button type="button" class="slip-chip" data-sliptoggle="1">'+
+    '<span>🕰️ '+chip+'</span><span class="caret">'+(slipExpanded?"▾":"▸")+'</span></button>';
+  if(slipExpanded){
+    html+='<div class="slip-panel"><div class="opts">'+
+      [15,30,60].map(function(n){ return '<button type="button" data-slipadd="'+n+'"'+(userD===n?' class="on"':'')+'>+'+n+'</button>'; }).join("")+
+      '<button type="button" class="reset" data-slipreset="1">Reset</button></div>'+
+      '<div class="tradeoff">'+slipTradeoff(day, sl)+'</div></div>';
+  }
+  return html+'</div>';
+}
+function wireSlip(wrap, day){
+  var slip=wrap.querySelector(".slip"); if(!slip) return;
+  var tg=slip.querySelector("[data-sliptoggle]");
+  if(tg) tg.addEventListener("click", function(){ slipExpanded=!slipExpanded; renderNow(); });
+  slip.querySelectorAll("[data-slipadd]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var n=+b.getAttribute("data-slipadd");
+      saveSlip(day.date, loadSlip(day.date)===n ? 0 : n);   // tap the active one to clear it
+      slipExpanded=true; renderNow(); renderSchedule();
+    });
+  });
+  var rb=slip.querySelector("[data-slipreset]");
+  if(rb) rb.addEventListener("click", function(){ saveSlip(day.date, 0); renderNow(); renderSchedule(); });
+}
+
+/* ---------- now card ---------- */
+function placeSuffix(item){ var p=item.place && placeById[item.place]; return p ? " · "+p.name : ""; }
+/* Live warning when a stop's planned start falls outside its open window. */
+function winWarn(item){
+  var wins=itemWindows(item);
+  if(!wins.length || inWindows(wins, hmMin(item.start))) return "";
+  return '<div class="winwarn">⚠️ Arrives '+esc(item.start)+', outside the window ('+esc(winTimes(wins))+').</div>';
+}
+function renderNow(){
+  var wrap=document.getElementById("nowWrap");
+  var day=EV.days[curDay], tz=dayTz(day), now=new Date();
+
+  if(!isTodayD(day)){
+    var when=fmtDay(day.date,{weekday:"long",month:"long",day:"numeric"});
+    var first=day.schedule[0];
+    var future=zonedEpoch(day.date,"23:59",tz) > now.getTime();
+    var body=first ? ((future?"Starts ":"Started ")+fmt12(first.start)+" · "+esc(first.title)) : "";
+    wrap.innerHTML='<div class="card now"><div class="label">'+(future?"Coming up":"Past day")+'</div>'+
+      '<div class="title">'+esc(day.title || when)+'</div>'+
+      '<div class="when">'+when+(body?". "+body:"")+'</div></div>';
+    return;
+  }
+
+  var cur=null, nxt=null, curIdx=-1, nxtIdx=-1;
+  for(var i=0;i<day.schedule.length;i++){
+    var st=statusOf(day.schedule[i], day, now);
+    if(st==="now" && !cur){ cur=day.schedule[i]; curIdx=i; }
+    if(st==="future" && !nxt){ nxt=day.schedule[i]; nxtIdx=i; }
+  }
+  var html='<div class="card now">';
+  if(cur){
+    html+='<div class="label">Right now</div><div class="title">'+esc(cur.title)+'</div>';
+    html+='<div class="when">'+fmtRange(cur.start,cur.end)+placeSuffix(cur)+'</div>';
+    html+='<div class="next">Wraps up in <span class="countdown" data-until="'+zonedEpoch(day.date,cur.end,tz)+'"></span>';
+    if(nxt) html+='. Next: <b>'+esc(nxt.title)+'</b> at '+fmt12(nxt.start);
+    html+='.</div>';
+    html+=winWarn(cur);
+  } else if(nxt){
+    html+='<div class="label">Up next</div><div class="title">'+esc(nxt.title)+'</div>';
+    html+='<div class="when">'+fmtRange(nxt.start,nxt.end)+placeSuffix(nxt)+'</div>';
+    html+='<div class="next">Starts in <span class="countdown" data-until="'+zonedEpoch(day.date,nxt.start,tz)+'"></span>.</div>';
+    html+=winWarn(nxt);
+  } else {
+    var first2=day.schedule[0];
+    if(first2 && now.getTime()<zonedEpoch(day.date,first2.start,tz)){
+      html+='<div class="label">Good morning</div><div class="title">'+esc(first2.title)+' at '+fmt12(first2.start)+'</div>'+
+            '<div class="when">Starts in <span class="countdown" data-until="'+zonedEpoch(day.date,first2.start,tz)+'"></span>.</div>';
+    } else {
+      html+='<div class="label">That’s a wrap</div><div class="title">Day complete 🎉</div>'+
+            '<div class="when">'+esc(day.closingNote || EV.closingNote || "Nicely done. Enjoy the rest of your day.")+'</div>';
+    }
+  }
+
+  // Day progress bar (are we there yet)
+  if(day.schedule.length){
+    var ds=zonedEpoch(day.date, day.schedule[0].start, tz);
+    var de=zonedEpoch(day.date, day.schedule[day.schedule.length-1].end, tz);
+    var pct = de>ds ? clamp(Math.round((now.getTime()-ds)/(de-ds)*100)) : 0;
+    var pos = curIdx>=0 ? curIdx+1 : (nxtIdx>=0 ? nxtIdx : day.schedule.length);
+    html+='<div class="prog"><i style="width:'+pct+'%"></i></div>';
+    html+='<div class="progcap"><span>Stop '+Math.min(pos,day.schedule.length)+' of '+day.schedule.length+'</span><span>'+pct+'% of the day</span></div>';
+  }
+
+  // Walk-to-next
+  var tp=null, tlabel="";
+  if(nxt && nxt.place && placeById[nxt.place]){ tp=placeById[nxt.place]; tlabel="Walk to next: "+tp.name; }
+  else if(cur && cur.place && placeById[cur.place]){ tp=placeById[cur.place]; tlabel="Walk to "+tp.name; }
+  if(tp){
+    var dist=myPos ? " ("+fmtDist(haversine(myPos.lat,myPos.lng,tp.lat,tp.lng))+")" : "";
+    html+='<div class="actions">'+
+      '<a class="btn primary" style="text-decoration:none" href="'+walkUrl(tp)+'" target="_blank" rel="noopener">🚶 '+esc(tlabel)+dist+'</a>'+
+      '<button class="btn ghost" data-goplace="'+tp.id+'">Show on map</button></div>';
+  }
+
+  html+=slipMarkup(day, now);
+
+  html+='</div>';
+  wrap.innerHTML=html;
+  var gp=wrap.querySelector("[data-goplace]");
+  if(gp) gp.addEventListener("click", function(){ focusPlace(gp.getAttribute("data-goplace")); });
+  wireSlip(wrap, day);
+  tick();
+}
+
+/* Up-in-5 nudge: tied to the REAL current day. */
+var NUDGE_MIN = 5;
+function renderNudge(){
+  var el=document.getElementById("nudge");
+  var ti=todayIndex();
+  if(ti<0){ el.innerHTML=""; return; }
+  var day=EV.days[ti], now=new Date(), cur=null, nxt=null;
+  for(var i=0;i<day.schedule.length;i++){
+    var st=statusOf(day.schedule[i], day, now);
+    if(st==="now" && !cur) cur=day.schedule[i];
+    if(st==="future" && !nxt) nxt=day.schedule[i];
+  }
+  if(!cur || !nxt){ el.innerHTML=""; return; }
+  var minsLeft=(zonedEpoch(day.date,cur.end,dayTz(day))-now.getTime())/60000;
+  var tp=nxt.place && placeById[nxt.place];
+  if(minsLeft>0 && minsLeft<=NUDGE_MIN && tp){
+    var m=Math.max(1, Math.ceil(minsLeft));
+    var dist=myPos ? " · "+fmtDist(haversine(myPos.lat,myPos.lng,tp.lat,tp.lng)) : "";
+    var nwins=itemWindows(nxt);
+    var heads=(nwins.length && !inWindows(nwins, hmMin(nxt.start))) ? " Heads up: that is outside its open window ("+esc(winTimes(nwins))+")." : "";
+    el.innerHTML='<div class="nudge"><span class="msg">⏰ '+m+' min left in '+esc(cur.title)+
+      '. Head to '+esc(tp.name)+dist+'.'+heads+'</span>'+
+      '<a class="btn" href="'+walkUrl(tp)+'" target="_blank" rel="noopener">🚶 Walk</a></div>';
+  } else { el.innerHTML=""; }
+}
+
+/* ---------- weather ---------- */
+var WX_CODE = {
+  0:["Clear","☀️"], 1:["Mostly clear","🌤️"], 2:["Partly cloudy","⛅"], 3:["Overcast","☁️"],
+  45:["Fog","🌫️"], 48:["Fog","🌫️"], 51:["Drizzle","🌦️"], 53:["Drizzle","🌦️"], 55:["Drizzle","🌦️"],
+  61:["Rain","🌧️"], 63:["Rain","🌧️"], 65:["Heavy rain","🌧️"], 71:["Snow","🌨️"], 73:["Snow","🌨️"],
+  75:["Snow","🌨️"], 80:["Showers","🌦️"], 81:["Showers","🌦️"], 82:["Storms","⛈️"],
+  95:["Thunderstorm","⛈️"], 96:["Thunderstorm","⛈️"], 99:["Thunderstorm","⛈️"]
+};
+function renderWeather(){
+  var el=document.getElementById("wxStrip");
+  var day=EV.days[curDay], loc=day.location||EV.location;
+  if(!loc){ el.innerHTML=""; return; }
+  var today=isTodayD(day);
+  var url="https://api.open-meteo.com/v1/forecast?latitude="+loc.lat+"&longitude="+loc.lng+
+    "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code"+
+    "&hourly=precipitation_probability&temperature_unit=fahrenheit&timezone=auto"+
+    "&start_date="+day.date+"&end_date="+day.date+
+    (today?"&current=temperature_2m,weather_code":"");
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    if(!d || !d.daily || !d.daily.time || !d.daily.time.length){ el.innerHTML=""; return; }
+    var code=today && d.current ? d.current.weather_code : d.daily.weather_code[0];
+    var wx=WX_CODE[code]||["",""];
+    var hi=Math.round(d.daily.temperature_2m_max[0]), lo=Math.round(d.daily.temperature_2m_min[0]);
+    var pop=d.daily.precipitation_probability_max[0];
+    // Cache the hourly rain odds by clock hour so the schedule can flag wet blocks.
+    var hourly={};
+    if(d.hourly && d.hourly.time){
+      d.hourly.time.forEach(function(t,i){ var h=parseInt(String(t).slice(11,13),10); if(!isNaN(h)) hourly[h]=d.hourly.precipitation_probability[i]; });
+    }
+    WX[day.date]={ pop:pop, hourly:hourly };
+    var nowT=today && d.current ? '<span class="now-t">'+Math.round(d.current.temperature_2m)+'°F</span> ' : "";
+    var hint = (pop!=null && pop>=50) ? '<div class="wxhint">☔ '+pop+'% rain today. Pack the rain shell and keep an eye on the outdoor blocks.</div>' : "";
+    el.innerHTML='<div class="wx"><span class="big">'+wx[1]+'</span>'+
+      '<span>'+nowT+esc(wx[0])+'<br><span class="rest">High '+hi+'° · Low '+lo+'° · '+(pop!=null?pop+'% rain':'')+'</span></span></div>'+hint;
+    renderSchedule();   // let the wet-block badges appear now that hourly data is in
+  }).catch(function(){ el.innerHTML=""; });
+}
+
+/* Peak rain odds (percent) during a schedule item's hours, or null when no data. */
+function itemRain(day, item){
+  var w=WX[day.date];
+  if(!w || !w.hourly || !item.start || !item.end) return null;
+  var h0=Math.floor(hmMin(item.start)/60), h1=Math.ceil(hmMin(item.end)/60), best=null;
+  for(var h=h0; h<h1; h++){ var v=w.hourly[h]; if(v!=null && (best==null || v>best)) best=v; }
+  return best;
+}
+
+/* ---------- sun times (offline, no API) ----------
+   Sunrise, sunset, and the evening golden hour from the classic solar algorithm.
+   Pure math from date + lat/lng, so it works with no signal. */
+function sunEvent(y, mo, d, lat, lng, zenith, rising){
+  var RAD=Math.PI/180, DEG=180/Math.PI;
+  var N1=Math.floor(275*mo/9), N2=Math.floor((mo+9)/12);
+  var N3=(1+Math.floor((y-4*Math.floor(y/4)+2)/3));
+  var N=N1-(N2*N3)+d-30;                       // day of year
+  var lngHour=lng/15;
+  var t=rising ? N+((6-lngHour)/24) : N+((18-lngHour)/24);
+  var M=(0.9856*t)-3.289;
+  var L=M+(1.916*Math.sin(M*RAD))+(0.020*Math.sin(2*M*RAD))+282.634; L=(L%360+360)%360;
+  var RA=DEG*Math.atan(0.91764*Math.tan(L*RAD)); RA=(RA%360+360)%360;
+  RA=RA+(Math.floor(L/90)*90-Math.floor(RA/90)*90); RA=RA/15;
+  var sinDec=0.39782*Math.sin(L*RAD), cosDec=Math.cos(Math.asin(sinDec));
+  var cosH=(Math.cos(zenith*RAD)-(sinDec*Math.sin(lat*RAD)))/(cosDec*Math.cos(lat*RAD));
+  if(cosH>1 || cosH<-1) return null;           // sun never rises/sets that day at this zenith
+  var H=rising ? 360-DEG*Math.acos(cosH) : DEG*Math.acos(cosH); H=H/15;
+  var T=H+RA-(0.06571*t)-6.622;
+  var UT=(T-lngHour)%24; UT=(UT+24)%24;         // hours UTC
+  return Date.UTC(y, mo-1, d)+Math.round(UT*3600000);
+}
+function fmtSun(epoch, tz){
+  if(epoch==null) return "";
+  var opts={ hour:"numeric", minute:"2-digit" }; if(tz) opts.timeZone=tz;
+  return new Intl.DateTimeFormat(undefined, opts).format(new Date(epoch)).replace(/\s?([AP])M/,function(_,p){ return p.toLowerCase(); });
+}
+function renderSun(){
+  var el=document.getElementById("sunStrip"); if(!el) return;
+  var day=EV.days[curDay], loc=day.location||EV.location;
+  if(!loc){ el.innerHTML=""; return; }
+  var p=day.date.split("-"), y=+p[0], mo=+p[1], d=+p[2], tz=dayTz(day);
+  var rise=sunEvent(y,mo,d,loc.lat,loc.lng,90.833,true);
+  var set=sunEvent(y,mo,d,loc.lat,loc.lng,90.833,false);
+  var gold=sunEvent(y,mo,d,loc.lat,loc.lng,84,false);   // sun 6 deg up: golden hour begins
+  if(rise==null && set==null){ el.innerHTML=""; return; }
+  var bits=[];
+  if(rise!=null) bits.push('🌅 Sunrise <b>'+fmtSun(rise,tz)+'</b>');
+  if(set!=null) bits.push('🌇 Sunset <b>'+fmtSun(set,tz)+'</b>');
+  if(gold!=null && set!=null) bits.push('✨ Golden hour <b>'+fmtSun(gold,tz)+' to '+fmtSun(set,tz)+'</b>');
+  el.innerHTML='<div class="sunstrip">'+bits.join('<span aria-hidden="true">·</span>')+'</div>';
+}
+
+/* Stop detail badges (distance, elevation gain, difficulty) and the day effort total. */
+function fmtMiles(v){ return (typeof v==="number") ? (Math.round(v*10)/10)+" mi" : esc(String(v)); }
+function fmtFeet(v){ return (typeof v==="number") ? v.toLocaleString()+" ft" : esc(String(v)); }
+function levelClass(s){ s=String(s).toLowerCase(); return /easy|light/.test(s)?"easy":(/mod|medium/.test(s)?"moderate":(/hard|strenu|tough|diff/.test(s)?"hard":"")); }
+function stopStats(item){
+  var det=[];
+  if(item.dist!=null) det.push('🥾 '+fmtMiles(item.dist));
+  if(item.gain!=null) det.push('↑ '+fmtFeet(item.gain));
+  if(item.level) det.push('<span class="lvl '+levelClass(item.level)+'">'+esc(item.level)+'</span>');
+  return det.length ? '<span class="statline">'+det.join(' · ')+'</span>' : "";
+}
+function fmtDur(mins){ mins=Math.round(mins); if(mins<60) return mins+" min"; var h=Math.floor(mins/60), m=mins%60; return h+"h"+(m?pad2(m):""); }
+
+/* ---------- schedule ---------- */
+function renderSchedule(){
+  var day=EV.days[curDay], now=new Date(), today=isTodayD(day);
+  document.getElementById("schedHead").textContent = isMulti
+    ? (day.title ? day.title : fmtDay(day.date,{weekday:"long",month:"long",day:"numeric"}))
+    : "Full schedule";
+  var ol=document.getElementById("schedList");
+  ol.innerHTML="";
+  var tz=dayTz(day), cfg=travelCfg(day), warnings=[];
+  var filtering=whoFilter.names.length>0, shown=0;
+  var usesFlex=day.schedule.some(function(it){ return it.flex; });   // only paint pills when the day opts in
+  var D=today ? slipMinutes(day, now) : 0;
+  day.schedule.forEach(function(item,i){
+    if(filtering && !matchesWho(item.who)) return;   // showing just one person's wants
+    shown++;
+    var li=document.createElement("li");
+    var st=today ? statusOf(item, day, now) : "";
+    var cls=[];
+    if(st==="now") cls.push("is-now");
+    else if(st==="past") cls.push("is-past");
+    if(item.all) cls.push("is-all");
+    li.className=cls.join(" ");
+    var sess=item.session? '<span class="sesspill">'+item.session+'</span>' : (item.all?'<span class="sesspill" style="background:#6d4bd6">ALL</span>':'');
+    var sub="";
+    var p=item.place && placeById[item.place];
+    if(p) sub=p.name;
+    if(item.also && placeById[item.also]) sub += (sub?" + ":"")+placeById[item.also].name;
+    if(item.note) sub += (sub?" · ":"")+item.note;
+    var wins=itemWindows(item), winPill="";
+    if(wins.length){
+      var inside=inWindows(wins, hmMin(item.start));
+      winPill='<span class="winpill'+(inside?"":" warn")+'">🕐 '+esc(winLabel(wins))+'</span>';
+    }
+    var flexPill="";
+    // Only mark the meaningful states: what can slide, and what a reservation pins.
+    // Plain default-fixed items get no pill, so a schedule stays glanceable.
+    if(usesFlex){
+      if(!isAnchored(item)) flexPill='<span class="flexpill">Flex</span>';
+      else if(bookingConfirmed(item)) flexPill='<span class="anchorpill">Booked</span>';
+    }
+    var slipBadge="";
+    if(D>0 && st!=="past" && !isAnchored(item))
+      slipBadge='<span class="slipped" title="Projected if you slide">→ '+fmt12(shiftHM(item.start,D))+' – '+fmt12(shiftHM(item.end,D))+'</span>';
+    var rain=itemRain(day, item), rainBadge=(rain!=null && rain>=50) ? '<span class="rainbadge" title="Rain likely during this block">🌧 '+rain+'%</span>' : "";
+    li.innerHTML =
+      '<span class="time">'+fmt12(item.start)+'<br>'+fmt12(item.end)+'</span>'+
+      '<span class="what">'+sess+esc(item.title)+winPill+flexPill+rainBadge+slipBadge+whoChips(item.who)+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+stopStats(item)+'</span>'+
+      (p?'<button class="go" title="Show on map" data-place="'+p.id+'">🗺️</button>':'<span></span>');
+    ol.appendChild(li);
+
+    // Connector to the next stop: rough drive/walk time, and a fit check against the gap.
+    // Skipped while filtering by person, since the visible stops are no longer adjacent.
+    var nxt=filtering ? null : day.schedule[i+1];
+    if(nxt){
+      var leg=legEstimate(p, nxt.place && placeById[nxt.place], day);
+      // Only a forward, sequential step gets a travel leg. Two stops that start at
+      // the same time are parallel (a group splitting up), so a drive between them
+      // is meaningless and must not be flagged as a conflict.
+      if(leg && leg.mode!=="same" && hmMin(nxt.start)>hmMin(item.start)){
+        var gapMin=Math.round((zonedEpoch(day.date,nxt.start,tz)-zonedEpoch(day.date,item.end,tz))/60000);
+        var tight=leg.min-gapMin>cfg.graceMin;   // only flag a meaningful shortfall, not a 2 min walk into a 0 gap
+        var label=(leg.mode==="walk"?"~"+leg.min+" min walk":"~"+leg.min+" min drive")+" · "+fmtDist(leg.road);
+        var warn=tight ? '<span class="legwarn">does not fit '+(gapMin<0?"(overlaps)":"(only "+gapMin+" min)")+'</span>' : "";
+        var lg=document.createElement("li");
+        lg.className="leg"+(tight?" tight":"");
+        lg.innerHTML='<span class="legchip '+leg.mode+(tight?" bad":"")+'">'+label+'</span>'+warn;
+        ol.appendChild(lg);
+        if(tight) warnings.push(esc(item.title)+" to "+esc(nxt.title)+" needs ~"+leg.min+" min but "+
+          (gapMin<0?"the times overlap.":"only "+gapMin+" min is set aside."));
+      }
+    }
+  });
+  if(!day.schedule.length){ ol.innerHTML='<li class="loading">No plans set for this day.</li>'; }
+  else if(!shown){ ol.innerHTML='<li class="loading">No wants match this filter.</li>'; }
+  ol.querySelectorAll(".go").forEach(function(b){
+    b.addEventListener("click", function(){ focusPlace(b.getAttribute("data-place")); });
+  });
+  // Day at a glance: total trail distance and elevation gain, when the data is there.
+  var gl=document.getElementById("dayGlance"), dist=0, gain=0, drive=dayDriveMinutes(day);
+  day.schedule.forEach(function(it){ if(typeof it.dist==="number") dist+=it.dist; if(typeof it.gain==="number") gain+=it.gain; });
+  var glBits=[];
+  if(dist>0) glBits.push('🥾 <b>'+(Math.round(dist*10)/10)+' mi</b>');
+  if(gain>0) glBits.push('↑ <b>'+gain.toLocaleString()+' ft</b>');
+  if(drive>0) glBits.push('🚗 <b>'+fmtDur(drive)+'</b> driving');
+  gl.innerHTML = glBits.length ? '<div class="dayglance">Today: '+glBits.join(' · ')+'</div>' : "";
+  updateJumpNow();
+  var dn=document.getElementById("dayNotes"), dnHtml="";
+  if(warnings.length){
+    dnHtml+='<div class="card daywarn"><h2>Timing check</h2><ul class="plain">'+
+      warnings.map(function(w){ return '<li>'+w+'</li>'; }).join("")+'</ul></div>';
+  }
+  if(day.notes && day.notes.length){
+    dnHtml+='<div class="card"><h2>Notes for this day</h2><ul class="plain">'+
+      day.notes.map(function(n){ return '<li>'+esc(n)+'</li>'; }).join("")+'</ul></div>';
+  }
+  dn.innerHTML=dnHtml;
+}
+
+/* ---------- jump to now ----------
+   Land the reader on the current block, and float a "Now" pill when it scrolls
+   out of view. Auto-scroll happens once per day view, never on the ticking
+   re-render, so it never yanks the page while you are reading. */
+function nowEl(){ return document.querySelector('#schedList li.is-now'); }
+function scrollToNow(auto){
+  var el=nowEl();
+  if(!el) return;
+  var key=EV.id+":"+curDay;
+  if(auto){ if(autoScrolledKey===key) return; autoScrolledKey=key; }
+  try { el.scrollIntoView({ behavior: auto?"auto":"smooth", block:"center" }); } catch(e){ el.scrollIntoView(); }
+  updateJumpNow();
+}
+function updateJumpNow(){
+  var btn=document.getElementById("jumpNow"), el=nowEl();
+  if(!btn) return;
+  var onSched=document.getElementById("tab-schedule").classList.contains("active");
+  if(!el || !onSched){ btn.hidden=true; return; }
+  var r=el.getBoundingClientRect();
+  var above=r.bottom < 96, below=r.top > window.innerHeight - 40;
+  btn.hidden = !(above || below);
+  btn.textContent = above ? "Now ↑" : "Now ↓";
+}
+
+/* ---------- info ---------- */
+function renderInfo(){
+  var w=document.getElementById("infoWrap");
+  w.className="";
+  var center=currentCenter();
+  var html="";
+
+  html+='<div class="card"><h2>'+esc(EV.title)+'</h2>';
+  if(EV.subtitle) html+='<p class="muted small" style="margin:0 0 8px">'+esc(EV.subtitle)+'</p>';
+  html+='<dl class="kv">';
+  if(isMulti){
+    html+='<dt>Dates</dt><dd>'+fmtDay(EV.days[0].date,{month:"long",day:"numeric"})+' – '+
+      fmtDay(EV.days[EV.days.length-1].date,{month:"long",day:"numeric",year:"numeric"})+' ('+EV.days.length+' days)</dd>';
+  } else {
+    html+='<dt>Date</dt><dd>'+fmtDay(EV.days[0].date,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+'</dd>';
+  }
+  if(EV.team) html+='<dt>Team</dt><dd>'+esc(EV.team.rank)+(EV.team.name?' · '+esc(EV.team.name):'')+'</dd>';
+  if(EV.location){
+    html+='<dt>Where</dt><dd>'+esc(EV.location.name)+'</dd>';
+    if(EV.location.address) html+='<dt>Address</dt><dd>'+esc(EV.location.address)+'</dd>';
+  }
+  html+='</dl>';
+  html+='<div class="actrow">'+
+    '<a class="btn primary" style="text-decoration:none" href="'+searchUrl(center)+'" target="_blank" rel="noopener">Open in Maps</a>'+
+    '<button class="btn ghost" id="calBtn">📅 Add to calendar</button>'+
+    '<button class="btn ghost" id="shareBtn">🔗 Share</button></div>';
+  if(EV.team && EV.team.note) html+='<p class="small muted" style="margin:10px 0 0">'+esc(EV.team.note)+'</p>';
+  html+='</div>';
+
+  var lodging=EV.places.filter(function(p){ return p.kind==="lodging"; });
+  if(lodging.length){
+    html+='<div class="card"><h2>Where you’re staying</h2>';
+    lodging.forEach(function(p){
+      html+='<div class="lodge"><b>'+esc(p.name)+'</b>'+
+        (p.address?'<span class="muted small">'+esc(p.address)+'</span>':'')+
+        ' <a href="'+searchUrl(p)+'" target="_blank" rel="noopener">Directions</a></div>';
+    });
+    html+='</div>';
+  }
+
+  var bookings=normalizeBookings(EV.bookings);
+  if(bookings.length){
+    var bsaved={};
+    try { bsaved=JSON.parse(localStorage.getItem("daykit:"+EV.id+":bookings")||"{}"); } catch(e){}
+    var toBook=0, rows="";
+    bookings.forEach(function(bk,i){
+      var id="bk-"+i;
+      var handled = (id in bsaved) ? !!bsaved[id] : (bk.status==="confirmed");
+      if(!handled) toBook++;
+      var pill=(BOOK_STATUS[bk.status]||BOOK_STATUS.todo).pill;
+      var parts=[];
+      if(bk.when) parts.push(esc(bk.when));
+      if(bk.who) parts.push(whoResolves(bk.who) ? whoChips(bk.who) : esc(bk.who));
+      if(bk.ref) parts.push("Ref "+esc(bk.ref));
+      if(bk.by && !handled){
+        var du=daysUntil(bk.by), byd=fmtDay(bk.by,{month:"short",day:"numeric"});
+        var cls = du==null ? "" : (du<0 ? "over" : (du<=14 ? "soon" : ""));
+        var lab = du==null ? ("Book by "+esc(bk.by))
+                : du<0    ? ("Overdue since "+byd)
+                : du===0  ? "Book by today"
+                :           ("Book by "+byd+" ("+du+"d)");
+        parts.push('<span class="bkby '+cls+'">'+lab+'</span>');
+      }
+      if(bk.url) parts.push('<a href="'+esc(bk.url)+'" target="_blank" rel="noopener">'+(handled?"View":"Book")+'</a>');
+      var bp=bk.place && placeById[bk.place];
+      if(bp) parts.push('<a href="'+searchUrl(bp)+'" target="_blank" rel="noopener">Directions</a>');
+      rows+='<li class="bk'+(handled?" done":"")+'">'+
+        '<input type="checkbox" id="'+id+'"'+(handled?" checked":"")+'>'+
+        '<div class="bkmain"><div class="bktop"><span class="bkname">'+esc(bk.title)+'</span>'+
+          '<span class="bkpill '+bk.status+'">'+pill+'</span></div>'+
+          (parts.length?'<div class="bkmeta">'+parts.join(" · ")+'</div>':'')+
+          (bk.note?'<div class="bkmeta" style="opacity:.85">'+esc(bk.note)+'</div>':'')+
+        '</div></li>';
+    });
+    html+='<div class="card"><h2>Reservations &amp; tickets</h2>'+
+      '<p class="bksum">'+(toBook ? (toBook+" still to book") : "All booked 🎉")+'</p>'+
+      '<ul class="bklist" id="bookList">'+rows+'</ul></div>';
+  }
+
+  if(EV.bring && EV.bring.length){
+    html+='<div class="card"><h2>'+(isMulti?"Packing":"Bring")+' / checklist</h2><ul class="check" id="bringList">';
+    EV.bring.forEach(function(b,i){
+      html+='<li><input type="checkbox" id="bring'+i+'"><label for="bring'+i+'">'+esc(b)+'</label></li>';
+    });
+    html+='</ul></div>';
+  }
+
+  var lists=normalizeLists(EV.lists);
+  if(lists.length){
+    var filteringGoals=whoFilter.names.length>0, goalsShown=0;
+    html+='<div class="card"><h2>Trip goals</h2>'+
+      '<p class="small muted" style="margin:0 0 12px">The must-do reasons for this trip, and the bonus adventures if time allows.</p>'+
+      '<div id="whoFilterGoals"></div>';
+    lists.forEach(function(lst,li){
+      var meta=LIST_TONES[lst.tone] || LIST_TONES.other;
+      var rows="";
+      lst.items.forEach(function(it,ii){
+        var text=(it && typeof it==="object") ? (it.text||it.title||"") : it;   // items degrade string -> object
+        var w=(it && typeof it==="object" && it.who!=null) ? it.who : lst.who;    // per-item who overrides the list default
+        if(filteringGoals && !matchesWho(w)) return;
+        goalsShown++;
+        var id='goal-'+li+'-'+ii;
+        rows+='<li><input type="checkbox" id="'+id+'"><label for="'+id+'">'+esc(text)+whoChips(w)+'</label></li>';
+      });
+      if(!rows) return;   // whole list filtered out
+      html+='<div class="goallist '+esc(lst.tone)+'">'+
+        '<h3><span class="gemoji">'+meta.emoji+'</span>'+esc(lst.title||meta.label)+
+        ' <span class="goalpill">'+meta.pill+'</span></h3>';
+      if(lst.note) html+='<p class="goalnote">'+esc(lst.note)+'</p>';
+      html+='<ul class="check" data-list="'+li+'">'+rows+'</ul><p class="goalprog" data-prog="'+li+'"></p></div>';
+    });
+    if(filteringGoals && !goalsShown) html+='<p class="small muted" style="margin:0">No wants match this filter.</p>';
+    html+='</div>';
+  }
+
+  if(EV.notes && EV.notes.length){
+    html+='<div class="card"><h2>Good to know</h2><ul class="plain">';
+    EV.notes.forEach(function(n){ html+='<li>'+esc(n)+'</li>'; });
+    html+='</ul></div>';
+  }
+
+  if("Notification" in window){
+    html+='<div class="card"><h2>Reminders</h2>'+
+      '<p class="small muted" style="margin:0 0 10px">A heads-up before each activity. Works best with the app installed and open in your pocket.</p>'+
+      '<button class="btn ghost" id="notifBtn">🔔 Turn on reminders</button>'+
+      '<div class="small muted" id="notifStat" style="margin-top:8px"></div></div>';
+  }
+
+  html+='<div class="card"><h2>Appearance</h2>'+
+    '<p class="small muted" style="margin:0 0 10px">Auto follows your phone. Tap to cycle.</p>'+
+    '<button class="btn ghost" id="themeBtn">🌗 Auto</button></div>';
+
+  html+='<div class="card"><h2>About</h2>'+
+    '<p class="small muted" style="margin:0"><b>Are We There Yet?</b> is a pocket app for one day or a whole trip, built from photos of a paper schedule, map, or itinerary. '+
+    'Install it to your home screen and it runs offline. To make one for another day or trip, swap in a new <code>event.json</code>.</p></div>';
+
+  w.innerHTML=html;
+  renderWhoFilters();   // populate the shared who filter above the trip-goals card
+
+  var key="daykit:"+EV.id+":bring", saved={};
+  try { saved=JSON.parse(localStorage.getItem(key)||"{}"); } catch(e){}
+  w.querySelectorAll("#bringList input").forEach(function(cb){
+    if(saved[cb.id]){ cb.checked=true; cb.closest("li").classList.add("done"); }
+    cb.addEventListener("change", function(){
+      cb.closest("li").classList.toggle("done", cb.checked);
+      saved[cb.id]=cb.checked;
+      try { localStorage.setItem(key, JSON.stringify(saved)); } catch(e){}
+    });
+  });
+
+  var blist=w.querySelector("#bookList");
+  if(blist){
+    var bkey="daykit:"+EV.id+":bookings", bsaved2={};
+    try { bsaved2=JSON.parse(localStorage.getItem(bkey)||"{}"); } catch(e){}
+    var refreshBookSum=function(){
+      var sum=w.querySelector(".bksum"); if(!sum) return;
+      var n=0;
+      blist.querySelectorAll("input").forEach(function(b){ if(!b.checked) n++; });
+      sum.textContent = n ? (n+" still to book") : "All booked 🎉";
+    };
+    blist.querySelectorAll("input").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        cb.closest("li").classList.toggle("done", cb.checked);
+        bsaved2[cb.id]=cb.checked;
+        try { localStorage.setItem(bkey, JSON.stringify(bsaved2)); } catch(e){}
+        refreshBookSum();
+      });
+    });
+  }
+
+  var lkey="daykit:"+EV.id+":lists", lsaved={};
+  try { lsaved=JSON.parse(localStorage.getItem(lkey)||"{}"); } catch(e){}
+  function refreshGoalProg(li){
+    var ul=w.querySelector('ul[data-list="'+li+'"]'); if(!ul) return;
+    var boxes=ul.querySelectorAll("input"), done=0;
+    boxes.forEach(function(b){ if(b.checked) done++; });
+    var cap=w.querySelector('p[data-prog="'+li+'"]');
+    if(cap) cap.textContent=done+" of "+boxes.length+" done"+(boxes.length&&done===boxes.length?" 🎉":"");
+  }
+  w.querySelectorAll(".goallist .check input").forEach(function(cb){
+    var li=cb.closest("ul").getAttribute("data-list");
+    if(lsaved[cb.id]){ cb.checked=true; cb.closest("li").classList.add("done"); }
+    cb.addEventListener("change", function(){
+      cb.closest("li").classList.toggle("done", cb.checked);
+      lsaved[cb.id]=cb.checked;
+      try { localStorage.setItem(lkey, JSON.stringify(lsaved)); } catch(e){}
+      refreshGoalProg(li);
+    });
+  });
+  w.querySelectorAll("ul[data-list]").forEach(function(ul){ refreshGoalProg(ul.getAttribute("data-list")); });
+
+  var sb=w.querySelector("#shareBtn"); if(sb) sb.addEventListener("click", shareThis);
+  var cb2=w.querySelector("#calBtn"); if(cb2) cb2.addEventListener("click", downloadICS);
+  var nb=w.querySelector("#notifBtn"); if(nb) nb.addEventListener("click", toggleNotify);
+  var tb=w.querySelector("#themeBtn"); if(tb) tb.addEventListener("click", cycleTheme);
+  updateNotifBtn();
+  updateThemeBtn();
+}
+
+/* ---------- map ---------- */
+function mkPin(place){
+  var color=KIND_COLOR[place.kind] || KIND_COLOR.activity;
+  var glyph=ICONS[place.icon] || ICONS.pin;
+  var ring=getNote(place.id) ? " hasnote" : "";
+  return L.divIcon({
+    className:"", iconSize:[30,30], iconAnchor:[15,29], popupAnchor:[0,-28],
+    html:'<div class="pin'+ring+'" style="background:'+color+'"><span>'+glyph+'</span></div>'
+  });
+}
+function placesForDay(idx){
+  if(!isMulti || showAllPins) return EV.places;
+  var day=EV.days[idx], refs={};
+  day.schedule.forEach(function(it){ if(it.place)refs[it.place]=1; if(it.also)refs[it.also]=1; });
+  return EV.places.filter(function(p){
+    if(refs[p.id]) return true;
+    if(p.days && p.days.length) return p.days.indexOf(day.date)!==-1;
+    if(p.kind==="service"||p.kind==="lodging") return true;
+    return false;
+  });
+}
+function popupHtml(p){
+  var note=getNote(p.id);
+  return "<b>"+esc(p.name)+"</b>"+(p.desc?"<br>"+esc(p.desc):"")+
+    (note?'<br><span style="color:var(--muted)">📝 '+esc(note)+'</span>':'')+
+    '<br><a href="'+walkUrl(p)+'" target="_blank" rel="noopener">🚶 Walk here</a>'+
+    ' · <a href="#" onclick="editNote(\''+p.id+'\');return false;">'+(note?'Edit note':'Add note')+'</a>';
+}
+function refreshMarkers(){
+  if(!map) return;
+  Object.keys(markers).forEach(function(id){ map.removeLayer(markers[id]); });
+  markers={};
+  placesForDay(curDay).forEach(function(p){
+    var m=L.marker([p.lat,p.lng],{icon:mkPin(p)}).addTo(map);
+    m.bindPopup(popupHtml(p));
+    markers[p.id]=m;
+  });
+  // Draw the day's route as an ordered dashed line through its stops.
+  if(routeLine){ map.removeLayer(routeLine); routeLine=null; }
+  var coords=dayRouteCoords(EV.days[curDay]);
+  if(coords.length>1){
+    var accent=(EV.theme && EV.theme.accent) || "#e4562b";
+    routeLine=L.polyline(coords, { color:accent, weight:3, opacity:.55, dashArray:"6 7" }).addTo(map);
+  }
+  renderLegend(placesForDay(curDay));
+}
+function fitDay(){
+  if(!map) return;
+  var list=placesForDay(curDay);
+  if(list.length>1){ map.fitBounds(L.latLngBounds(list.map(function(p){ return [p.lat,p.lng]; })).pad(0.25)); }
+  else { var c=currentCenter(); map.setView([c.lat,c.lng], c.zoom||16); }
+}
+function initMap(){
+  if(map) return;
+  if(typeof L === "undefined"){
+    document.getElementById("map").innerHTML =
+      '<div style="padding:24px;text-align:center;color:var(--muted);font-size:14px">'+
+      'Map needs a connection the first time you open it. Reconnect once, then it works offline.</div>';
+    document.getElementById("locStat").textContent = "Map library not loaded yet.";
+    return;
+  }
+  var c=currentCenter();
+  map = L.map("map", { zoomControl:true }).setView([c.lat, c.lng], c.zoom||16);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:19, attribution:"&copy; OpenStreetMap" }).addTo(map);
+  refreshMarkers();
+  fitDay();
+  var car=getCar(); if(car) dropCarMarker(car);
+}
+
+/* ---------- notes per stop ---------- */
+function noteKey(){ return "daykit:"+EV.id+":notes"; }
+function getNotes(){ try { return JSON.parse(localStorage.getItem(noteKey())||"{}"); } catch(e){ return {}; } }
+function getNote(id){ return getNotes()[id]||""; }
+function editNote(id){
+  var name=placeById[id] ? placeById[id].name : "this stop";
+  var v=window.prompt("Note for "+name+":", getNote(id));
+  if(v===null) return;
+  var n=getNotes(); v=v.trim();
+  if(v) n[id]=v; else delete n[id];
+  try { localStorage.setItem(noteKey(), JSON.stringify(n)); } catch(e){}
+  if(map && markers[id]){ markers[id].setIcon(mkPin(placeById[id])); markers[id].setPopupContent(popupHtml(placeById[id])); markers[id].openPopup(); }
+}
+
+/* ---------- offline map tiles ---------- */
+function tileUrls(bounds, z){
+  var n=Math.pow(2,z);
+  function lon2x(lon){ return Math.floor((lon+180)/360*n); }
+  function lat2y(lat){ var r=lat*Math.PI/180; return Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n); }
+  var x0=lon2x(bounds.getWest()), x1=lon2x(bounds.getEast());
+  var y0=lat2y(bounds.getNorth()), y1=lat2y(bounds.getSouth());
+  var out=[];
+  for(var x=x0;x<=x1;x++){ for(var y=y0;y<=y1;y++){ out.push("https://tile.openstreetmap.org/"+z+"/"+x+"/"+y+".png"); } }
+  return out;
+}
+function saveTiles(){
+  var stat=document.getElementById("locStat");
+  initMap(); if(!map) return;
+  if(!("caches" in window)){ stat.textContent="Offline saving is not supported on this browser."; return; }
+  var b=map.getBounds(), z=map.getZoom();
+  var urls=tileUrls(b, z).concat(tileUrls(b, Math.min(19, z+1))).slice(0, 240);
+  stat.textContent="Saving "+urls.length+" map tiles for offline...";
+  caches.open("daykit-tiles").then(function(c){
+    return Promise.allSettled(urls.map(function(u){ return c.add(new Request(u, {mode:"no-cors"})); }));
+  }).then(function(res){
+    var ok=res.filter(function(r){ return r.status==="fulfilled"; }).length;
+    stat.textContent="Saved "+ok+" tiles. This area of the map now works offline.";
+  }).catch(function(){ stat.textContent="Could not save tiles. Check your connection and try again."; });
+}
+
+/* ---------- car finder ---------- */
+function carKey(){ return "daykit:"+EV.id+":car"; }
+function getCar(){ try { return JSON.parse(localStorage.getItem(carKey())||"null"); } catch(e){ return null; } }
+function dropCarMarker(c){
+  if(!map || typeof L==="undefined") return;
+  var icon=L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,29],popupAnchor:[0,-28],
+    html:'<div class="pin" style="background:#2a1a00"><span>🚗</span></div>'});
+  if(carMarker) carMarker.setLatLng([c.lat,c.lng]);
+  else carMarker=L.marker([c.lat,c.lng],{icon:icon}).addTo(map);
+  carMarker.bindPopup('<b>My car</b><br><a href="'+walkUrl(c)+'" target="_blank" rel="noopener">🚶 Walk to my car</a>');
+}
+function markCar(){
+  var stat=document.getElementById("locStat");
+  if(!navigator.geolocation){ stat.textContent="No GPS on this device."; return; }
+  stat.textContent="Marking your car...";
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var c={lat:pos.coords.latitude, lng:pos.coords.longitude};
+    try { localStorage.setItem(carKey(), JSON.stringify(c)); } catch(e){}
+    initMap(); dropCarMarker(c);
+    stat.innerHTML='🚗 Car saved. <a href="'+walkUrl(c)+'" target="_blank" rel="noopener">Walk to my car</a>';
+  }, function(){ stat.textContent="Could not get a fix. Try again outside."; },
+  { enableHighAccuracy:true, timeout:15000 });
+}
+function renderLegend(list){
+  list=list || EV.places;
+  var used={};
+  list.forEach(function(p){ used[p.kind]=true; });
+  var el=document.getElementById("legend"); el.innerHTML="";
+  Object.keys(used).forEach(function(k){
+    var s=document.createElement("span");
+    s.innerHTML='<span class="dot" style="background:'+(KIND_COLOR[k]||"#888")+'"></span>'+(KIND_LABEL[k]||k);
+    el.appendChild(s);
+  });
+  var me=document.createElement("span");
+  me.innerHTML='<span class="dot" style="background:var(--water)"></span>You';
+  el.appendChild(me);
+  var drive=dayDriveMinutes(EV.days[curDay]);
+  if(drive>0){
+    var dr=document.createElement("span");
+    dr.innerHTML='<span class="dot" style="background:'+((EV.theme&&EV.theme.accent)||"#e4562b")+'"></span>Route · '+fmtDur(drive)+' driving';
+    el.appendChild(dr);
+  }
+}
+function focusPlace(id){
+  showTab("map");
+  setTimeout(function(){
+    initMap(); if(!map) return; map.invalidateSize();
+    if(!markers[id]){ showAllPins=true; syncAllPinsBtn(); refreshMarkers(); }
+    var p=placeById[id]; if(!p) return;
+    map.setView([p.lat,p.lng], Math.max(map.getZoom(),17), {animate:true});
+    if(markers[id]) markers[id].openPopup();
+  }, 60);
+}
+function startFindMe(){
+  var stat=document.getElementById("locStat");
+  if(!navigator.geolocation){ stat.textContent="This device has no GPS support."; return; }
+  stat.textContent="Locating...";
+  initMap();
+  if(!map) return;
+  if(watchId!==null) navigator.geolocation.clearWatch(watchId);
+  watchId=navigator.geolocation.watchPosition(function(pos){
+    var la=pos.coords.latitude, ln=pos.coords.longitude;
+    myPos={ lat:la, lng:ln };
+    renderNow(); renderNudge();
+    if(!meMarker){
+      meMarker=L.marker([la,ln], {icon:L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],
+        html:'<div class="pin me"><span></span></div>'})}).addTo(map);
+      map.setView([la,ln], 17);
+    } else { meMarker.setLatLng([la,ln]); }
+    var pool=placesForDay(curDay), best=null, bd=1e12;
+    (pool.length?pool:EV.places).forEach(function(p){ var d=haversine(la,ln,p.lat,p.lng); if(d<bd){bd=d;best=p;} });
+    stat.innerHTML="You are here (±"+Math.round(pos.coords.accuracy)+"m)."+
+      (best? " Nearest: <b>"+esc(best.name)+"</b>, "+fmtDist(bd)+" away." : "");
+  }, function(err){
+    stat.textContent = err.code===1 ? "Location permission denied. Enable it in your browser settings." : "Could not get a fix. Try again outside.";
+  }, { enableHighAccuracy:true, maximumAge:5000, timeout:15000 });
+}
+function haversine(la1,ln1,la2,ln2){
+  var R=6371000, toR=Math.PI/180;
+  var dLa=(la2-la1)*toR, dLn=(ln2-ln1)*toR;
+  var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1*toR)*Math.cos(la2*toR)*Math.sin(dLn/2)*Math.sin(dLn/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function fmtDist(m){ return m<950 ? Math.round(m)+" m" : (m/1609.34).toFixed(1)+" mi"; }
+
+/* Travel tuning, day-level first then event-level, with good-enough offline defaults. */
+function travelCfg(day){
+  var t=(day && day.travel) || (EV && EV.travel) || {};
+  return {
+    roadFactor: +t.roadFactor>0 ? +t.roadFactor : 1.3,   // roads run ~1.3x the straight line
+    mph:        +t.mph>0        ? +t.mph        : 45,     // blended town + highway
+    walkMph:    +t.walkMph>0    ? +t.walkMph    : 3,
+    walkUnder:  (t.walkUnderMi!=null ? +t.walkUnderMi : 0.3) * 1609.34,
+    graceMin:   +t.graceMin>=0  ? +t.graceMin   : 5       // slack before a short hop is flagged tight
+  };
+}
+
+/* Rough offline travel estimate between two places. No routing API, coords only.
+   Returns {mode:"same"|"walk"|"drive", min, road} or null when coords are missing. */
+function legEstimate(a, b, day){
+  if(!a || !b || a.lat==null || a.lng==null || b.lat==null || b.lng==null) return null;
+  var crow=haversine(a.lat, a.lng, b.lat, b.lng);
+  if(crow<25) return { mode:"same", min:0, road:0 };     // effectively the same spot
+  var c=travelCfg(day), road=crow*c.roadFactor;
+  var walk=road<c.walkUnder, mps=(walk?c.walkMph:c.mph)*1609.34/3600;
+  return { mode:walk?"walk":"drive", min:Math.round(road/mps/60), road:road };
+}
+
+/* The day's stops in schedule order as [lat,lng], deduping repeats, for the map route. */
+function dayRouteCoords(day){
+  var out=[], last=null;
+  (day.schedule||[]).forEach(function(it){
+    var p=it.place && placeById[it.place];
+    if(!p || p.lat==null || p.lng==null) return;
+    if(last && last[0]===p.lat && last[1]===p.lng) return;
+    last=[p.lat, p.lng]; out.push(last);
+  });
+  return out;
+}
+/* Total driving minutes for a day: the forward drive legs between consecutive stops. */
+function dayDriveMinutes(day){
+  var sched=day.schedule||[], total=0;
+  for(var i=0;i<sched.length-1;i++){
+    var a=sched[i].place && placeById[sched[i].place], b=sched[i+1].place && placeById[sched[i+1].place];
+    if(!sched[i].start || !sched[i+1].start || hmMin(sched[i+1].start)<=hmMin(sched[i].start)) continue;
+    var leg=legEstimate(a, b, day);
+    if(leg && leg.mode==="drive") total+=leg.min;
+  }
+  return total;
+}
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(function(b){
+    b.setAttribute("aria-selected", b.getAttribute("data-tab")===name ? "true":"false");
+  });
+  document.querySelectorAll("section.tab").forEach(function(s){
+    s.classList.toggle("active", s.id==="tab-"+name);
+  });
+  if(name==="map"){ initMap(); setTimeout(function(){ if(map) map.invalidateSize(); },60); }
+  if(name==="kids"){ renderKids(); }
+  if(name==="schedule"){ setTimeout(function(){ scrollToNow(true); updateJumpNow(); }, 40); }
+  else { var jb=document.getElementById("jumpNow"); if(jb) jb.hidden=true; }
+  try { history.replaceState(null,"","#"+name); } catch(e){}
+}
+
+/* ---------- live ticking ---------- */
+var lastRederive = 0;
+function tick(){
+  document.querySelectorAll(".countdown[data-until]").forEach(function(el){
+    el.textContent=fmtCountdown(+el.getAttribute("data-until") - Date.now());
+  });
+}
+function startClock(){
+  if(tickTimer) clearInterval(tickTimer);
+  lastRederive=Date.now();   // first full re-derive happens ~20s in, not on the first tick
+  tick();
+  tickTimer=setInterval(function(){
+    tick();
+    if(Date.now()-lastRederive >= 20000){ lastRederive=Date.now(); renderNow(); renderSchedule(); renderNudge(); if(document.getElementById("tab-kids").classList.contains("active")) renderKids(); }
+  }, 1000);
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+
+/* ---------- share ---------- */
+function shareThis(){
+  var url=location.href.split("#")[0];
+  if(navigator.share){ navigator.share({ title:EV.title, text:EV.title, url:url }).catch(function(){}); return; }
+  var btn=document.getElementById("shareBtn");
+  function flash(msg){ if(!btn) return; var o=btn.textContent; btn.textContent=msg; setTimeout(function(){ btn.textContent=o; },1600); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){ flash("✓ Link copied"); }).catch(function(){ flash(url); });
+  } else { flash(url); }
+}
+
+/* ---------- add to calendar (.ics) ---------- */
+function icsStamp(ms){
+  var d=new Date(ms);
+  return d.getUTCFullYear()+pad2(d.getUTCMonth()+1)+pad2(d.getUTCDate())+"T"+pad2(d.getUTCHours())+pad2(d.getUTCMinutes())+pad2(d.getUTCSeconds())+"Z";
+}
+function icsEsc(s){ return String(s).replace(/([,;\\])/g,"\\$1").replace(/\n/g,"\\n"); }
+function buildICS(){
+  var out=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//AreWeThereYet//Daykit//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"];
+  var stamp=icsStamp(Date.now());
+  EV.days.forEach(function(day){
+    var tz=dayTz(day);
+    day.schedule.forEach(function(it,i){
+      var s=zonedEpoch(day.date,it.start,tz), e=zonedEpoch(day.date,it.end,tz);
+      out.push("BEGIN:VEVENT","UID:"+EV.id+"-"+day.date+"-"+i+"@arewethereyet","DTSTAMP:"+stamp,
+        "DTSTART:"+icsStamp(s),"DTEND:"+icsStamp(e),"SUMMARY:"+icsEsc(it.title));
+      var p=it.place && placeById[it.place];
+      if(p){ out.push("LOCATION:"+icsEsc(p.name)); if(p.lat!=null) out.push("GEO:"+p.lat+";"+p.lng); }
+      out.push("END:VEVENT");
+    });
+  });
+  out.push("END:VCALENDAR");
+  return out.join("\r\n");
+}
+function downloadICS(){
+  try {
+    var blob=new Blob([buildICS()], { type:"text/calendar;charset=utf-8" });
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a"); a.href=url; a.download=(EV.id||"itinerary")+".ics";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  } catch(e){ /* older browsers */ }
+}
+
+/* ---------- reminders (best-effort local notifications) ---------- */
+var notifTimers=[];
+var NOTIF_LEAD=10;
+function notifKey(){ return "daykit:"+EV.id+":notify"; }
+function notifEnabled(){
+  try { return localStorage.getItem(notifKey())==="1" && ("Notification" in window) && Notification.permission==="granted"; }
+  catch(e){ return false; }
+}
+function setNotifPref(on){ try { localStorage.setItem(notifKey(), on?"1":"0"); } catch(e){} }
+function showNotif(title, body){
+  var opts={ body:body, icon:"assets/icon-192.png", badge:"assets/icon-192.png", tag:"awty-next", renotify:true };
+  if(navigator.serviceWorker && navigator.serviceWorker.ready){
+    navigator.serviceWorker.ready.then(function(reg){ reg.showNotification(title, opts); }).catch(function(){ try{ new Notification(title, opts); }catch(e){} });
+  } else { try{ new Notification(title, opts); }catch(e){} }
+}
+function clearNotifTimers(){ notifTimers.forEach(clearTimeout); notifTimers=[]; }
+function scheduleNotifs(){
+  clearNotifTimers();
+  if(!notifEnabled()) return;
+  var ti=todayIndex(); if(ti<0) return;
+  var day=EV.days[ti], tz=dayTz(day), now=Date.now();
+  day.schedule.forEach(function(it){
+    var start=zonedEpoch(day.date, it.start, tz);
+    if(start<=now) return;
+    var delay=(start - NOTIF_LEAD*60000) - now;
+    if(delay<0) delay=0;
+    if(delay>86400000) return;
+    var p=it.place && placeById[it.place];
+    notifTimers.push(setTimeout(function(){
+      showNotif("Up next: "+it.title, "Starts at "+fmt12(it.start)+(p?" · "+p.name:""));
+    }, delay));
+  });
+}
+function updateNotifBtn(){
+  var btn=document.getElementById("notifBtn"), stat=document.getElementById("notifStat");
+  if(!btn) return;
+  var on=notifEnabled();
+  btn.className="btn "+(on?"primary":"ghost");
+  btn.textContent=on ? "🔔 Reminders on (tap to turn off)" : "🔔 Turn on reminders";
+  if(stat){
+    if(!("Notification" in window)) stat.textContent="This browser does not support reminders.";
+    else if(Notification.permission==="denied") stat.textContent="Notifications are blocked. Enable them in your browser settings.";
+    else if(on){ var ti=todayIndex(); stat.textContent = ti<0 ? "Set. They will fire on the event day." : (notifTimers.length+" reminder"+(notifTimers.length===1?"":"s")+" queued for today."); }
+    else stat.textContent="";
+  }
+}
+function toggleNotify(){
+  if(!("Notification" in window)) return;
+  if(notifEnabled()){ setNotifPref(false); clearNotifTimers(); updateNotifBtn(); return; }
+  Notification.requestPermission().then(function(perm){
+    if(perm==="granted"){ setNotifPref(true); scheduleNotifs(); }
+    updateNotifBtn();
+  }).catch(function(){ updateNotifBtn(); });
+}
+
+/* ---------- appearance (light/dark) ---------- */
+function storedTheme(){ try { return localStorage.getItem("daykit:theme"); } catch(e){ return null; } }
+function resolvedDark(){
+  var t=storedTheme();
+  if(t==="dark") return true;
+  if(t==="light") return false;
+  return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+function applyTheme(){
+  var r=document.documentElement.style, t=(EV && EV.theme) ? EV.theme : {};
+  var dark=resolvedDark();
+  if(t.primary) r.setProperty("--primary", t.primary);
+  if(t.accent){ r.setProperty("--accent", t.accent); KIND_COLOR.activity=t.accent; }
+  if(t.sun) r.setProperty("--sun", t.sun);
+  if(t.water){ r.setProperty("--water", t.water); KIND_COLOR.water=t.water; }
+  ["--ink","--bg","--card"].forEach(function(v){ r.removeProperty(v); });   // let dark CSS win when dark
+  if(!dark){
+    if(t.ink) r.setProperty("--ink", t.ink);
+    if(t.bg) r.setProperty("--bg", t.bg);
+    if(t.card) r.setProperty("--card", t.card);
+  }
+  var tc=document.querySelector('meta[name="theme-color"]');
+  if(tc) tc.setAttribute("content", (t.primary) || (dark?"#10141b":"#2f80c4"));
+}
+function applyThemeMode(){
+  var t=storedTheme();
+  if(t) document.documentElement.setAttribute("data-theme", t);
+  else document.documentElement.removeAttribute("data-theme");
+  applyTheme();
+}
+function cycleTheme(){
+  var order=[null,"light","dark"], cur=storedTheme(), next=order[(order.indexOf(cur)+1)%order.length];
+  try { if(next) localStorage.setItem("daykit:theme", next); else localStorage.removeItem("daykit:theme"); } catch(e){}
+  applyThemeMode(); updateThemeBtn();
+}
+function updateThemeBtn(){
+  var b=document.getElementById("themeBtn"); if(!b) return;
+  var t=storedTheme();
+  b.textContent = t==="dark" ? "🌙 Dark" : t==="light" ? "☀️ Light" : "🌗 Auto";
+}
+
+/* ---------- kid mode ---------- */
+function kidMins(m){
+  if(m<=0) return "any second";
+  if(m<2) return "1 minute";
+  if(m<45) return m+" minutes";
+  var h=Math.round(m/60); return "about "+h+" hour"+(h>1?"s":"");
+}
+function speak(t){
+  try { if(window.speechSynthesis){ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=1; u.pitch=1.1; speechSynthesis.speak(u); } } catch(e){}
+}
+var KID_CHEERS=["Not yet!","Almost there!","Getting close!","Soon!","Hang tight!","Pretty soon!"];
+var kidCheerIx=0;
+function nextPlaceName(it){ var p=it.place && placeById[it.place]; return p ? p.name : it.title; }
+function kidState(){
+  var ti=todayIndex();
+  if(ti<0){
+    var ts=tripStatus();
+    if(ts.phase==="pre"){ var d=ts.days; return { big:"Not yet!", sub:d+" sleep"+(d===1?"":"s")+" until we go!", pct:0, spoken:"Not yet. "+d+" more sleep"+(d===1?"":"s")+"." }; }
+    return { big:"All done!", sub:"That adventure is over. See you next time!", pct:100, spoken:"All done. See you next time!" };
+  }
+  var day=EV.days[ti], tz=dayTz(day), now=new Date().getTime();
+  var cur=null, nxt=null, nowD=new Date();
+  for(var i=0;i<day.schedule.length;i++){ var st=statusOf(day.schedule[i], day, nowD); if(st==="now"&&!cur)cur=day.schedule[i]; if(st==="future"&&!nxt)nxt=day.schedule[i]; }
+  var pct=0;
+  if(day.schedule.length){
+    var ds=zonedEpoch(day.date, day.schedule[0].start, tz), de=zonedEpoch(day.date, day.schedule[day.schedule.length-1].end, tz);
+    pct = de>ds ? clamp(Math.round((now-ds)/(de-ds)*100)) : 0;
+  }
+  if(cur){
+    var e=zonedEpoch(day.date, cur.end, tz), mins=Math.ceil((e-now)/60000);
+    var dest = nxt ? nextPlaceName(nxt) : "the finish";
+    return { big:"Not yet!", sub:kidMins(mins)+(nxt?" until "+dest:" to go"), pct:pct, spoken:"Not yet! About "+kidMins(mins)+(nxt?" until "+dest:" to go")+"." };
+  }
+  if(nxt){
+    var ns=zonedEpoch(day.date, nxt.start, tz), mm=Math.ceil((ns-now)/60000);
+    return { big:"Almost!", sub:kidMins(mm)+" until "+nextPlaceName(nxt), pct:pct, spoken:"Almost! About "+kidMins(mm)+" until "+nextPlaceName(nxt)+"." };
+  }
+  var first=day.schedule[0];
+  if(first && now<zonedEpoch(day.date, first.start, tz)){
+    var fm=Math.ceil((zonedEpoch(day.date, first.start, tz)-now)/60000);
+    return { big:"Soon!", sub:kidMins(fm)+" until we start", pct:0, spoken:"Soon! About "+kidMins(fm)+" until we start." };
+  }
+  return { big:"We’re here! 🎉", sub:"You made it. Great job!", pct:100, spoken:"We are here! We made it!" };
+}
+function renderKids(){
+  var hero=document.getElementById("kidHero");
+  var ks=kidState();
+  var reverse = ""; // car faces right toward the flag
+  hero.innerHTML=
+    '<div class="hero">'+
+      '<div class="kidq">Are we there yet?</div>'+
+      '<div class="kidbig" id="kidBig">'+esc(ks.big)+'</div>'+
+      '<div class="kidsub" id="kidSub">'+esc(ks.sub)+'</div>'+
+      '<div class="road"><span class="flag">🏁</span><span class="car'+reverse+'" id="kidCar" style="left:'+Math.max(4,Math.min(92,ks.pct))+'%">🚗</span></div>'+
+      '<button class="btn primary talkbtn" id="talkBtn">🔊 Are we there yet?</button>'+
+    '</div>';
+  var tb=document.getElementById("talkBtn");
+  if(tb) tb.addEventListener("click", function(){
+    var s=kidState();
+    var lead = s.pct>=100 ? "We made it!" : KID_CHEERS[(kidCheerIx++)%KID_CHEERS.length];
+    document.getElementById("kidBig").textContent = s.pct>=100 ? "We’re here! 🎉" : lead;
+    speak(s.spoken);
+    if(s.pct>=100) confetti();
+  });
+
+  // stickers
+  var res=updateStickers();
+  var wrap=document.getElementById("stickers"), cnt=document.getElementById("stickCount"), hint=document.getElementById("stickHint");
+  if(wrap){
+    wrap.innerHTML = res.list.length
+      ? res.list.map(function(s){ return '<span class="sticker" title="'+esc(s.name)+'">'+s.icon+'</span>'; }).join("")
+      : '<span class="small muted">None yet. Your first sticker unlocks when you reach a stop.</span>';
+    if(cnt) cnt.textContent = res.list.length ? "("+res.list.length+")" : "";
+    if(hint) hint.textContent = res.list.length ? "Nice collecting! Keep going." : "Reach each stop to collect a sticker.";
+  }
+  if(res.isNew && document.getElementById("tab-kids").classList.contains("active")) confetti();
+}
+function stickerKey(){
+  var ti=todayIndex();
+  var d = ti>=0 ? EV.days[ti].date : (EV.days[curDay] ? EV.days[curDay].date : "x");
+  return "daykit:"+EV.id+":stickers:"+d;
+}
+function updateStickers(){
+  var ti=todayIndex();
+  var earned=[];
+  try { earned=JSON.parse(localStorage.getItem(stickerKey())||"[]"); } catch(e){ earned=[]; }
+  if(ti<0) return { list:earned, isNew:false };
+  var day=EV.days[ti], now=new Date(), seen={}, isNew=false;
+  earned.forEach(function(s){ seen[s.id]=1; });
+  day.schedule.forEach(function(it){
+    if(!it.place || !placeById[it.place]) return;
+    if(statusOf(it, day, now)!=="past") return;
+    var id=it.place+"@"+it.start;
+    if(seen[id]) return;
+    var p=placeById[it.place];
+    earned.push({ id:id, icon:(ICONS[p.icon]||"⭐"), name:p.name });
+    seen[id]=1; isNew=true;
+  });
+  if(isNew){ try { localStorage.setItem(stickerKey(), JSON.stringify(earned)); } catch(e){} }
+  return { list:earned, isNew:isNew };
+}
+function confetti(){
+  var c=document.createElement("div"); c.className="confetti";
+  var em=["🎉","⭐","🚗","🎊","🏁","✨"];
+  for(var i=0;i<30;i++){
+    var s=document.createElement("span");
+    s.textContent=em[i%em.length];
+    s.style.left=(Math.random()*100)+"%";
+    s.style.animationDuration=(2+Math.random()*2)+"s";
+    s.style.animationDelay=(Math.random()*0.4)+"s";
+    c.appendChild(s);
+  }
+  document.body.appendChild(c);
+  setTimeout(function(){ c.remove(); }, 4400);
+}
+
+/* ---------- games ---------- */
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+var BINGO_ITEMS=["Red car","School bus","Cow","Horse","Bridge","Tunnel","Motorcycle","Police car","Dog in a car","RV / camper","Boat on trailer","Water tower","Windmill","Tractor","Out-of-state plate","Semi truck","Yellow car","Flag","Gas station","Big bird","Roadwork","Barn","Lake","Church"];
+var SPOT_ITEMS=["🚚 Semi truck","🚌 School bus","🏍️ Motorcycle","🚓 Police car","🐄 Cow","🐎 Horse","🌉 Bridge","🚐 RV / camper","🚜 Tractor","🐕 Dog in a car","⛽ Gas station","🚩 A flag","🛥️ Boat on a trailer","🗼 Water tower","🚁 Helicopter"];
+var ISPY_ITEMS=["something RED 🔴","something ROUND ⚪","a TREE 🌳","another CAR 🚗","something BLUE 🔵","an ANIMAL 🐾","a SIGN 🪧","something GREEN 🟢","a TRUCK 🚚","a BUILDING 🏢","something YELLOW 🟡","some WATER 💧","a BIRD 🐦","something with WHEELS 🛞"];
+var gameKeyBase; function gk(g){ return "daykit:"+EV.id+":game:"+g; }
+function load(g,def){ try { var v=JSON.parse(localStorage.getItem(gk(g))||"null"); return v||def; } catch(e){ return def; } }
+function save(g,v){ try { localStorage.setItem(gk(g), JSON.stringify(v)); } catch(e){} }
+
+function newBingoState(){
+  var pool=shuffle(BINGO_ITEMS.slice()).slice(0,24);
+  pool.splice(12,0,"FREE");
+  return { cells:pool, marked:{12:true}, won:false };
+}
+function bingoWon(marked){
+  var lines=[];
+  for(var r=0;r<5;r++){ var row=[],col=[]; for(var c=0;c<5;c++){ row.push(r*5+c); col.push(c*5+r); } lines.push(row,col); }
+  lines.push([0,6,12,18,24],[4,8,12,16,20]);
+  return lines.some(function(l){ return l.every(function(i){ return marked[i]; }); });
+}
+function renderBingo(){
+  var st=load("bingo", null); if(!st || !st.cells){ st=newBingoState(); save("bingo",st); }
+  var area=document.getElementById("gameArea");
+  area.innerHTML='<div class="gamebar"><b>Bingo</b><button class="btn ghost" id="bingoNew">New card</button></div><div class="bingo" id="bingoGrid"></div>';
+  var grid=document.getElementById("bingoGrid");
+  st.cells.forEach(function(txt, i){
+    var d=document.createElement("div");
+    d.className="cell"+(st.marked[i]?" marked":"")+(txt==="FREE"?" free":"");
+    d.textContent = txt==="FREE" ? "FREE ⭐" : txt;
+    d.addEventListener("click", function(){
+      if(i===12) return;
+      if(st.marked[i]) delete st.marked[i]; else st.marked[i]=true;
+      d.classList.toggle("marked");
+      save("bingo",st);
+      if(!st.won && bingoWon(st.marked)){ st.won=true; save("bingo",st); confetti(); alertBingo(); }
+    });
+    grid.appendChild(d);
+  });
+  document.getElementById("bingoNew").addEventListener("click", function(){ var ns=newBingoState(); save("bingo",ns); renderBingo(); });
+}
+function alertBingo(){
+  var area=document.getElementById("gameArea");
+  var b=document.createElement("div"); b.className="ispy"; b.textContent="🎉 BINGO! 🎉";
+  area.insertBefore(b, area.firstChild);
+  speak("Bingo! You win!");
+  setTimeout(function(){ if(b.parentNode) b.parentNode.removeChild(b); }, 3000);
+}
+function renderSpot(){
+  var got=load("spot", {});
+  var area=document.getElementById("gameArea");
+  var found=SPOT_ITEMS.filter(function(x){ return got[x]; }).length;
+  area.innerHTML='<div class="gamebar"><b>Spot It — found '+found+' of '+SPOT_ITEMS.length+'</b><button class="btn ghost" id="spotReset">Reset</button></div><ul class="spotlist" id="spotList"></ul>';
+  var ul=document.getElementById("spotList");
+  SPOT_ITEMS.forEach(function(x){
+    var li=document.createElement("li");
+    if(got[x]) li.className="got";
+    li.innerHTML='<span class="box">'+(got[x]?"✓":"")+'</span><span class="lbl">'+x+'</span>';
+    li.addEventListener("click", function(){
+      if(got[x]) delete got[x]; else got[x]=true;
+      save("spot",got);
+      var f=SPOT_ITEMS.filter(function(y){ return got[y]; }).length;
+      if(f===SPOT_ITEMS.length) confetti();
+      renderSpot();
+    });
+    ul.appendChild(li);
+  });
+  document.getElementById("spotReset").addEventListener("click", function(){ save("spot",{}); renderSpot(); });
+}
+function renderISpy(){
+  var area=document.getElementById("gameArea");
+  var pick=ISPY_ITEMS[Math.floor(Math.random()*ISPY_ITEMS.length)];
+  area.innerHTML='<div class="ispy">I spy with my little eye…<br>'+pick+'</div>'+
+    '<div style="text-align:center"><button class="btn primary" id="ispyNext">Next one 👀</button></div>';
+  document.getElementById("ispyNext").addEventListener("click", renderISpy);
+}
+function openGame(which){
+  document.querySelectorAll('.games [data-game]').forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-game")===which ? "true":"false"); });
+  if(which==="bingo") renderBingo();
+  else if(which==="spot") renderSpot();
+  else renderISpy();
+}
+
+/* ---------- boot ---------- */
+function normalizeDays(data){
+  if(Array.isArray(data.days) && data.days.length){
+    return data.days.map(function(d){ return {
+      date:d.date, title:d.title||"", location:d.location||data.location, timezone:d.timezone||data.timezone,
+      schedule:d.schedule||[], notes:d.notes||[], closingNote:d.closingNote
+    };});
+  }
+  return [{ date:data.date, title:data.title, location:data.location, timezone:data.timezone,
+            schedule:data.schedule||[], notes:data.notes||[], closingNote:data.closingNote }];
+}
+function syncAllPinsBtn(){
+  var btn=document.getElementById("allPinsBtn");
+  btn.hidden=!isMulti;
+  btn.textContent=showAllPins ? "This day only" : "Show all stops";
+}
+function boot(){
+  fetch("event.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).then(function(data){
+    EV=data;
+    EV.places=EV.places||[];
+    EV.days=normalizeDays(data);
+    isMulti=EV.days.length>1;
+    placeById={};
+    EV.places.forEach(function(p){ placeById[p.id]=p; });
+    MEMBERS=normalizeMembers(EV.team);
+    memberBy={};
+    MEMBERS.forEach(function(m){ memberBy[m.key]=m; });
+    loadWhoFilter();
+    var ti=todayIndex();
+    curDay=ti>=0 ? ti : 0;
+    applyThemeMode();
+    renderHeader();
+    renderDayStrip();
+    renderNow();
+    renderNudge();
+    renderSchedule();
+    renderInfo();
+    renderWhoFilters();
+    renderSun();
+    renderWeather();
+    renderKids();
+    syncAllPinsBtn();
+    document.getElementById("foot").textContent="Are We There Yet? · map data © OpenStreetMap · offline-ready";
+    startClock();
+    if(notifEnabled()) scheduleNotifs();
+    var h=(location.hash||"").replace("#","");
+    if(h==="map"||h==="info") showTab(h);
+    else setTimeout(function(){ scrollToNow(true); }, 350);
+  }).catch(function(e){
+    document.getElementById("hdrTitle").textContent="Could not load event.json";
+    document.getElementById("schedList").innerHTML='<li class="loading">Add an <code>event.json</code> next to index.html.</li>';
+    console.error(e);
+  });
+}
+
+/* wire up */
+document.querySelectorAll("nav.tabs button").forEach(function(b){
+  b.addEventListener("click", function(){ showTab(b.getAttribute("data-tab")); });
+});
+document.getElementById("findMe").addEventListener("click", startFindMe);
+document.getElementById("parkBtn").addEventListener("click", markCar);
+document.getElementById("saveTilesBtn").addEventListener("click", saveTiles);
+document.getElementById("allPinsBtn").addEventListener("click", function(){
+  showAllPins=!showAllPins; syncAllPinsBtn();
+  initMap(); if(map){ refreshMarkers(); fitDay(); }
+});
+document.getElementById("recenter").addEventListener("click", function(){ initMap(); if(map) fitDay(); });
+document.querySelectorAll('.games [data-game]').forEach(function(b){
+  b.addEventListener("click", function(){ openGame(b.getAttribute("data-game")); });
+});
+document.getElementById("jumpNow").addEventListener("click", function(){ scrollToNow(false); });
+window.addEventListener("scroll", function(){ updateJumpNow(); }, { passive:true });
+
+/* react to system light/dark changes when on Auto */
+if(window.matchMedia){
+  try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function(){ if(!storedTheme()) applyTheme(); }); } catch(e){}
+}
+
+/* PWA install */
+var deferredPrompt=null;
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault(); deferredPrompt=e;
+  if(!localStorage.getItem("daykit:install-dismissed")) document.getElementById("installBar").classList.add("show");
+});
+document.getElementById("installBtn").addEventListener("click", function(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.finally(function(){ deferredPrompt=null; document.getElementById("installBar").classList.remove("show"); });
+});
+document.getElementById("installX").addEventListener("click", function(){
+  document.getElementById("installBar").classList.remove("show");
+  try { localStorage.setItem("daykit:install-dismissed","1"); } catch(e){}
+});
+
+/* re-arm reminders when the app returns to the foreground */
+document.addEventListener("visibilitychange", function(){
+  if(!document.hidden && notifEnabled()){ scheduleNotifs(); updateNotifBtn(); }
+});
+
+/* service worker */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+}
+
+boot();
+</script>
+</body>
+</html>

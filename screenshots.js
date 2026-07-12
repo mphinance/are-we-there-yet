@@ -46,8 +46,20 @@ const SHOTS = [
 (async () => {
   fs.mkdirSync(path.join(ROOT, 'docs'), { recursive: true });
   const server = await serve();
-  const base = 'http://localhost:' + server.address().port + '/index.html';
+  const origin = 'http://localhost:' + server.address().port;
+  const base = origin + '/zion/index.html';   // the app shots drive the Zion trip
   const browser = await chromium.launch({ executablePath: process.env.PWEXEC || undefined });
+
+  // Hub landing page shot
+  {
+    const hctx = await browser.newContext({ viewport: { width: VIEW.width, height: 620 }, deviceScaleFactor: 1 });
+    const hp = await hctx.newPage();
+    await hp.goto(origin + '/index.html', { waitUntil: 'domcontentloaded' });
+    await hp.waitForTimeout(600);
+    await hp.screenshot({ path: path.join(ROOT, 'docs', 'screenshot-hub.png') });
+    console.log('wrote docs/screenshot-hub.png');
+    await hctx.close();
+  }
 
   async function shoot(ctx, s) {
     const page = await ctx.newPage();
