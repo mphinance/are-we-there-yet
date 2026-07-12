@@ -31,6 +31,30 @@
     "Closed-toe shoes for Archery and BB Guns",
     "Name tag (turn it in at the end for your patch and medal)"
   ],
+  "lists": [
+    {
+      "tone": "must",
+      "title": "The whole point",
+      "note": "The reasons we came. Try to hit every one.",
+      "items": [
+        "Earn the camp patch and medal (turn in your name tag)",
+        "Shoot at both Archery and BB Guns",
+        "Launch a bottle rocket",
+        "Cool off at Super Splash"
+      ]
+    },
+    {
+      "tone": "stretch",
+      "title": "Bonus adventures",
+      "note": "Would be super awesome if we get the time.",
+      "items": [
+        "Find a geocache at the Geocaching station",
+        "Climb into every rig at Touch a Truck",
+        "Catch the giant water balloon toss at closing",
+        "Make a new friend from another den"
+      ]
+    }
+  ],
   "closingNote": "Turn in your name tag to receive your patch and medal.",
   "notes": [
     "At the end of the day, turn in your name tag to receive your patch and medal.",

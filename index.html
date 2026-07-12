@@ -216,6 +216,21 @@
   .check input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--accent); flex: 0 0 auto; }
   .check label { font-size: 14px; }
   .check li.done label { text-decoration: line-through; color: var(--muted); }
+
+  /* Trip goal lists (must-do vs would-be-awesome) */
+  .goallist { margin: 0 0 16px; }
+  .goallist:last-child { margin-bottom: 0; }
+  .goallist h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0 0 3px; }
+  .goallist h3 .gemoji { font-size: 17px; }
+  .goalpill { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; color: #fff; background: var(--muted); }
+  .goallist .goalnote { font-size: 12.5px; color: var(--muted); margin: 0 0 8px; }
+  .goallist.must h3 { color: var(--accent); }
+  .goallist.must .goalpill { background: var(--accent); }
+  .goallist.must .check input { accent-color: var(--accent); }
+  .goallist.stretch h3 { color: var(--water); }
+  .goallist.stretch .goalpill { background: var(--water); }
+  .goallist.stretch .check input { accent-color: var(--water); }
+  .goalprog { font-size: 11px; color: var(--muted); font-weight: 700; margin: 4px 0 0; }
   .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; margin: 0; }
   .kv dt { color: var(--muted); }
   .kv dd { margin: 0; font-weight: 600; }
@@ -375,6 +390,34 @@ var KIND_LABEL = {
   hub:"Hub", activity:"Activity", water:"Water", service:"Services",
   lodging:"Lodging", food:"Food", sight:"Sights", travel:"Travel"
 };
+
+/* Trip-goal list tones. "must" is the point of the trip, "stretch" is bonus. */
+var LIST_TONES = {
+  must:    { emoji:"🎯", label:"The whole point", pill:"Must do" },
+  stretch: { emoji:"✨", label:"Bonus adventures", pill:"If we get time" },
+  other:   { emoji:"📍", label:"List", pill:"List" }
+};
+
+/* Accept a few shapes for EV.lists and normalize to [{title,tone,note,items[]}]. */
+function normalizeLists(raw){
+  if(!raw) return [];
+  var out=[];
+  if(Array.isArray(raw)){
+    raw.forEach(function(l){
+      if(!l) return;
+      var items=l.items || l.list || [];
+      if(items.length) out.push({ title:l.title||"", tone:l.tone||"other", note:l.note||"", items:items });
+    });
+  } else if(typeof raw==="object"){
+    // Object form: { must:[...], stretch:[...] } or { must:{title,items} }
+    Object.keys(raw).forEach(function(tone){
+      var v=raw[tone];
+      var items=Array.isArray(v) ? v : (v && v.items) || [];
+      if(items.length) out.push({ title:(v&&v.title)||"", tone:tone, note:(v&&v.note)||"", items:items });
+    });
+  }
+  return out;
+}
 
 /* ---- time helpers. Schedule times are wall-clock in the event's timezone. ---- */
 function hm(t){ var p=t.split(":"); return {h:+p[0], m:+p[1]}; }
@@ -707,6 +750,26 @@ function renderInfo(){
     html+='</ul></div>';
   }
 
+  var lists=normalizeLists(EV.lists);
+  if(lists.length){
+    html+='<div class="card"><h2>Trip goals</h2>'+
+      '<p class="small muted" style="margin:0 0 12px">The must-do reasons for this trip, and the bonus adventures if time allows.</p>';
+    lists.forEach(function(lst,li){
+      var meta=LIST_TONES[lst.tone] || LIST_TONES.other;
+      html+='<div class="goallist '+esc(lst.tone)+'">'+
+        '<h3><span class="gemoji">'+meta.emoji+'</span>'+esc(lst.title||meta.label)+
+        ' <span class="goalpill">'+meta.pill+'</span></h3>';
+      if(lst.note) html+='<p class="goalnote">'+esc(lst.note)+'</p>';
+      html+='<ul class="check" data-list="'+li+'">';
+      lst.items.forEach(function(it,ii){
+        var id='goal-'+li+'-'+ii;
+        html+='<li><input type="checkbox" id="'+id+'"><label for="'+id+'">'+esc(it)+'</label></li>';
+      });
+      html+='</ul><p class="goalprog" data-prog="'+li+'"></p></div>';
+    });
+    html+='</div>';
+  }
+
   if(EV.notes && EV.notes.length){
     html+='<div class="card"><h2>Good to know</h2><ul class="plain">';
     EV.notes.forEach(function(n){ html+='<li>'+esc(n)+'</li>'; });
@@ -740,6 +803,27 @@ function renderInfo(){
       try { localStorage.setItem(key, JSON.stringify(saved)); } catch(e){}
     });
   });
+
+  var lkey="daykit:"+EV.id+":lists", lsaved={};
+  try { lsaved=JSON.parse(localStorage.getItem(lkey)||"{}"); } catch(e){}
+  function refreshGoalProg(li){
+    var ul=w.querySelector('ul[data-list="'+li+'"]'); if(!ul) return;
+    var boxes=ul.querySelectorAll("input"), done=0;
+    boxes.forEach(function(b){ if(b.checked) done++; });
+    var cap=w.querySelector('p[data-prog="'+li+'"]');
+    if(cap) cap.textContent=done+" of "+boxes.length+" done"+(boxes.length&&done===boxes.length?" 🎉":"");
+  }
+  w.querySelectorAll(".goallist .check input").forEach(function(cb){
+    var li=cb.closest("ul").getAttribute("data-list");
+    if(lsaved[cb.id]){ cb.checked=true; cb.closest("li").classList.add("done"); }
+    cb.addEventListener("change", function(){
+      cb.closest("li").classList.toggle("done", cb.checked);
+      lsaved[cb.id]=cb.checked;
+      try { localStorage.setItem(lkey, JSON.stringify(lsaved)); } catch(e){}
+      refreshGoalProg(li);
+    });
+  });
+  w.querySelectorAll("ul[data-list]").forEach(function(ul){ refreshGoalProg(ul.getAttribute("data-list")); });
 
   var sb=w.querySelector("#shareBtn"); if(sb) sb.addEventListener("click", shareThis);
   var cb2=w.querySelector("#calBtn"); if(cb2) cb2.addEventListener("click", downloadICS);

@@ -34,6 +34,8 @@ corner.
 > - Include first aid, restrooms, lunch, and parking as `service` places if
 >   they are on the map.
 > - Add a sensible `bring` checklist and a `closingNote`.
+> - Add a `lists` array with a `must` list (the whole point of the day) and a
+>   `stretch` list (bonus things to do if there is time).
 >
 > Output only the `event.json`.
 
@@ -52,6 +54,8 @@ corner.
 >   map and gets walking directions.
 > - Pick a `theme` that fits the trip, add a `bring` packing list, and a few
 >   `notes`.
+> - Add a `lists` array with a `must` list (the reasons for the trip) and a
+>   `stretch` list (would-be-awesome extras if time allows).
 >
 > Output only the `event.json`.
 

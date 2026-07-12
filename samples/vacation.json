@@ -16,6 +16,30 @@
     "Cooler and reusable water bottles",
     "Sunscreen and bug spray"
   ],
+  "lists": [
+    {
+      "tone": "must",
+      "title": "The whole point",
+      "note": "Why we booked this trip. Do not leave without these.",
+      "items": [
+        "Hike to the tower in Peninsula State Park",
+        "Watch a real Door County fish boil at Pelletier's",
+        "Swim at Nicolet Bay Beach",
+        "See the goats on the roof at Al Johnson's"
+      ]
+    },
+    {
+      "tone": "stretch",
+      "title": "Bonus adventures",
+      "note": "Would be super awesome if the weather and time cooperate.",
+      "items": [
+        "Tour Eagle Bluff Lighthouse",
+        "Kayak the shoreline from Nicolet Bay",
+        "Take the ferry to Washington Island",
+        "Catch sunset at the tip in Gills Rock"
+      ]
+    }
+  ],
   "notes": [
     "Cherry season peaks in July. Grab a pie for the drive home.",
     "Peninsula State Park needs a WI state park sticker at the gate.",

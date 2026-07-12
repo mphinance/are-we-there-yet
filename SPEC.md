@@ -37,6 +37,7 @@ same internal shape, so single-day files never need a `days` array.
   },
 
   "bring":  ["Layers", "Swimsuits"],   // optional; saved checklist on Info
+  "lists":  [ /* optional trip-goal checklists, see below */ ],
   "notes":  ["Cherry season peaks in July."],  // optional; trip-level bullets
   "closingNote": "Safe drive home.",   // optional; shown when the day is over
 
@@ -59,6 +60,37 @@ same internal shape, so single-day files never need a `days` array.
   // "schedule": [ /* items */ ]
 }
 ```
+
+## `lists` (trip goals)
+
+Optional priority checklists on the Info tab, saved offline per item like the
+packing list. Use them to separate the must-do reasons for the trip from the
+would-be-awesome extras. Each list renders as its own titled block with a
+tone-colored pill and a "N of M done" progress line.
+
+```jsonc
+"lists": [
+  {
+    "tone": "must",              // "must" (the point), "stretch" (bonus), or any
+                                 // other string (neutral styling). Sets color + pill.
+    "title": "The whole point",  // optional; falls back to a tone default label
+    "note": "Try to hit them all.", // optional subtitle under the heading
+    "items": ["Ride the coaster", "Earn the patch"]  // the checklist entries
+  },
+  {
+    "tone": "stretch",
+    "title": "Bonus adventures",
+    "note": "If we get the time.",
+    "items": ["Tour the lighthouse", "Take the ferry"]
+  }
+]
+```
+
+A shorthand object form is also accepted and normalized to the same shape:
+`"lists": { "must": ["..."], "stretch": ["..."] }`. `must` renders in the theme
+accent with a "Must do" pill, `stretch` in the water blue with an "If we get
+time" pill; any other tone gets neutral styling. Omit `lists` entirely and the
+section does not appear.
 
 ## `schedule` items
 
