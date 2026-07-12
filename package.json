@@ -1,4 +1,8 @@
 {
+  "name": "are-we-there-yet",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A drop-in PWA for a day or a trip, built from photos via AI: live schedule, arrival countdown, map, and a back-seat kids mode.",
   "scripts": {
     "icons": "node gen-icons.js",
     "shots": "node screenshots.js"
