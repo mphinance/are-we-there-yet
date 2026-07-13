@@ -228,6 +228,19 @@
   /* day at a glance (effort) */
   .dayglance { font-size: 12px; color: var(--muted); font-weight: 700; margin: -4px 0 10px; }
   .dayglance b { color: var(--ink); }
+  /* nearby food during gaps */
+  ol.sched li.foodgap { display: block; padding: 2px 6px 8px 72px; border-bottom: 0; }
+  .foodbtn { appearance: none; border: 1px dashed var(--line); background: var(--bg); color: var(--ink); font-family: inherit;
+    font-size: 12px; font-weight: 700; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+  .foodbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .foodbtn:disabled { opacity: .6; cursor: default; }
+  .foodlist { display: grid; gap: 6px; margin: 8px 0 0; }
+  .foodlist:empty { margin: 0; }
+  .fooditem { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; text-decoration: none; color: inherit;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px; }
+  .fooditem .fn { font-weight: 700; font-size: 13px; }
+  .fooditem .fm { font-size: 11.5px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .foodnone { font-size: 12px; color: var(--muted); padding: 4px 2px; }
   /* stop detail badges */
   .statline { display: block; font-weight: 600; font-size: 12px; color: var(--muted); margin-top: 2px; }
   .statline .lvl { text-transform: capitalize; font-weight: 800; }
@@ -1305,12 +1318,31 @@ function renderSchedule(){
         if(tight) warnings.push(esc(item.title)+" to "+esc(nxt.title)+" needs ~"+leg.min+" min but "+
           (gapMin<0?"the times overlap.":"only "+gapMin+" min is set aside."));
       }
+      // A long lunch or dinner gap with nothing food-related planned: offer nearby food.
+      var fc=nearbyCfg();
+      if(fc.food){
+        var fgap=Math.round((zonedEpoch(day.date,nxt.start,tz)-zonedEpoch(day.date,item.end,tz))/60000);
+        var meal=mealLabel(item.end, nxt.start);
+        var pa=item.place&&placeById[item.place], pb=nxt.place&&placeById[nxt.place];
+        var anchor=(pa&&pa.lat!=null)?pa:((pb&&pb.lat!=null)?pb:null);
+        var mealPlanned=(pa&&pa.kind==="food")||(pb&&pb.kind==="food")||MEAL_WORD.test(item.title)||MEAL_WORD.test(nxt.title);
+        if(meal && fgap>=(fc.minGapMin||45) && anchor && !mealPlanned){
+          var fl=document.createElement("li");
+          fl.className="foodgap";
+          fl.innerHTML='<button class="foodbtn" data-lat="'+anchor.lat+'" data-lng="'+anchor.lng+'" data-r="'+((fc.radiusKm||2)*1000)+'">'+
+            '🍴 '+meal+' gap near '+esc(anchor.name)+'. Find a place to eat</button><div class="foodlist"></div>';
+          ol.appendChild(fl);
+        }
+      }
     }
   });
   if(!day.schedule.length){ ol.innerHTML='<li class="loading">No plans set for this day.</li>'; }
   else if(!shown){ ol.innerHTML='<li class="loading">No wants match this filter.</li>'; }
   ol.querySelectorAll(".go").forEach(function(b){
     b.addEventListener("click", function(){ focusPlace(b.getAttribute("data-place")); });
+  });
+  ol.querySelectorAll(".foodbtn").forEach(function(b){
+    b.addEventListener("click", function(){ loadFood(b); });
   });
   // Day at a glance: total trail distance and elevation gain, when the data is there.
   var gl=document.getElementById("dayGlance"), dist=0, gain=0, drive=dayDriveMinutes(day);
@@ -1771,6 +1803,36 @@ function legEstimate(a, b, day){
   var c=travelCfg(day), road=crow*c.roadFactor;
   var walk=road<c.walkUnder, mps=(walk?c.walkMph:c.mph)*1609.34/3600;
   return { mode:walk?"walk":"drive", min:Math.round(road/mps/60), road:road };
+}
+
+/* ---------- nearby food during meal-time gaps (opt-in, keyless OpenStreetMap) ----------
+   Config: event.json or config.json "nearby": { "food": true, "radiusKm": 2, "minGapMin": 45 }.
+   During a long lunch or dinner gap with nothing food-related planned, offer a tap
+   that queries the free, keyless Overpass API for restaurants near the stop. */
+function nearbyCfg(){ return (EV && EV.nearby) || CONFIG.nearby || {}; }
+var MEAL_WORD = /breakfast|brunch|lunch|dinner|supper|\beat\b|\bfood\b|caf[eé]|restaurant|diner|meal|snack/i;
+function mealLabel(a, b){
+  var s=hmMin(a), e=hmMin(b), W=[["Lunch",690,840],["Dinner",1020,1230]];
+  for(var i=0;i<W.length;i++){ if(s<W[i][2] && e>W[i][1]) return W[i][0]; }
+  return "";
+}
+function loadFood(btn){
+  var lat=+btn.getAttribute("data-lat"), lng=+btn.getAttribute("data-lng"), r=+btn.getAttribute("data-r")||2000;
+  var list=btn.parentNode.querySelector(".foodlist"), orig=btn.textContent;
+  btn.disabled=true; btn.textContent="Finding food nearby...";
+  var q='[out:json][timeout:12];(node["amenity"~"^(restaurant|cafe|fast_food)$"](around:'+r+','+lat+','+lng+'););out body 40;';
+  fetch("https://overpass-api.de/api/interpreter", { method:"POST", body:q }).then(function(res){ return res.json(); }).then(function(d){
+    var els=(d.elements||[]).filter(function(e){ return e.tags && e.tags.name && e.lat!=null && e.lon!=null; })
+      .map(function(e){ return { name:e.tags.name, cuisine:e.tags.cuisine||"", lat:e.lat, lng:e.lon, dist:haversine(lat,lng,e.lat,e.lon) }; })
+      .sort(function(a,b){ return a.dist-b.dist; }).slice(0,6);
+    btn.disabled=false; btn.textContent=orig;
+    if(!els.length){ list.innerHTML='<div class="foodnone">No spots found nearby. Try again later or widen the radius.</div>'; return; }
+    list.innerHTML=els.map(function(e){
+      return '<a class="fooditem" href="'+searchUrl(e)+'" target="_blank" rel="noopener">'+
+        '<span class="fn">'+esc(e.name)+'</span>'+
+        '<span class="fm">'+(e.cuisine?esc(String(e.cuisine).replace(/[_;]/g," "))+' · ':'')+fmtDist(e.dist)+'</span></a>';
+    }).join("");
+  }).catch(function(){ btn.disabled=false; btn.textContent=orig; list.innerHTML='<div class="foodnone">Could not reach the food search. Check your connection.</div>'; });
 }
 
 /* The day's stops in schedule order as [lat,lng], deduping repeats, for the map route. */
