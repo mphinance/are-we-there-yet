@@ -12,35 +12,150 @@
     "bg": "#f5f2f8",
     "card": "#ffffff"
   },
-  "location": { "name": "Reykjavik, Iceland", "lat": 64.1466, "lng": -21.9426, "zoom": 6 },
-  "travel": { "roadFactor": 1.4, "mph": 45, "walkUnderMi": 0.4 },
+  "location": {
+    "name": "Reykjavik, Iceland",
+    "lat": 64.1466,
+    "lng": -21.9426,
+    "zoom": 6
+  },
+  "travel": {
+    "roadFactor": 1.4,
+    "mph": 45,
+    "walkUnderMi": 0.4
+  },
   "team": {
     "emoji": "🪨",
     "rank": "Team Obsidian",
     "note": "Black volcanic glass, the real kind, made exactly the way Kilian makes it in Minecraft: lava meets water. Iceland is the biggest obsidian farm on Earth. Grandma and Grandpa are sailing too, on their own reservation."
   },
   "bring": [
-    "Waterproof hiking boots, broken in. Non-negotiable for Vigur and the sea cliffs",
+    "Waterproof hiking boots, broken in. Non-negotiable for the sea cliffs and the lava fields",
     "Base layer: wool or synthetic, no cotton",
     "Mid layer: heavy fleece or wool",
     "Outer shell: waterproof AND windproof. Umbrellas are useless here",
     "Warm hat and gloves even in August. It is 50 to 55F with hard wind",
     "Passports for everyone, plus the cruise boarding passes",
     "Seasick meds for the Aug 15 crossing of the Iceland-Faroe Ridge",
-    "Swimsuits for the Forest Lagoon in Akureyri",
-    "Binoculars for the puffins and the whales",
-    "Portable battery and a plug adapter (Europlug Type F, 230V)"
+    "Swimsuits and flip flops. Sky Lagoon on day one, and Iceland makes you shower properly first",
+    "Binoculars for the puffin cruise",
+    "Portable battery and a plug adapter (Europlug Type F, 230V)",
+    "Eye mask for Kilian. Mid-August Reykjavik never really gets dark"
   ],
   "bookings": [
-    { "title": "Flight out: Icelandair 852, ORD to KEF", "status": "confirmed", "when": "Fri Aug 7, 7:25pm", "ref": "AIR-OBSIDIAN", "place": "ord", "who": "Everyone", "note": "Overnight crossing, lands 6:40am Saturday. Miss this one and the airline cancels the flight home too, so do not cut it fine." },
-    { "title": "Old Town Reykjavik", "status": "confirmed", "when": "Aug 8", "ref": "STAY-OBSIDIAN", "place": "hotel_rvk", "who": "Everyone", "note": "One night before the ship. Walkable to everything downtown." },
-    { "title": "Norwegian Star, 7 nights", "status": "confirmed", "when": "Aug 9 to 16", "ref": "NCL-OBSIDIAN", "place": "pier312", "who": "Everyone", "note": "Freestyle cruising. No fixed dining times, no formal nights." },
-    { "title": "Flight home: Icelandair 855, KEF to ORD", "status": "confirmed", "when": "Sun Aug 16, 7:45pm Iceland time", "ref": "AIR-OBSIDIAN", "place": "kef", "who": "Everyone", "note": "Lands O'Hare 9:25pm the same evening. Flying west you gain 5 hours back." },
-    { "title": "Blue Lagoon, last day", "status": "todo", "by": "2026-07-20", "place": "blue_lagoon", "who": "Everyone", "url": "https://www.bluelagoon.com", "note": "Book a mid-morning slot. It sells out and there are eleven hours to fill between walking off the ship and the flight." },
-    { "title": "Flybus: cruise terminal to Blue Lagoon to airport", "status": "todo", "by": "2026-07-26", "url": "https://flybus.is", "who": "Everyone", "note": "About $29 to $35 a head instead of the ship's $99.50. Book online." },
-    { "title": "Online check-in with Norwegian", "status": "todo", "by": "2026-07-19", "url": "https://www.ncl.com", "who": "Everyone", "note": "Opens Jul 19, 21 days out. Needs passport numbers, an emergency contact who is not sailing, and a card for the onboard account." },
-    { "title": "Vigur Island puffin tour", "status": "todo", "by": "2026-07-20", "place": "vigur", "who": "Everyone", "note": "Last window of the season. The birds leave mid-August. Private operators want months of lead time, so this is already tight." },
-    { "title": "Do NOT buy the ship's airport transfer", "status": "todo", "by": "2026-07-26", "note": "$99.50 a head, and it drops you at Keflavik at 9am for a 7:45pm flight. Wrong plan and four times the price. Flybus via the Blue Lagoon instead." }
+    {
+      "title": "Flight out: Icelandair 852, ORD to KEF",
+      "status": "confirmed",
+      "when": "Fri Aug 7, 7:25pm",
+      "ref": "AIR-OBSIDIAN",
+      "place": "ord",
+      "who": "Everyone",
+      "note": "Overnight crossing, lands 6:40am Saturday. Miss this one and the airline cancels the flight home too, so do not cut it fine."
+    },
+    {
+      "title": "Old Town Reykjavik",
+      "status": "confirmed",
+      "when": "Aug 8",
+      "ref": "STAY-OBSIDIAN",
+      "place": "hotel_rvk",
+      "who": "Everyone",
+      "note": "One night before the ship. Walkable to everything downtown."
+    },
+    {
+      "title": "Norwegian Star, 7 nights",
+      "status": "confirmed",
+      "when": "Aug 9 to 16",
+      "ref": "NCL-OBSIDIAN",
+      "place": "pier312",
+      "who": "Everyone",
+      "note": "Freestyle cruising. No fixed dining times, no formal nights."
+    },
+    {
+      "title": "Flight home: Icelandair 855, KEF to ORD",
+      "status": "confirmed",
+      "when": "Sun Aug 16, 7:45pm Iceland time",
+      "ref": "AIR-OBSIDIAN",
+      "place": "kef",
+      "who": "Everyone",
+      "note": "Lands O'Hare 9:25pm the same evening. Flying west you gain 5 hours back."
+    },
+    {
+      "title": "Online check-in with Norwegian",
+      "status": "todo",
+      "by": "2026-07-19",
+      "url": "https://www.ncl.com",
+      "who": "Everyone",
+      "note": "Opens Jul 19, 21 days out. Needs passport numbers, an emergency contact who is not sailing, and a card for the onboard account."
+    },
+    {
+      "title": "Sky Lagoon Pure Pass Adventure, with transfer",
+      "status": "confirmed",
+      "when": "Sun Aug 9, 11:00am",
+      "ref": "EXC-OBSIDIAN",
+      "place": "sky_lagoon",
+      "who": "Everyone",
+      "note": "3 hours. Hotel checkout is also 11:00, so bags go down before the desk shuts at 11. Ask where the transfer drops you."
+    },
+    {
+      "title": "Snaefellsnes Highlights and Kirkjufell Views by bus",
+      "status": "confirmed",
+      "when": "Mon Aug 10, 9:30am",
+      "ref": "EXC-OBSIDIAN",
+      "place": "kirkjufell",
+      "who": "Everyone",
+      "note": "4 hours. Tender port, so get tender tickets the moment you dock at 7."
+    },
+    {
+      "title": "Half Day Lake Myvatn and Godafoss Waterfall",
+      "status": "confirmed",
+      "when": "Tue Aug 11, 9:30am",
+      "ref": "EXC-OBSIDIAN",
+      "place": "myvatn",
+      "who": "Everyone",
+      "note": "5.5 hours, the longest excursion of the week."
+    },
+    {
+      "title": "Puffins and Wildlife Cruising",
+      "status": "confirmed",
+      "when": "Wed Aug 12, 10:15am",
+      "ref": "EXC-OBSIDIAN",
+      "place": "isafjordur",
+      "who": "Everyone",
+      "note": "2.25 hours by boat. An NCL tour, so the ship waits for it. Back by 12:30 against a hard 2pm all-aboard."
+    },
+    {
+      "title": "Vestmanna Seacliffs",
+      "status": "confirmed",
+      "when": "Fri Aug 14, 12:00",
+      "ref": "EXC-OBSIDIAN",
+      "place": "vestmanna",
+      "who": "Everyone",
+      "note": "4 hours. Ship docks 11:30 and this leaves at 12:00 - be at the gangway before you dock."
+    },
+    {
+      "title": "Seydisfjordur - nothing booked",
+      "status": "todo",
+      "by": "2026-08-01",
+      "place": "seydisfjordur",
+      "who": "Everyone",
+      "note": "The one open day. Grandma's plan literally says 'Michael planning' next to it."
+    },
+    {
+      "title": "Blue Lagoon on the last day",
+      "status": "todo",
+      "by": "2026-07-20",
+      "place": "blue_lagoon",
+      "who": "Everyone",
+      "url": "https://www.bluelagoon.com",
+      "note": "Nothing is booked for Aug 16 and there are eleven hours to fill. Sells out - book early."
+    },
+    {
+      "title": "Flybus: cruise terminal to Blue Lagoon to airport",
+      "status": "todo",
+      "by": "2026-07-26",
+      "url": "https://flybus.is",
+      "who": "Everyone",
+      "note": "About $29 to $35 a head instead of the ship's $99.50."
+    }
   ],
   "lists": [
     {
@@ -49,155 +164,631 @@
       "note": "The reasons we flew across an ocean. Do not come home without these.",
       "who": "Everyone",
       "items": [
-        { "text": "Find real obsidian. Actual volcanic glass, in the wild", "who": ["Kilian"] },
-        "Puffins on Vigur Island before they leave for the winter",
-        "Whales feeding in Eyjafjordur",
+        {
+          "text": "Find real obsidian. Actual volcanic glass, in the wild",
+          "who": [
+            "Kilian"
+          ]
+        },
+        "Puffins from the boat at Isafjordur, before they leave for the winter",
         "Kirkjufell, the most photographed mountain in Iceland",
+        "Godafoss, the waterfall of the gods",
         "Stand in the Faroe Islands, a place most people never get to"
       ]
     },
     {
       "tone": "stretch",
-      "title": "If the weather cooperates",
-      "note": "North Atlantic weather decides these, not us.",
+      "title": "Up for grabs",
+      "note": "Nothing is booked for these. The Seydisfjordur day is completely open.",
+      "who": "Everyone",
       "items": [
-        "Vatnshellir lava cave, 8,000-year-old tubes underground",
-        "Godafoss, the waterfall of the gods",
-        "Soak in the Forest Lagoon infinity pools above Akureyri",
-        "Vestmanna sea cliffs by boat",
-        "Spot the heart-shaped traffic lights in Akureyri"
+        "The rainbow street and the blue church at Seydisfjordur",
+        "Blue Lagoon on the way to the airport on the last day",
+        "Spot the heart-shaped traffic lights in Akureyri",
+        "Tinganes old town in Torshavn, red turf roofs on the harbour",
+        "Be on deck for the sail-in to Seydisfjordur"
       ]
     }
   ],
   "notes": [
-    "Tipping is not expected in Iceland or the Faroe Islands. Service is already in the price at restaurants and in taxis.",
+    "Tipping is not expected in Iceland or the Faroe Islands. Service is already in the price.",
     "The Faroes run one hour ahead of Iceland in summer. The ship stays on Iceland time. Do not trust your phone in Torshavn.",
     "Iceland is card-first. You can go the whole trip without touching cash.",
-    "Grundarfjordur is a tender port. Get tender tickets the moment they release or you lose shore hours standing in line.",
-    "Isafjordur all-aboard at 2pm is hard. Do not go more than 30 minutes from the pier on your own."
+    "Grundarfjordur is a tender port. Tender tickets are the first thing you do, not the thing you get around to.",
+    "Isafjordur all-aboard at 2pm is hard, but the puffin cruise is an NCL tour, so the ship waits for that one.",
+    "Grandma and Grandpa fly separately and stay on after we go home. Their days are not our days."
   ],
   "closingNote": "Salt in the air, obsidian in the backpack, everybody home safe.",
   "places": [
-    { "id": "ord", "name": "Chicago O'Hare", "kind": "hub", "icon": "compass", "lat": 41.9786, "lng": -87.9048, "desc": "International departures. Bag drop closes an hour before the flight." },
-    { "id": "kef", "name": "Keflavik Airport", "kind": "hub", "icon": "compass", "lat": 63.985, "lng": -22.6056, "desc": "45 minutes from Reykjavik, 20 from the Blue Lagoon. The Flybus runs both legs." },
-    { "id": "blue_lagoon", "name": "Blue Lagoon", "kind": "water", "icon": "water", "lat": 63.8804, "lng": -22.4495, "desc": "Between the city and the airport, and it stores your luggage. The answer to the 11-hour gap on the last day. Book ahead, it sells out." },
-    { "id": "hotel_rvk", "name": "Old Town Reykjavik", "kind": "lodging", "icon": "lodging", "lat": 64.1465, "lng": -21.942, "address": "2 Kirkjustraeti, Reykjavik", "desc": "One night before the ship, right on the old town square." },
-    { "id": "pier312", "name": "Skarfabakki Pier 312", "kind": "hub", "icon": "compass", "lat": 64.1533, "lng": -21.871, "desc": "The cruise pier. 10 to 12 minutes from downtown by taxi, about 4,000 ISK." },
-    { "id": "grundarfjordur", "name": "Grundarfjordur", "kind": "hub", "icon": "beach", "lat": 64.9217, "lng": -23.25, "desc": "Tender port. The village is 500m from the landing." },
-    { "id": "kirkjufell", "name": "Kirkjufell", "kind": "sight", "icon": "hike", "lat": 64.941, "lng": -23.307, "desc": "The arrowhead mountain, 3km from the pier. The waterfall is on the near side." },
-    { "id": "vatnshellir", "name": "Vatnshellir Lava Cave", "kind": "sight", "icon": "hike", "lat": 64.748, "lng": -23.818, "desc": "8,000-year-old lava tubes on Snaefellsnes. Ages 5 and up." },
-    { "id": "akureyri", "name": "Akureyri, Oddeyrarbryggja", "kind": "hub", "icon": "compass", "lat": 65.685, "lng": -18.085, "desc": "Capital of the north. The ship docks right at the town." },
-    { "id": "godafoss", "name": "Godafoss", "kind": "water", "icon": "water", "lat": 65.6829, "lng": -17.55, "desc": "The waterfall of the gods, 45 minutes east of Akureyri." },
-    { "id": "forest_lagoon", "name": "Forest Lagoon", "kind": "water", "icon": "water", "lat": 65.688, "lng": -18.045, "desc": "Infinity pools in a birch forest above the fjord." },
-    { "id": "isafjordur", "name": "Isafjordur, Sundabakki", "kind": "hub", "icon": "compass", "lat": 66.0748, "lng": -23.1266, "desc": "Westfjords hub. Walk-off pier. Hard 2pm all-aboard." },
-    { "id": "vigur", "name": "Vigur Island", "kind": "sight", "icon": "star", "lat": 66.04, "lng": -22.825, "desc": "100,000 puffins, plus eiders and arctic terns. They start leaving mid-August." },
-    { "id": "dynjandi", "name": "Dynjandi Waterfall", "kind": "water", "icon": "water", "lat": 65.7333, "lng": -23.205, "desc": "Tiered cliff waterfall. Getting there means mountain tunnels that can delay you." },
-    { "id": "seydisfjordur", "name": "Seydisfjordur", "kind": "hub", "icon": "compass", "lat": 65.26, "lng": -14.012, "desc": "The rainbow street and the blue church, at the head of a narrow eastern fjord." },
-    { "id": "torshavn", "name": "Torshavn, Faroe Islands", "kind": "hub", "icon": "compass", "lat": 62.0107, "lng": -6.7719, "desc": "The smallest capital in the world. Local time runs one hour ahead of the ship." },
-    { "id": "vestmanna", "name": "Vestmanna Sea Cliffs", "kind": "sight", "icon": "beach", "lat": 62.155, "lng": -7.17, "desc": "Basalt grottos full of nesting seabirds. A 45 minute drive before the boat even starts." },
-    { "id": "kirkjubour", "name": "Kirkjubour", "kind": "sight", "icon": "hike", "lat": 61.956, "lng": -6.797, "desc": "Medieval village walk, 3 to 4 hours. The red bus back to the pier is free." },
-    { "id": "tinganes", "name": "Tinganes Old Town", "kind": "sight", "icon": "star", "lat": 62.009, "lng": -6.768, "desc": "Red turf-roofed government houses on the harbour spit. Easy walk from the ship." }
+    {
+      "id": "ord",
+      "name": "Chicago O'Hare",
+      "kind": "hub",
+      "icon": "compass",
+      "lat": 41.9786,
+      "lng": -87.9048,
+      "desc": "International departures. Bag drop closes an hour before the flight."
+    },
+    {
+      "id": "kef",
+      "name": "Keflavik Airport",
+      "kind": "hub",
+      "icon": "compass",
+      "lat": 63.985,
+      "lng": -22.6056,
+      "desc": "45 minutes from Reykjavik, 20 from the Blue Lagoon. The Flybus runs both legs."
+    },
+    {
+      "id": "blue_lagoon",
+      "name": "Blue Lagoon",
+      "kind": "water",
+      "icon": "water",
+      "lat": 63.8804,
+      "lng": -22.4495,
+      "desc": "Between the city and the airport, and it stores your luggage. The answer to the 11-hour gap on the last day. Book ahead, it sells out."
+    },
+    {
+      "id": "hotel_rvk",
+      "name": "Old Town Reykjavik",
+      "kind": "lodging",
+      "icon": "lodging",
+      "lat": 64.1465,
+      "lng": -21.942,
+      "address": "2 Kirkjustraeti, Reykjavik",
+      "desc": "One night before the ship, right on the old town square."
+    },
+    {
+      "id": "sky_lagoon",
+      "name": "Sky Lagoon",
+      "kind": "water",
+      "icon": "water",
+      "lat": 64.1179,
+      "lng": -21.931,
+      "desc": "Geothermal infinity edge over the Atlantic, on the Reykjavik side. The seven-step Skjol ritual is the whole point."
+    },
+    {
+      "id": "pier312",
+      "name": "Skarfabakki Pier 312",
+      "kind": "hub",
+      "icon": "compass",
+      "lat": 64.1533,
+      "lng": -21.871,
+      "desc": "The cruise pier. 10 to 12 minutes from downtown by taxi, about 4,000 ISK."
+    },
+    {
+      "id": "grundarfjordur",
+      "name": "Grundarfjordur",
+      "kind": "hub",
+      "icon": "beach",
+      "lat": 64.9217,
+      "lng": -23.25,
+      "desc": "Tender port. The village is 500m from the landing."
+    },
+    {
+      "id": "kirkjufell",
+      "name": "Kirkjufell",
+      "kind": "sight",
+      "icon": "hike",
+      "lat": 64.941,
+      "lng": -23.307,
+      "desc": "The arrowhead mountain, 3km from the pier. The waterfall is on the near side."
+    },
+    {
+      "id": "vatnshellir",
+      "name": "Vatnshellir Lava Cave",
+      "kind": "sight",
+      "icon": "hike",
+      "lat": 64.748,
+      "lng": -23.818,
+      "desc": "8,000-year-old lava tubes on Snaefellsnes. Ages 5 and up."
+    },
+    {
+      "id": "akureyri",
+      "name": "Akureyri, Oddeyrarbryggja",
+      "kind": "hub",
+      "icon": "compass",
+      "lat": 65.685,
+      "lng": -18.085,
+      "desc": "Capital of the north. The ship docks right at the town."
+    },
+    {
+      "id": "myvatn",
+      "name": "Lake Myvatn",
+      "kind": "sight",
+      "icon": "hike",
+      "lat": 65.6039,
+      "lng": -16.996,
+      "desc": "Volcanic lake, pseudocraters and steaming ground. The Diamond Circle, an hour east of Akureyri."
+    },
+    {
+      "id": "godafoss",
+      "name": "Godafoss",
+      "kind": "water",
+      "icon": "water",
+      "lat": 65.6829,
+      "lng": -17.55,
+      "desc": "The waterfall of the gods, 45 minutes east of Akureyri."
+    },
+    {
+      "id": "forest_lagoon",
+      "name": "Forest Lagoon",
+      "kind": "water",
+      "icon": "water",
+      "lat": 65.688,
+      "lng": -18.045,
+      "desc": "Infinity pools in a birch forest above the fjord."
+    },
+    {
+      "id": "isafjordur",
+      "name": "Isafjordur, Sundabakki",
+      "kind": "hub",
+      "icon": "compass",
+      "lat": 66.0748,
+      "lng": -23.1266,
+      "desc": "Westfjords hub. Walk-off pier. Hard 2pm all-aboard."
+    },
+    {
+      "id": "vigur",
+      "name": "Vigur Island",
+      "kind": "sight",
+      "icon": "star",
+      "lat": 66.04,
+      "lng": -22.825,
+      "desc": "100,000 puffins, plus eiders and arctic terns. They start leaving mid-August."
+    },
+    {
+      "id": "dynjandi",
+      "name": "Dynjandi Waterfall",
+      "kind": "water",
+      "icon": "water",
+      "lat": 65.7333,
+      "lng": -23.205,
+      "desc": "Tiered cliff waterfall. Getting there means mountain tunnels that can delay you."
+    },
+    {
+      "id": "seydisfjordur",
+      "name": "Seydisfjordur",
+      "kind": "hub",
+      "icon": "compass",
+      "lat": 65.26,
+      "lng": -14.012,
+      "desc": "The rainbow street and the blue church, at the head of a narrow eastern fjord."
+    },
+    {
+      "id": "torshavn",
+      "name": "Torshavn, Faroe Islands",
+      "kind": "hub",
+      "icon": "compass",
+      "lat": 62.0107,
+      "lng": -6.7719,
+      "desc": "The smallest capital in the world. Local time runs one hour ahead of the ship."
+    },
+    {
+      "id": "vestmanna",
+      "name": "Vestmanna Sea Cliffs",
+      "kind": "sight",
+      "icon": "beach",
+      "lat": 62.155,
+      "lng": -7.17,
+      "desc": "Basalt grottos full of nesting seabirds. A 45 minute drive before the boat even starts."
+    },
+    {
+      "id": "kirkjubour",
+      "name": "Kirkjubour",
+      "kind": "sight",
+      "icon": "hike",
+      "lat": 61.956,
+      "lng": -6.797,
+      "desc": "Medieval village walk, 3 to 4 hours. The red bus back to the pier is free."
+    },
+    {
+      "id": "tinganes",
+      "name": "Tinganes Old Town",
+      "kind": "sight",
+      "icon": "star",
+      "lat": 62.009,
+      "lng": -6.768,
+      "desc": "Red turf-roofed government houses on the harbour spit. Easy walk from the ship."
+    }
   ],
   "days": [
     {
       "date": "2026-08-07",
       "title": "Fly out",
       "timezone": "America/Chicago",
-      "notes": ["Kilian skips the last day of camp, so this day has room in it now. Keep the room."],
+      "notes": [
+        "Kilian skips the last day of camp, so this day has room in it now. Keep the room."
+      ],
       "schedule": [
-        { "start": "13:30", "end": "15:30", "title": "Drive to O'Hare", "place": "ord", "who": "Everyone", "flex": true, "note": "Leaving early is the whole plan. Friday evening into Chicago is the part that used to break." },
-        { "start": "15:30", "end": "16:30", "title": "Park and shuttle to the terminal", "place": "ord", "note": "Off-site lots add 20 to 30 minutes. Terminal 5 for Icelandair." },
-        { "start": "16:30", "end": "18:00", "title": "Bag drop, security, gate", "place": "ord", "note": "International bag drop closes 60 minutes out." },
-        { "start": "19:25", "end": "20:25", "title": "Icelandair 852 departs", "place": "ord", "booking": "AIR-OBSIDIAN", "who": "Everyone", "note": "7:25pm, not 7:45. The ticket says so. Overnight, 6h15, lands Reykjavik 6:40am." }
+        {
+          "start": "13:30",
+          "end": "15:30",
+          "title": "Drive to O'Hare",
+          "place": "ord",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Leaving early is the whole plan. Friday evening into Chicago is the part that used to break."
+        },
+        {
+          "start": "15:30",
+          "end": "16:30",
+          "title": "Park and shuttle to the terminal",
+          "place": "ord",
+          "note": "Off-site lots add 20 to 30 minutes. Terminal 5 for Icelandair."
+        },
+        {
+          "start": "16:30",
+          "end": "18:00",
+          "title": "Bag drop, security, gate",
+          "place": "ord",
+          "note": "International bag drop closes 60 minutes out."
+        },
+        {
+          "start": "19:25",
+          "end": "20:25",
+          "title": "Icelandair 852 departs",
+          "place": "ord",
+          "booking": "AIR-OBSIDIAN",
+          "who": "Everyone",
+          "note": "7:25pm, not 7:45. The ticket says so. Overnight, 6h15, lands Reykjavik 6:40am."
+        }
       ]
     },
     {
       "date": "2026-08-08",
       "title": "Land in Reykjavik",
-      "notes": ["You lose a night to the flight. Go easy and stay up until a normal bedtime."],
+      "notes": [
+        "You lose a night to the flight. Go easy and stay up until a normal bedtime."
+      ],
       "schedule": [
-        { "start": "06:30", "end": "07:30", "title": "Land at Keflavik, clear customs", "place": "kef", "who": "Everyone" },
-        { "start": "07:30", "end": "08:30", "title": "Transfer into Reykjavik", "place": "hotel_rvk", "note": "45 minutes. Flybus or a pre-booked van." },
-        { "start": "09:00", "end": "12:00", "title": "Drop bags, walk the old town", "place": "hotel_rvk", "who": "Everyone", "flex": true, "note": "Rooms will not be ready this early. Leave the bags and go." },
-        { "start": "12:00", "end": "18:00", "title": "Reykjavik at your own pace", "place": "hotel_rvk", "who": "Everyone", "flex": true, "note": "Hallgrimskirkja, the harbour, Braud and Co. Nothing scheduled on purpose." }
+        {
+          "start": "06:30",
+          "end": "07:30",
+          "title": "Land at Keflavik, clear customs",
+          "place": "kef",
+          "who": "Everyone"
+        },
+        {
+          "start": "07:30",
+          "end": "08:30",
+          "title": "Transfer into Reykjavik",
+          "place": "hotel_rvk",
+          "note": "45 minutes. Flybus or a pre-booked van."
+        },
+        {
+          "start": "09:00",
+          "end": "12:00",
+          "title": "Drop bags, walk the old town",
+          "place": "hotel_rvk",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Rooms will not be ready this early. Leave the bags and go."
+        },
+        {
+          "start": "12:00",
+          "end": "18:00",
+          "title": "Reykjavik at your own pace",
+          "place": "hotel_rvk",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Hallgrimskirkja, the harbour, Braud and Co. Nothing scheduled on purpose."
+        }
       ]
     },
     {
       "date": "2026-08-09",
-      "title": "Board the Star",
-      "notes": ["All aboard is 5pm, not 7pm. The ship does not wait."],
+      "title": "Sky Lagoon, then board",
+      "notes": [
+        "Checkout is 11:00 and the Sky Lagoon starts at 11:00. The bags have to be down before the front desk shuts at 11.",
+        "All aboard is 17:00, not 19:00. The ship does not wait."
+      ],
       "schedule": [
-        { "start": "09:00", "end": "11:00", "title": "Check out, last morning in town", "place": "hotel_rvk", "who": "Everyone", "flex": true },
-        { "start": "12:00", "end": "12:30", "title": "Taxi to Skarfabakki Pier 312", "place": "pier312", "who": "Everyone", "note": "Ask for a minivan. A sedan will not hold a family plus suitcases." },
-        { "start": "13:00", "end": "15:00", "title": "Embarkation, find the cabins", "place": "pier312", "booking": "NCL-OBSIDIAN", "who": "Everyone" },
-        { "start": "16:00", "end": "17:00", "title": "Muster drill, explore the ship", "place": "pier312", "who": "Everyone", "note": "Sign Kilian up for Splash Academy today, not later in the week." },
-        { "start": "17:00", "end": "19:00", "title": "All aboard, then sailaway", "place": "pier312", "who": "Everyone", "note": "Ship departs 7pm. Watch Reykjavik go by from the top deck." }
+        {
+          "start": "08:00",
+          "end": "10:30",
+          "title": "Pack, bags to the front desk",
+          "place": "hotel_rvk",
+          "who": "Everyone",
+          "note": "Desk is staffed 7 to 11 only. Do not leave this to 10:55."
+        },
+        {
+          "start": "10:30",
+          "end": "11:00",
+          "title": "Check out",
+          "place": "hotel_rvk",
+          "who": "Everyone",
+          "note": "Checkout is 11:00 sharp and the excursion starts at 11:00. This is the tight seam of the day."
+        },
+        {
+          "start": "11:00",
+          "end": "14:00",
+          "title": "Sky Lagoon Pure Pass Adventure",
+          "place": "sky_lagoon",
+          "booking": "EXC-OBSIDIAN",
+          "who": "Everyone",
+          "note": "3 hours. Infinity edge over the Atlantic and the seven-step ritual. Transfer is included - confirm where it drops you."
+        },
+        {
+          "start": "14:30",
+          "end": "15:30",
+          "title": "To Skarfabakki Pier 312",
+          "place": "pier312",
+          "who": "Everyone",
+          "note": "With the luggage. If the Sky Lagoon transfer does not do this leg, it is a taxi and you want a minivan."
+        },
+        {
+          "start": "15:30",
+          "end": "17:00",
+          "title": "Embarkation",
+          "place": "pier312",
+          "booking": "NCL-OBSIDIAN",
+          "who": "Everyone",
+          "note": "Sign Kilian up for Splash Academy today, not later in the week."
+        },
+        {
+          "start": "17:00",
+          "end": "19:00",
+          "title": "All aboard, then sailaway",
+          "place": "pier312",
+          "who": "Everyone",
+          "note": "Ship departs 7pm. Watch Reykjavik go by from the top deck."
+        }
       ]
     },
     {
       "date": "2026-08-10",
       "title": "Grundarfjordur",
-      "notes": ["Tender port. Tickets first, everything else second."],
+      "notes": [
+        "Tender port. Tickets first, everything else second."
+      ],
       "schedule": [
-        { "start": "07:00", "end": "07:45", "title": "Arrive, get tender tickets", "place": "grundarfjordur", "who": "Everyone", "note": "Do this immediately. Late tickets cost you hours ashore." },
-        { "start": "08:30", "end": "12:00", "title": "Kirkjufell and the Snaefellsnes coast", "place": "kirkjufell", "who": "Everyone", "flex": true, "dist": 2, "level": "easy", "note": "3km from the pier. The mountain-and-waterfall shot everyone knows." },
-        { "start": "12:30", "end": "15:00", "title": "Vatnshellir lava cave", "place": "vatnshellir", "who": "Everyone", "flex": true, "level": "moderate", "note": "Underground and cold. Bring the fleece you were not going to bring." },
-        { "start": "15:00", "end": "16:00", "title": "Last tender back", "place": "grundarfjordur", "who": "Everyone", "note": "Ship leaves at 4pm. Do not cut this fine." }
+        {
+          "start": "07:00",
+          "end": "07:45",
+          "title": "Arrive, get tender tickets",
+          "place": "grundarfjordur",
+          "who": "Everyone",
+          "note": "First thing. Late tickets cost you shore hours."
+        },
+        {
+          "start": "09:30",
+          "end": "13:30",
+          "title": "Snaefellsnes Highlights and Kirkjufell",
+          "place": "kirkjufell",
+          "booking": "EXC-OBSIDIAN",
+          "who": "Everyone",
+          "note": "4 hours by bus. The arrowhead mountain everyone photographs."
+        },
+        {
+          "start": "14:00",
+          "end": "15:30",
+          "title": "Village, or back aboard early",
+          "place": "grundarfjordur",
+          "who": "Everyone",
+          "flex": true
+        },
+        {
+          "start": "15:30",
+          "end": "16:00",
+          "title": "Last tender",
+          "place": "grundarfjordur",
+          "who": "Everyone",
+          "note": "Ship leaves at 4pm. Do not cut this fine."
+        }
       ]
     },
     {
       "date": "2026-08-11",
-      "title": "Akureyri",
-      "notes": ["The longest day in port and the best one for whales."],
+      "title": "Akureyri and the Diamond Circle",
+      "notes": [
+        "The longest day in port and the best one for whales."
+      ],
       "schedule": [
-        { "start": "09:00", "end": "09:30", "title": "Dock at Oddeyrarbryggja", "place": "akureyri", "who": "Everyone", "note": "Walk off, straight into town." },
-        { "start": "10:00", "end": "13:00", "title": "Whale watching in Eyjafjordur", "place": "akureyri", "who": "Everyone", "note": "The classic boat is 3 hours and calmer. The RIB is 2 hours, faster, wetter, closer." },
-        { "start": "13:30", "end": "16:00", "title": "Godafoss", "place": "godafoss", "who": "Everyone", "flex": true, "note": "45 minutes each way. Shuttle runs about $92." },
-        { "start": "16:30", "end": "18:30", "title": "Forest Lagoon", "place": "forest_lagoon", "who": "Everyone", "flex": true, "note": "Infinity pools over the fjord. Icelandic pool rules: you shower first, properly." },
-        { "start": "18:30", "end": "19:00", "title": "Back aboard", "place": "akureyri", "who": "Everyone" }
+        {
+          "start": "09:00",
+          "end": "09:30",
+          "title": "Dock at Oddeyrarbryggja",
+          "place": "akureyri",
+          "who": "Everyone",
+          "note": "Walk off, straight into town."
+        },
+        {
+          "start": "09:30",
+          "end": "15:00",
+          "title": "Lake Myvatn and Godafoss",
+          "place": "myvatn",
+          "booking": "EXC-OBSIDIAN",
+          "who": "Everyone",
+          "note": "5.5 hours, the big one. Volcanic lake, pseudocraters, and the waterfall of the gods."
+        },
+        {
+          "start": "15:30",
+          "end": "17:00",
+          "title": "Akureyri town",
+          "place": "akureyri",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Find the heart-shaped traffic lights."
+        },
+        {
+          "start": "17:30",
+          "end": "19:00",
+          "title": "Dinner at La Cocina",
+          "who": "Everyone",
+          "note": "Table for 6 at 5:30."
+        }
       ]
     },
     {
       "date": "2026-08-12",
-      "title": "Isafjordur and the puffins",
-      "notes": ["Seven hours only, and a hard 2pm all-aboard. The tightest day of the cruise."],
+      "title": "Puffins at Isafjordur",
+      "notes": [
+        "Seven hours and a hard 14:00 all-aboard. The puffin cruise is an NCL tour, so the ship waits for it."
+      ],
       "schedule": [
-        { "start": "07:00", "end": "07:30", "title": "Dock at Sundabakki", "place": "isafjordur", "who": "Everyone", "note": "Walk-off pier, right at the town." },
-        { "start": "08:00", "end": "12:00", "title": "Vigur Island puffin tour", "place": "vigur", "who": "Everyone", "window": "07:30-13:00", "note": "The one thing on this trip with an expiry date. The colony starts leaving mid-August." },
-        { "start": "12:30", "end": "13:30", "title": "Isafjordur old town", "place": "isafjordur", "who": "Everyone", "flex": true, "note": "Stay close to the pier. Do not wander." },
-        { "start": "13:30", "end": "14:00", "title": "All aboard. Hard stop", "place": "isafjordur", "who": "Everyone", "note": "Skip Dynjandi unless you are on a ship excursion. The tunnels delay people and the ship will leave without you." }
+        {
+          "start": "07:00",
+          "end": "07:30",
+          "title": "Dock at Sundabakki",
+          "place": "isafjordur",
+          "who": "Everyone",
+          "note": "Walk-off pier, right at the town."
+        },
+        {
+          "start": "07:30",
+          "end": "10:00",
+          "title": "Isafjordur old town",
+          "place": "isafjordur",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Stay near the pier. The tour is the fixed point of the day."
+        },
+        {
+          "start": "10:15",
+          "end": "12:30",
+          "title": "Puffins and Wildlife Cruising",
+          "place": "isafjordur",
+          "booking": "EXC-OBSIDIAN",
+          "who": "Everyone",
+          "note": "2.25 hours by boat. Bring binoculars and the windproof layer - it is colder on the water."
+        },
+        {
+          "start": "13:30",
+          "end": "14:00",
+          "title": "All aboard. Hard stop",
+          "place": "isafjordur",
+          "who": "Everyone",
+          "note": "90 minutes of margin after the tour. Do not spend it wandering."
+        }
       ]
     },
     {
       "date": "2026-08-13",
-      "title": "Seydisfjordur",
-      "notes": ["The prettiest approach of the trip. Be on deck for it."],
+      "title": "Seydisfjordur (nothing booked)",
+      "notes": [
+        "The only open day of the cruise. Grandma's plan says 'Michael planning' next to this one."
+      ],
       "schedule": [
-        { "start": "08:30", "end": "09:30", "title": "Sail in through the fjord", "place": "seydisfjordur", "who": "Everyone", "note": "Narrow eastern fjord, mountains both sides. Worth an alarm." },
-        { "start": "10:00", "end": "13:00", "title": "The rainbow street and the blue church", "place": "seydisfjordur", "who": "Everyone", "flex": true, "note": "Small, walkable, and the best photo in Iceland that does not need a bus." },
-        { "start": "13:00", "end": "15:30", "title": "Waterfall walk, or just the town", "place": "seydisfjordur", "who": "Everyone", "flex": true },
-        { "start": "15:30", "end": "16:00", "title": "Back aboard", "place": "seydisfjordur", "who": "Everyone" }
+        {
+          "start": "08:30",
+          "end": "09:30",
+          "title": "Sail in through the fjord",
+          "place": "seydisfjordur",
+          "who": "Everyone",
+          "note": "Narrow eastern fjord, mountains both sides. Worth an alarm."
+        },
+        {
+          "start": "10:00",
+          "end": "13:00",
+          "title": "The rainbow street and the blue church",
+          "place": "seydisfjordur",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Walk off and it is right there. The best photo in Iceland that needs no bus."
+        },
+        {
+          "start": "13:00",
+          "end": "15:30",
+          "title": "Open. Waterfall walk, or the town",
+          "place": "seydisfjordur",
+          "who": "Everyone",
+          "flex": true
+        },
+        {
+          "start": "15:30",
+          "end": "16:00",
+          "title": "Back aboard",
+          "place": "seydisfjordur",
+          "who": "Everyone"
+        }
       ]
     },
     {
       "date": "2026-08-14",
       "title": "Torshavn, Faroe Islands",
-      "notes": ["Faroe local time is one hour ahead of the ship. Your phone will lie to you. Trust ship time."],
+      "notes": [
+        "Faroe local time is one hour ahead of the ship. Your phone will lie to you. Trust ship time."
+      ],
       "schedule": [
-        { "start": "11:30", "end": "12:00", "title": "Dock in Torshavn", "place": "torshavn", "who": "Everyone", "note": "Every time here is SHIP time. Local clocks read an hour later." },
-        { "start": "12:30", "end": "17:00", "title": "Vestmanna sea cliffs", "place": "vestmanna", "who": "Everyone", "flex": true, "note": "45 minute drive before the boat even starts. Big day, big payoff." },
-        { "start": "17:30", "end": "19:30", "title": "Tinganes old town", "place": "tinganes", "who": "Everyone", "flex": true, "note": "Red turf-roofed houses on the harbour. Easy walk from the ship." },
-        { "start": "19:30", "end": "20:30", "title": "All aboard", "place": "torshavn", "who": "Everyone", "note": "Ship time. Check your watch against the ship, not your phone." }
+        {
+          "start": "11:30",
+          "end": "12:00",
+          "title": "Dock in Torshavn",
+          "place": "torshavn",
+          "who": "Everyone",
+          "note": "SHIP time. Local clocks read an hour later. The tour leaves in 30 minutes - be at the gangway already."
+        },
+        {
+          "start": "12:00",
+          "end": "16:00",
+          "title": "Vestmanna Seacliffs",
+          "place": "vestmanna",
+          "booking": "EXC-OBSIDIAN",
+          "who": "Everyone",
+          "note": "4 hours. 45 minute drive, then the boat into the grottos."
+        },
+        {
+          "start": "16:15",
+          "end": "17:15",
+          "title": "Tinganes old town",
+          "place": "tinganes",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Red turf-roofed houses on the harbour. Easy walk from the ship."
+        },
+        {
+          "start": "17:30",
+          "end": "19:00",
+          "title": "Dinner at Moderno",
+          "who": "Everyone",
+          "note": "Table for 4 at 5:30."
+        },
+        {
+          "start": "19:30",
+          "end": "20:30",
+          "title": "All aboard",
+          "place": "torshavn",
+          "who": "Everyone",
+          "note": "Ship time. Check your watch against the ship, not your phone."
+        }
       ]
     },
     {
       "date": "2026-08-15",
       "title": "At sea",
-      "notes": ["Crossing the Iceland-Faroe Ridge. Sea state here is genuinely variable."],
+      "notes": [
+        "Crossing the Iceland-Faroe Ridge. Sea state here is genuinely variable."
+      ],
       "schedule": [
-        { "start": "09:00", "end": "12:00", "title": "Sea day. Do nothing", "who": "Everyone", "flex": true, "note": "Splash Academy, the pool, the spa. Take the meds early if the swell builds." },
-        { "start": "14:00", "end": "16:00", "title": "Pack, settle the onboard account", "who": "Everyone", "flex": true },
-        { "start": "19:00", "end": "21:00", "title": "Last dinner aboard", "who": "Everyone", "flex": true }
+        {
+          "start": "09:30",
+          "end": "10:30",
+          "title": "Massage",
+          "who": "Everyone",
+          "note": "Booked for 9:30."
+        },
+        {
+          "start": "10:30",
+          "end": "14:00",
+          "title": "Sea day. Do nothing",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Splash Academy, the pool. Take the meds early if the swell builds - this is the Iceland-Faroe Ridge."
+        },
+        {
+          "start": "14:00",
+          "end": "16:00",
+          "title": "Pack, settle the onboard account",
+          "who": "Everyone",
+          "flex": true
+        },
+        {
+          "start": "19:00",
+          "end": "21:00",
+          "title": "Last dinner aboard",
+          "who": "Everyone",
+          "flex": true
+        }
       ]
     },
     {
@@ -209,12 +800,54 @@
         "The Blue Lagoon sits between Reykjavik and Keflavik and stores luggage. That is the whole answer to this day."
       ],
       "schedule": [
-        { "start": "07:00", "end": "08:30", "title": "Dock at Skarfabakki, walk off", "place": "pier312", "who": "Everyone", "note": "Walk-off. Carry your own bags and you leave on your own schedule, not the ship's." },
-        { "start": "09:00", "end": "10:00", "title": "Transfer toward the Blue Lagoon", "place": "blue_lagoon", "who": "Everyone", "note": "Flybus runs the cruise terminal to Blue Lagoon to airport route. Do not buy the ship's transfer for this." },
-        { "start": "10:00", "end": "10:30", "title": "Store the luggage", "place": "blue_lagoon", "who": "Everyone", "note": "Roughly 550 ISK a bag, about $4. Lockers inside for the small stuff." },
-        { "start": "10:30", "end": "15:30", "title": "The Blue Lagoon", "place": "blue_lagoon", "who": "Everyone", "note": "Book ahead. It sells out, and turning up without a slot means you do not get in." },
-        { "start": "16:00", "end": "16:30", "title": "Blue Lagoon to Keflavik", "place": "kef", "who": "Everyone", "note": "About 20 minutes. The Flybus does this leg on a schedule." },
-        { "start": "16:30", "end": "19:45", "title": "Check in, eat, fly", "place": "kef", "who": "Everyone", "note": "Icelandair 855 departs 7:45pm Iceland time and lands O'Hare 9:25pm the SAME evening. You gain 5 hours going west." }
+        {
+          "start": "07:00",
+          "end": "08:30",
+          "title": "Dock at Skarfabakki, walk off",
+          "place": "pier312",
+          "who": "Everyone",
+          "note": "Walk-off. Carry your own bags and you leave on your own schedule, not the ship's."
+        },
+        {
+          "start": "09:00",
+          "end": "10:00",
+          "title": "Transfer toward the Blue Lagoon",
+          "place": "blue_lagoon",
+          "who": "Everyone",
+          "note": "Flybus runs the cruise terminal to Blue Lagoon to airport route. Do not buy the ship's transfer for this."
+        },
+        {
+          "start": "10:00",
+          "end": "10:30",
+          "title": "Store the luggage",
+          "place": "blue_lagoon",
+          "who": "Everyone",
+          "note": "Roughly 550 ISK a bag, about $4. Lockers inside for the small stuff."
+        },
+        {
+          "start": "10:30",
+          "end": "15:30",
+          "title": "The Blue Lagoon",
+          "place": "blue_lagoon",
+          "who": "Everyone",
+          "note": "Book ahead. It sells out, and turning up without a slot means you do not get in."
+        },
+        {
+          "start": "16:00",
+          "end": "16:30",
+          "title": "Blue Lagoon to Keflavik",
+          "place": "kef",
+          "who": "Everyone",
+          "note": "About 20 minutes. The Flybus does this leg on a schedule."
+        },
+        {
+          "start": "16:30",
+          "end": "19:45",
+          "title": "Check in, eat, fly",
+          "place": "kef",
+          "who": "Everyone",
+          "note": "Icelandair 855 departs 7:45pm Iceland time and lands O'Hare 9:25pm the SAME evening. You gain 5 hours going west."
+        }
       ]
     }
   ]
