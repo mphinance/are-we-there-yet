@@ -26,7 +26,7 @@
   "team": {
     "emoji": "🪨",
     "rank": "Team Obsidian",
-    "note": "Black volcanic glass, the real kind, made exactly the way Kilian makes it in Minecraft: lava meets water. Iceland is the biggest obsidian farm on Earth. Grandma and Grandpa are sailing too, on their own reservation."
+    "note": "Five of us: Mom, Dad, Kilian, and Grandma and Grandpa in the room down the hall. Obsidian is black volcanic glass, made the real way exactly like Kilian makes it in Minecraft: lava meets water. Iceland is the biggest obsidian farm on Earth."
   },
   "bring": [
     "Waterproof hiking boots, broken in. Non-negotiable for the sea cliffs and the lava fields",
@@ -132,12 +132,11 @@
       "note": "4 hours. Ship docks 11:30 and this leaves at 12:00 - be at the gangway before you dock."
     },
     {
-      "title": "Seydisfjordur - nothing booked",
-      "status": "todo",
-      "by": "2026-08-01",
+      "title": "Seydisfjordur: walk the town",
+      "status": "confirmed",
       "place": "seydisfjordur",
       "who": "Everyone",
-      "note": "The one open day. Grandma's plan literally says 'Michael planning' next to it."
+      "note": "Nothing to book. Rainbow Street, the Tvisongur sound sculpture, and a waterfall loop if the weather holds."
     },
     {
       "title": "Blue Lagoon on the last day",
@@ -389,6 +388,33 @@
       "lat": 62.009,
       "lng": -6.768,
       "desc": "Red turf-roofed government houses on the harbour spit. Easy walk from the ship."
+    },
+    {
+      "id": "tvisongur",
+      "name": "Tvisongur Sound Sculpture",
+      "kind": "sight",
+      "icon": "star",
+      "lat": 65.2625,
+      "lng": -14.018,
+      "desc": "Five concrete domes on the mountainside. Each one resonates a different note. Stand inside and sing and it sings back. 20 minutes uphill, free, always open."
+    },
+    {
+      "id": "vestdalsfossar",
+      "name": "Vestdalsfossar trail",
+      "kind": "water",
+      "icon": "hike",
+      "lat": 65.268,
+      "lng": -14.033,
+      "desc": "Family-friendly waterfall chain up the Vestdalur valley. Short loop is 5.5km, about 90 minutes."
+    },
+    {
+      "id": "skaftfell",
+      "name": "Skaftfell Bistro and Art Center",
+      "kind": "food",
+      "icon": "food",
+      "lat": 65.2604,
+      "lng": -14.006,
+      "desc": "Lunch and an exhibition in town. Indoors, which matters when the alternative is horizontal rain."
     }
   ],
   "days": [
@@ -664,9 +690,10 @@
     },
     {
       "date": "2026-08-13",
-      "title": "Seydisfjordur (nothing booked)",
+      "title": "Seydisfjordur on foot",
       "notes": [
-        "The only open day of the cruise. Grandma's plan says 'Michael planning' next to this one."
+        "The only day with nothing booked, and the only day we get to pick. Nothing here needs a ticket.",
+        "The ship is a ten minute walk away all day. If the weather turns, just go back."
       ],
       "schedule": [
         {
@@ -675,31 +702,52 @@
           "title": "Sail in through the fjord",
           "place": "seydisfjordur",
           "who": "Everyone",
-          "note": "Narrow eastern fjord, mountains both sides. Worth an alarm."
+          "note": "Narrow eastern fjord, mountains both sides. The prettiest arrival of the week. Worth an alarm."
         },
         {
-          "start": "10:00",
-          "end": "13:00",
-          "title": "The rainbow street and the blue church",
+          "start": "09:45",
+          "end": "10:15",
+          "title": "Rainbow Street and the Blue Church",
           "place": "seydisfjordur",
           "who": "Everyone",
-          "flex": true,
-          "note": "Walk off and it is right there. The best photo in Iceland that needs no bus."
+          "note": "Five minutes off the pier. The painted street points straight at the church. Take the photo."
         },
         {
-          "start": "13:00",
-          "end": "15:30",
-          "title": "Open. Waterfall walk, or the town",
-          "place": "seydisfjordur",
+          "start": "10:15",
+          "end": "11:30",
+          "title": "Up to Tvisongur",
+          "place": "tvisongur",
+          "who": "Everyone",
+          "dist": 1.2,
+          "level": "easy",
+          "note": "20 minutes up a gravel road that starts across from the fish factory. Let Kilian yell in the domes - that is the whole point of them."
+        },
+        {
+          "start": "12:00",
+          "end": "13:15",
+          "title": "Lunch at Skaftfell",
+          "place": "skaftfell",
           "who": "Everyone",
           "flex": true
         },
         {
-          "start": "15:30",
-          "end": "16:00",
+          "start": "13:15",
+          "end": "15:00",
+          "title": "Vestdalsfossar loop, if the sky allows",
+          "place": "vestdalsfossar",
+          "who": "Everyone",
+          "flex": true,
+          "dist": 3.4,
+          "level": "moderate",
+          "note": "90 minute waterfall loop. If it is blowing, the Technology Museum in town is open 11 to 6 and is five minutes from the ship."
+        },
+        {
+          "start": "15:00",
+          "end": "15:30",
           "title": "Back aboard",
           "place": "seydisfjordur",
-          "who": "Everyone"
+          "who": "Everyone",
+          "note": "Ship departs 16:00, so all aboard is 15:30."
         }
       ]
     },
