@@ -82,14 +82,18 @@
   /* Tabs */
   nav.tabs {
     position: sticky; top: 0; z-index: 480;
-    display: grid; grid-template-columns: repeat(4, 1fr);
+    /* auto-sizes to however many tabs exist, so adding one never wraps.
+       a hidden button is display:none and takes no column. */
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
     background: var(--card); border-bottom: 1px solid var(--line);
   }
   nav.tabs button {
     appearance: none; border: 0; background: none; cursor: pointer;
-    padding: 11px 2px 9px; font-size: 12px; font-weight: 700; color: var(--muted);
+    padding: 11px 1px 9px; font-size: 12px; font-weight: 700; color: var(--muted);
     border-bottom: 3px solid transparent; font-family: inherit;
+    min-width: 0; white-space: nowrap;
   }
+  @media (max-width: 360px){ nav.tabs button { font-size: 11px; } }
   nav.tabs button .ic { display: block; font-size: 18px; line-height: 1; margin-bottom: 3px; }
   nav.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
 
@@ -404,6 +408,63 @@
   .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 900; overflow: hidden; }
   .confetti span { position: absolute; top: -8%; font-size: 22px; animation: fall linear forwards; }
   @keyframes fall { to { transform: translateY(115vh) rotate(400deg); opacity: .85; } }
+
+  /* ---------- Prep tab: countdown calendar of what still needs doing ---------- */
+  .prepHead { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin:0 0 6px; }
+  .prepBig { font-size:30px; font-weight:800; letter-spacing:-.02em; color:var(--primary); font-variant-numeric:tabular-nums; }
+  .prepSub { color:var(--muted); font-size:13px; }
+  .prepStats { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .prepStat { font-size:12px; padding:3px 8px; border-radius:999px; background:var(--codebg); color:var(--muted); }
+  .prepStat.over { background:#fdeaea; color:#b4232a; font-weight:600; }
+  .prepStat.soon { background:#fff4e2; color:#96591a; font-weight:600; }
+  @media (prefers-color-scheme: dark){
+    .prepStat.over { background:#3a1d1f; color:#ff9ba0; }
+    .prepStat.soon { background:#3a2c17; color:#ffc978; }
+  }
+  :root[data-theme="dark"] .prepStat.over { background:#3a1d1f; color:#ff9ba0; }
+  :root[data-theme="dark"] .prepStat.soon { background:#3a2c17; color:#ffc978; }
+
+  .calMonth { margin-top:4px; }
+  .calMonth + .calMonth { margin-top:14px; }
+  .calName { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 6px; }
+  .calGrid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .calDow { font-size:10px; text-align:center; color:var(--muted); padding-bottom:2px; }
+  .calCell { aspect-ratio:1/1; border-radius:8px; border:1px solid transparent; background:var(--codebg);
+             display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+             font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .calCell.blank { background:transparent; }
+  .calCell.past { opacity:var(--pastdim); }
+  .calCell.today { border-color:var(--primary); color:var(--ink); font-weight:800; }
+  .calCell.trip { background:var(--alltint); color:var(--ink); font-weight:600; }
+  .calCell.go { background:var(--primary); color:#fff; font-weight:800; border-color:var(--primary); }
+  .calCell.has { cursor:pointer; }
+  .calCell.has:hover { border-color:var(--muted); }
+  .calCell.sel { border-color:var(--ink); border-width:2px; }
+  .calCell:focus-visible { outline:2px solid var(--primary); outline-offset:1px; }
+  .calDots { display:flex; gap:2px; height:5px; align-items:center; }
+  .calDot { width:5px; height:5px; border-radius:50%; background:var(--primary); }
+  .calDot.over { background:#d33; }
+  .calDot.soon { background:var(--accent); }
+  .calDot.done { background:var(--good); opacity:.45; }
+
+  .prepList { list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:2px; }
+  .prepItem { display:flex; gap:9px; align-items:flex-start; padding:9px 8px; border-radius:9px; }
+  .prepItem + .prepItem { border-top:1px solid var(--line); }
+  .prepItem.done .pTitle { text-decoration:line-through; opacity:.55; }
+  .prepItem.hit { background:var(--nowtint); }
+  .prepItem input { margin-top:3px; flex:none; width:17px; height:17px; }
+  .pMain { min-width:0; flex:1; }
+  .pTitle { font-weight:600; font-size:14px; }
+  .pMeta { font-size:12px; color:var(--muted); margin-top:2px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .pDue { font-weight:600; }
+  .pDue.over { color:#d33; }
+  .pDue.soon { color:var(--accent); }
+  .pOwner { font-size:11px; padding:1px 6px; border-radius:999px; background:var(--codebg); }
+  .pNote { font-size:12px; color:var(--muted); margin-top:3px; opacity:.9; }
+  .prepFilter { display:flex; align-items:center; gap:8px; margin:10px 0 0; font-size:12px; color:var(--muted); }
+  .prepFilter button { font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid var(--line);
+                       background:var(--card); color:var(--muted); cursor:pointer; }
+  .prepFilter button[aria-pressed="true"] { background:var(--ink); color:var(--card); border-color:var(--ink); }
 </style>
 </head>
 <body>
@@ -418,6 +479,7 @@
   <button role="tab" aria-selected="true" data-tab="schedule"><span class="ic">🗓️</span>Schedule</button>
   <button role="tab" aria-selected="false" data-tab="map"><span class="ic">🗺️</span>Map</button>
   <button role="tab" aria-selected="false" data-tab="kids"><span class="ic">🚗</span>Kids</button>
+  <button role="tab" aria-selected="false" data-tab="prep"><span class="ic">✅</span>Prep</button>
   <button role="tab" aria-selected="false" data-tab="info"><span class="ic">ℹ️</span>Info</button>
 </nav>
 
@@ -468,6 +530,8 @@
       <div id="gameArea" style="margin-top:12px"></div>
     </div>
   </section>
+
+  <section class="tab" id="tab-prep"></section>
 
   <section class="tab" id="tab-info">
     <div id="infoWrap" class="loading">Loading...</div>
@@ -1868,6 +1932,7 @@ function showTab(name){
   });
   if(name==="map"){ initMap(); setTimeout(function(){ if(map) map.invalidateSize(); },60); }
   if(name==="kids"){ renderKids(); }
+  if(name==="prep"){ renderPrep(); }
   if(name==="schedule"){ setTimeout(function(){ scrollToNow(true); updateJumpNow(); }, 40); }
   else { var jb=document.getElementById("jumpNow"); if(jb) jb.hidden=true; }
   try { history.replaceState(null,"","#"+name); } catch(e){}
@@ -1889,6 +1954,187 @@ function startClock(){
     if(Date.now()-lastRederive >= 20000){ lastRederive=Date.now(); renderNow(); renderSchedule(); renderNudge(); if(document.getElementById("tab-kids").classList.contains("active")) renderKids(); }
   }, 1000);
 }
+
+
+/* ---------- Prep: a calendar of what still has to happen before you go ----------
+   Sources, merged and de-duplicated:
+     - EV.prep[]      : explicit pre-trip tasks   {title, by, owner, who, note, url, done}
+     - EV.bookings[]  : anything not "confirmed" that carries a "by" date
+   Both are optional. With neither, the tab hides itself. -------------------- */
+
+function normalizePrep(raw){
+  if(!Array.isArray(raw)) return [];
+  return raw.map(function(t){
+    if(typeof t==="string") return { title:t, by:"", owner:"", who:"", note:"", url:"", done:false, src:"prep" };
+    if(!t || !t.title) return null;
+    return { title:t.title, by:t.by||"", owner:t.owner||"", who:t.who||"",
+             note:t.note||"", url:t.url||"", done:!!t.done, src:"prep" };
+  }).filter(Boolean);
+}
+
+function prepItems(){
+  var out = normalizePrep(EV.prep), seen = {};
+  out.forEach(function(t){ seen[String(t.title).toLowerCase()] = true; });
+  normalizeBookings(EV.bookings).forEach(function(b){
+    if(b.status==="confirmed") return;
+    if(!b.by) return;
+    /* a prep task of the same name wins, so an event.json that lists a thing
+       in both places shows it once. */
+    if(seen[String(b.title).toLowerCase()]) return;
+    out.push({ title:b.title, by:b.by, owner:"", who:b.who, note:b.note, url:b.url,
+               done:false, src:"booking", place:b.place });
+  });
+  out.sort(function(a,c){
+    if(!a.by) return 1; if(!c.by) return -1;
+    return a.by < c.by ? -1 : a.by > c.by ? 1 : 0;
+  });
+  return out;
+}
+
+function prepKey(){ return "daykit:"+EV.id+":prep"; }
+function prepSaved(){ try { return JSON.parse(localStorage.getItem(prepKey())||"{}"); } catch(e){ return {}; } }
+function prepId(t,i){ return "pp-"+i+"-"+String(t.title).replace(/\W+/g,"").slice(0,18); }
+
+var prepSel = null; /* selected calendar day (YYYY-MM-DD) or null */
+
+function renderPrep(){
+  var host=document.getElementById("tab-prep");
+  if(!host) return;
+  var items=prepItems();
+  var btn=document.querySelector('nav.tabs button[data-tab="prep"]');
+  if(!items.length){ if(btn) btn.hidden=true; host.innerHTML=""; return; }
+  if(btn) btn.hidden=false;
+
+  var saved=prepSaved();
+  items.forEach(function(t,i){ var id=prepId(t,i); t._id=id; t._done = (id in saved) ? !!saved[id] : t.done; });
+
+  var open=items.filter(function(t){ return !t._done; });
+  var over=open.filter(function(t){ var d=daysUntil(t.by); return d!=null && d<0; });
+  var soon=open.filter(function(t){ var d=daysUntil(t.by); return d!=null && d>=0 && d<=7; });
+
+  /* countdown to the first day of the trip */
+  var go = (EV.days && EV.days[0] && EV.days[0].date) || "";
+  var togo = go ? daysUntil(go) : null;
+
+  var html='<div class="card">';
+  html+='<div class="prepHead">';
+  if(togo!=null && togo>0) html+='<span class="prepBig">'+togo+'</span><span class="prepSub">days until we go</span>';
+  else if(togo===0)        html+='<span class="prepBig">Today</span><span class="prepSub">is the day</span>';
+  else                     html+='<span class="prepBig">'+open.length+'</span><span class="prepSub">still open</span>';
+  html+='</div>';
+  html+='<div class="prepStats">';
+  if(over.length) html+='<span class="prepStat over">'+over.length+' overdue</span>';
+  if(soon.length) html+='<span class="prepStat soon">'+soon.length+' this week</span>';
+  html+='<span class="prepStat">'+open.length+' open</span>';
+  html+='<span class="prepStat">'+(items.length-open.length)+' done</span>';
+  html+='</div>';
+
+  /* ---- calendar: today's month through the departure month ---- */
+  var byDay={};
+  items.forEach(function(t){ if(!t.by) return; (byDay[t.by]=byDay[t.by]||[]).push(t); });
+
+  var tripDays={};
+  (EV.days||[]).forEach(function(d){ if(d.date) tripDays[d.date]=true; });
+
+  var today=new Date(), tYmd=ymdLocal(today);
+  /* Span every month that matters: today, the departure, and every dated task -
+     in whichever order they fall. A trip already in the past still draws its own
+     months instead of an empty grid, and no dotted day is ever off the calendar. */
+  var marks=[today];
+  if(go) marks.push(dateAt(go,"12:00"));
+  items.forEach(function(t){ if(t.by) marks.push(dateAt(t.by,"12:00")); });
+  var lo=marks[0], hi=marks[0];
+  marks.forEach(function(d){ if(d<lo) lo=d; if(d>hi) hi=d; });
+  var start=new Date(lo.getFullYear(), lo.getMonth(), 1);
+  var end=new Date(hi.getFullYear(), hi.getMonth()+1, 0);
+  var DOW=["S","M","T","W","T","F","S"];
+
+  html+='<div style="margin-top:14px">';
+  var cur=new Date(start);
+  var guard=0;
+  while(cur<=end && guard++<14){
+    var y=cur.getFullYear(), m=cur.getMonth();
+    html+='<div class="calMonth"><p class="calName">'+
+      cur.toLocaleDateString(undefined,{month:"long",year:"numeric"})+'</p><div class="calGrid">';
+    DOW.forEach(function(d){ html+='<div class="calDow">'+d+'</div>'; });
+    var first=new Date(y,m,1).getDay(), dim=new Date(y,m+1,0).getDate(), k;
+    for(k=0;k<first;k++) html+='<div class="calCell blank"></div>';
+    for(k=1;k<=dim;k++){
+      var ds=y+"-"+pad2(m+1)+"-"+pad2(k);
+      var list=byDay[ds]||[];
+      var cls="calCell";
+      if(ds<tYmd) cls+=" past";
+      if(ds===tYmd) cls+=" today";
+      if(tripDays[ds]) cls+=" trip";
+      if(ds===go) cls+=" go";
+      if(list.length) cls+=" has";
+      if(prepSel===ds) cls+=" sel";
+      var dots="";
+      list.slice(0,3).forEach(function(t){
+        var dc="calDot", du=daysUntil(t.by);
+        if(t._done) dc+=" done";
+        else if(du!=null && du<0) dc+=" over";
+        else if(du!=null && du<=7) dc+=" soon";
+        dots+='<span class="'+dc+'"></span>';
+      });
+      html+='<div class="'+cls+'"'+(list.length?' data-day="'+ds+'" role="button" tabindex="0" aria-label="'+list.length+' items on '+ds+'"':'')+'>'+
+              '<span>'+k+'</span><span class="calDots">'+dots+'</span></div>';
+    }
+    html+='</div></div>';
+    cur=new Date(y,m+1,1);
+  }
+  html+='</div>';
+
+  html+='<div class="prepFilter"><button type="button" id="prepAll" aria-pressed="'+(prepSel?"false":"true")+'">'+
+        (prepSel? ("Showing "+fmtDay(prepSel,{month:"short",day:"numeric"})+" — show all") : "Showing everything")+'</button></div>';
+  html+='</div>';
+
+  /* ---- the list ---- */
+  html+='<div class="card"><h2>Before we go</h2><ul class="prepList" id="prepList">';
+  items.forEach(function(t){
+    var du=t.by?daysUntil(t.by):null;
+    var dcls = du==null?"":(du<0?"over":(du<=7?"soon":""));
+    var lab  = t.by==="" ? "" : du==null ? esc(t.by)
+             : du<0  ? ("Overdue since "+fmtDay(t.by,{month:"short",day:"numeric"}))
+             : du===0? "Today"
+             : du===1? "Tomorrow"
+             :         (fmtDay(t.by,{month:"short",day:"numeric"})+" · "+du+"d");
+    var meta=[];
+    if(lab) meta.push('<span class="pDue '+dcls+'">'+lab+'</span>');
+    if(t.owner) meta.push('<span class="pOwner">'+esc(t.owner)+'</span>');
+    if(t.who && whoResolves(t.who)) meta.push(whoChips(t.who));
+    if(t.url) meta.push('<a href="'+esc(t.url)+'" target="_blank" rel="noopener">Open</a>');
+    var hit = prepSel && t.by===prepSel;
+    html+='<li class="prepItem'+(t._done?" done":"")+(hit?" hit":"")+'" data-by="'+esc(t.by)+'">'+
+      '<input type="checkbox" id="'+t._id+'"'+(t._done?" checked":"")+'>'+
+      '<div class="pMain"><div class="pTitle">'+esc(t.title)+'</div>'+
+      (meta.length?'<div class="pMeta">'+meta.join("")+'</div>':'')+
+      (t.note?'<div class="pNote">'+esc(t.note)+'</div>':'')+
+      '</div></li>';
+  });
+  html+='</ul></div>';
+  host.innerHTML=html;
+
+  /* checkboxes persist, same pattern as bookings */
+  host.querySelectorAll("#prepList input").forEach(function(cb){
+    cb.addEventListener("change", function(){
+      var s=prepSaved(); s[cb.id]=cb.checked;
+      try { localStorage.setItem(prepKey(), JSON.stringify(s)); } catch(e){}
+      renderPrep();
+    });
+  });
+  /* tap a day to filter */
+  host.querySelectorAll(".calCell[data-day]").forEach(function(c){
+    var pick=function(){ var d=c.getAttribute("data-day"); prepSel = (prepSel===d)?null:d; renderPrep(); };
+    c.addEventListener("click", pick);
+    c.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(); } });
+  });
+  var all=host.querySelector("#prepAll");
+  if(all) all.addEventListener("click", function(){ prepSel=null; renderPrep(); });
+}
+
+/* local YYYY-MM-DD for "today", without UTC drift */
+function ymdLocal(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
 
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
 
@@ -2294,12 +2540,13 @@ function boot(){
     renderSun();
     renderWeather();
     renderKids();
+    renderPrep();
     syncAllPinsBtn();
     document.getElementById("foot").textContent="Are We There Yet? · map data © OpenStreetMap · offline-ready";
     startClock();
     if(notifEnabled()) scheduleNotifs();
     var h=(location.hash||"").replace("#","");
-    if(h==="map"||h==="info") showTab(h);
+    if(h==="map"||h==="info"||h==="prep") showTab(h);
     else setTimeout(function(){ scrollToNow(true); }, 350);
   }).catch(function(e){
     document.getElementById("hdrTitle").textContent="Could not load event.json";

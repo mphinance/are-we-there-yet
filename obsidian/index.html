@@ -2037,9 +2037,16 @@ function renderPrep(){
   (EV.days||[]).forEach(function(d){ if(d.date) tripDays[d.date]=true; });
 
   var today=new Date(), tYmd=ymdLocal(today);
-  var start=new Date(today.getFullYear(), today.getMonth(), 1);
-  var endRef=go ? dateAt(go,"12:00") : today;
-  var end=new Date(endRef.getFullYear(), endRef.getMonth()+1, 0);
+  /* Span every month that matters: today, the departure, and every dated task -
+     in whichever order they fall. A trip already in the past still draws its own
+     months instead of an empty grid, and no dotted day is ever off the calendar. */
+  var marks=[today];
+  if(go) marks.push(dateAt(go,"12:00"));
+  items.forEach(function(t){ if(t.by) marks.push(dateAt(t.by,"12:00")); });
+  var lo=marks[0], hi=marks[0];
+  marks.forEach(function(d){ if(d<lo) lo=d; if(d>hi) hi=d; });
+  var start=new Date(lo.getFullYear(), lo.getMonth(), 1);
+  var end=new Date(hi.getFullYear(), hi.getMonth()+1, 0);
   var DOW=["S","M","T","W","T","F","S"];
 
   html+='<div style="margin-top:14px">';
