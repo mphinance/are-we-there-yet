@@ -42,6 +42,9 @@ corner.
 > - Add a sensible `bring` checklist and a `closingNote`.
 > - Add a `lists` array with a `must` list (the whole point of the day) and a
 >   `stretch` list (bonus things to do if there is time).
+> - If kids are along, add a `kids` object with a `facts` array (short "Did you
+>   know?" lines about where you're going) and a `trivia` array (each item a `q`,
+>   2 to 4 `choices`, the `answer` index, and an optional `fact`).
 > - If anything has to be signed up, paid, or reserved ahead of time (forms,
 >   tickets, volunteer slots), add a `bookings` array with a `status` of
 >   `confirmed`, `todo`, or `waitlist` and a `by` deadline where one applies.
@@ -74,6 +77,9 @@ corner.
 >   `notes`.
 > - Add a `lists` array with a `must` list (the reasons for the trip) and a
 >   `stretch` list (would-be-awesome extras if time allows).
+> - If kids are along, add a `kids` object with a `facts` array (short "Did you
+>   know?" lines tuned to the trip) and a `trivia` array (each item a `q`, 2 to 4
+>   `choices`, the `answer` index, and an optional `fact` shown after answering).
 > - Add a `bookings` array for anything that needs a reservation or ticket
 >   (hotels, tours, dinners, ferries, permits), each with a `status`
 >   (`confirmed`, `todo`, or `waitlist`) and a `by` book-by deadline where the

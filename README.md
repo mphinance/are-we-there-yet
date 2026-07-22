@@ -73,8 +73,10 @@ Three tabs, no backend, no build step.
   "Are we there yet?" answer with a car driving along a road toward the finish,
   a kid-worded countdown ("7 minutes until Bottle Rockets"), and a talking
   button that says the answer out loud. Kids collect a sticker for every stop
-  they reach (with confetti), and three offline boredom-busters are built in:
-  Bingo, Spot It, and I Spy.
+  they reach (with confetti), and offline boredom-busters are built in:
+  Bingo, Spot It, and I Spy. A trip can also add its own **Trivia** quiz and a
+  "Did you know?" facts card by filling in the optional `kids` field in
+  `event.json`, so the learning is tuned to where you're going.
 - **Info** - Location and Open-in-Maps, an Add-to-Calendar export (.ics), a
   Share button, where you're staying, a reservations tracker, a saved packing
   checklist, trip goal lists, live weather, reminder controls, a light/dark

@@ -61,6 +61,27 @@
     "Peninsula State Park needs a WI state park sticker at the gate.",
     "Al Johnson's in Sister Bay has goats on the roof. Yes, really."
   ],
+  "kids": {
+    "facts": [
+      "Door County has 11 lighthouses, more than any other county in the United States.",
+      "A Door County fish boil ends with a giant fireball, when kerosene hits the pot and boils it over.",
+      "Al Johnson's restaurant really does keep live goats grazing on its grass roof."
+    ],
+    "trivia": [
+      {
+        "q": "What makes the big fireball at the end of a fish boil?",
+        "choices": ["Kerosene tossed on the fire to boil the pot over", "A firework", "The fish exploding", "A dragon"],
+        "answer": 0,
+        "fact": "The boil-over carries the fishy foam up and out of the pot, so what is left tastes clean."
+      },
+      {
+        "q": "Door County has more of one thing than any other county in the country. What?",
+        "choices": ["Lighthouses", "Roller coasters", "Volcanoes", "Subway stations"],
+        "answer": 0,
+        "fact": "Eleven of them, because the peninsula sticks far out into Lake Michigan and ships needed the help."
+      }
+    ]
+  },
   "places": [
     { "id": "inn",        "name": "Whistling Swan Inn",     "kind": "lodging",  "icon": "lodging",   "lat": 45.1316, "lng": -87.2412, "address": "4192 Main St, Fish Creek", "desc": "Home base for all three nights." },
     { "id": "coffee",     "name": "Blue Horse Cafe",        "kind": "food",     "icon": "coffee",    "lat": 45.1332, "lng": -87.2416, "desc": "Morning coffee and pastries." },

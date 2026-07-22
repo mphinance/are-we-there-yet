@@ -403,6 +403,13 @@
   .spotlist li .box { width: 24px; height: 24px; border: 2px solid var(--line); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; color: #fff; }
   .spotlist li.got .box { background: var(--good); border-color: var(--good); }
   .ispy { text-align: center; font-size: 24px; font-weight: 900; padding: 18px 6px; line-height: 1.2; }
+  .triviaq { font-size: 17px; font-weight: 800; line-height: 1.25; margin: 4px 2px 12px; }
+  .trivia { display: grid; gap: 8px; }
+  .trivia .triviaC { text-align: left; font-size: 15px; font-weight: 700; padding: 12px 14px; }
+  .trivia .triviaC.right { background: var(--good); color: #fff; border-color: var(--good); }
+  .trivia .triviaC.wrong { background: #d9534f; color: #fff; border-color: #d9534f; }
+  .factbox { background: var(--nowtint); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 15px; font-weight: 600; line-height: 1.4; margin: 8px 0 0; }
+  .factcard .btn { margin-top: 12px; }
   .gamebar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
   .gamebar .btn { padding: 8px 12px; font-size: 13px; }
   .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 900; overflow: hidden; }
@@ -515,6 +522,11 @@
 
   <section class="tab" id="tab-kids">
     <div id="kidHero"></div>
+    <div class="card factcard" id="factCard" hidden>
+      <h2>Did you know?</h2>
+      <div class="factbox" id="factBox"></div>
+      <button class="btn ghost" id="factNext">Another one 🔁</button>
+    </div>
     <div class="card">
       <h2>My stickers <span class="muted small" id="stickCount"></span></h2>
       <div class="stickers" id="stickers"></div>
@@ -526,6 +538,7 @@
         <button class="btn ghost" data-game="bingo">🎉 Bingo</button>
         <button class="btn ghost" data-game="spot">🚙 Spot It</button>
         <button class="btn ghost" data-game="ispy">👀 I Spy</button>
+        <button class="btn ghost" data-game="trivia" id="triviaBtn" hidden>🧠 Trivia</button>
       </div>
       <div id="gameArea" style="margin-top:12px"></div>
     </div>
@@ -2354,6 +2367,7 @@ function renderKids(){
     if(hint) hint.textContent = res.list.length ? "Nice collecting! Keep going." : "Reach each stop to collect a sticker.";
   }
   if(res.isNew && document.getElementById("tab-kids").classList.contains("active")) confetti();
+  renderKidExtras();
 }
 function stickerKey(){
   var ti=todayIndex();
@@ -2473,7 +2487,74 @@ function openGame(which){
   document.querySelectorAll('.games [data-game]').forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-game")===which ? "true":"false"); });
   if(which==="bingo") renderBingo();
   else if(which==="spot") renderSpot();
+  else if(which==="trivia") renderTrivia();
   else renderISpy();
+}
+
+/* ---------- trivia and facts (optional, driven by event.json "kids") ---------- */
+function triviaData(){ return (EV.kids && Array.isArray(EV.kids.trivia)) ? EV.kids.trivia : []; }
+function kidFacts(){ return (EV.kids && Array.isArray(EV.kids.facts)) ? EV.kids.facts : []; }
+var factIx=-1;
+function showNextFact(){
+  var f=kidFacts(); if(!f.length) return;
+  factIx=(factIx+1)%f.length;
+  var box=document.getElementById("factBox"); if(box) box.textContent=f[factIx];
+}
+/* Shows or hides the trivia button and the facts card based on what the event
+   provides. Idempotent, safe to call on every renderKids(). */
+function renderKidExtras(){
+  var tBtn=document.getElementById("triviaBtn");
+  if(tBtn) tBtn.hidden = triviaData().length===0;
+  var fc=document.getElementById("factCard"), box=document.getElementById("factBox");
+  var facts=kidFacts();
+  if(fc){
+    if(facts.length){
+      fc.hidden=false;
+      if(box && !box.textContent){ factIx=Math.floor(Math.random()*facts.length); box.textContent=facts[factIx]; }
+    } else { fc.hidden=true; }
+  }
+}
+var triviaState=null;
+function newTrivia(){ return { order:shuffle(triviaData().map(function(_,i){ return i; })), ix:0, score:0 }; }
+function renderTrivia(){
+  var data=triviaData(), area=document.getElementById("gameArea");
+  if(!data.length){ area.innerHTML='<div class="ispy">No trivia for this trip yet.</div>'; return; }
+  if(!triviaState) triviaState=newTrivia();
+  var st=triviaState;
+  if(st.ix>=st.order.length){
+    area.innerHTML='<div class="ispy">You finished! 🎉<br>Score '+st.score+' of '+st.order.length+'</div>'+
+      '<div style="text-align:center"><button class="btn primary" id="triviaAgain">Play again 🔁</button></div>';
+    document.getElementById("triviaAgain").addEventListener("click", function(){ triviaState=newTrivia(); renderTrivia(); });
+    if(st.score===st.order.length) confetti();
+    return;
+  }
+  var q=data[st.order[st.ix]], choices=Array.isArray(q.choices)?q.choices:[];
+  var correct=(typeof q.answer==="number")?q.answer:-1;
+  var html='<div class="gamebar"><b>Question '+(st.ix+1)+' of '+st.order.length+'</b><span class="small muted">Score '+st.score+'</span></div>';
+  html+='<div class="triviaq">'+esc(q.q||"")+'</div><div class="trivia" id="triviaChoices">';
+  choices.forEach(function(c,i){ html+='<button class="btn ghost triviaC" data-i="'+i+'">'+esc(c)+'</button>'; });
+  html+='</div><div class="factbox" id="triviaFact" hidden></div>'+
+    '<div style="text-align:center"><button class="btn primary" id="triviaNext" hidden>Next ➡️</button></div>';
+  area.innerHTML=html;
+  var answered=false;
+  area.querySelectorAll(".triviaC").forEach(function(b){
+    b.addEventListener("click", function(){
+      if(answered) return; answered=true;
+      var pick=parseInt(b.getAttribute("data-i"),10);
+      area.querySelectorAll(".triviaC").forEach(function(bb){
+        var bi=parseInt(bb.getAttribute("data-i"),10);
+        bb.disabled=true;
+        if(bi===correct) bb.classList.add("right");
+        else if(bi===pick) bb.classList.add("wrong");
+      });
+      if(pick===correct){ st.score++; confetti(); }
+      var fb=document.getElementById("triviaFact");
+      fb.textContent=(pick===correct?"Correct! ":"Good try! ")+(q.fact||"");
+      fb.hidden=false;
+      var nx=document.getElementById("triviaNext"); nx.hidden=false;
+      nx.addEventListener("click", function(){ st.ix++; renderTrivia(); });
+    });
+  });
 }
 
 /* ---------- boot ---------- */
@@ -2570,6 +2651,7 @@ document.getElementById("recenter").addEventListener("click", function(){ initMa
 document.querySelectorAll('.games [data-game]').forEach(function(b){
   b.addEventListener("click", function(){ openGame(b.getAttribute("data-game")); });
 });
+(function(){ var fn=document.getElementById("factNext"); if(fn) fn.addEventListener("click", showNextFact); })();
 document.getElementById("jumpNow").addEventListener("click", function(){ scrollToNow(false); });
 window.addEventListener("scroll", function(){ updateJumpNow(); }, { passive:true });
 

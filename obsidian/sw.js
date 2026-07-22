@@ -6,7 +6,7 @@
 
 var SLUG = (self.location.pathname.match(/\/([^\/]+)\/sw\.js$/) || [])[1] || 'trip';
 var PREFIX = 'awty-' + SLUG + '-';
-var CACHE = PREFIX + 'v3';
+var CACHE = PREFIX + 'v4';
 var TILES = 'daykit-tiles';   // shared across trips; map tiles saved via "Save offline"
 
 var CORE = [

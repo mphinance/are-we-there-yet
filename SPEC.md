@@ -188,6 +188,40 @@ accent with a "Must do" pill, `stretch` in the water blue with an "If we get
 time" pill; any other tone gets neutral styling. Omit `lists` entirely and the
 section does not appear.
 
+## `kids` (Kids tab trivia and facts)
+
+Optional. Learning content for the Kids tab, tuned to the trip. Two independent
+parts, each shown only when present, so a trip can supply either, both, or
+neither and nothing breaks.
+
+```jsonc
+"kids": {
+  "facts": [                       // optional; "Did you know?" card
+    "Iceland is one of the only countries on Earth with zero mosquitoes.",
+    "The Icelandic word for obsidian is hrafntinna, raven's flint."
+  ],
+  "trivia": [                      // optional; a "Trivia" boredom buster
+    {
+      "q": "What makes obsidian in real life?",   // required question text
+      "choices": [                                // 2 to 4 answer options
+        "Lava that cools super fast",
+        "Sand squished for a million years"
+      ],
+      "answer": 0,                                // index into choices of the right one
+      "fact": "It cools too fast to grow crystals, so it freezes into glass."
+                                                  // optional; shown after answering
+    }
+  ]
+}
+```
+
+`facts` renders a "Did you know?" card with an "Another one" button that cycles
+through the list (starting on a random one). `trivia` adds a **Trivia** button to
+the Boredom busters, which asks the questions in a shuffled order, one at a time,
+keeps a score, reveals the `fact` after each answer, and celebrates a perfect
+run. Questions are asked in-session only, no persistence. Omit `kids` entirely
+and nothing about the Kids tab changes.
+
 ## `bookings` (reservations and tickets)
 
 Optional. The things that have to be worked out ahead of time: tour tickets,

@@ -205,6 +205,84 @@
     "Isafjordur all-aboard at 2pm is hard, but the puffin cruise is an NCL tour, so the ship waits for that one.",
     "Grandma and Grandpa fly separately and stay on after we go home. Their days are not our days."
   ],
+  "kids": {
+    "facts": [
+      "Iceland is one of the only countries on Earth with zero mosquitoes. Nobody is totally sure why.",
+      "The Icelandic word for obsidian is hrafntinna, which means raven's flint.",
+      "There is a mountain in Iceland called Hrafntinnusker, or Obsidian Skerry, with shiny black volcanic glass all over the ground.",
+      "Real obsidian can be chipped into a blade sharper than a steel knife, so ancient people used it for tools.",
+      "Almost all of Iceland's heat and power comes from volcanoes and water, not from burning fuel.",
+      "There are more sheep in Iceland than there are people.",
+      "Many Icelanders tell stories of the huldufolk, the hidden people, and some roads were even curved around elf rocks.",
+      "Iceland's parliament, the Althing, first met in the year 930, making it one of the oldest in the world.",
+      "Puffins spend all summer on the cliffs, then fly out to the open ocean in the middle of August.",
+      "A waterfall called Svartifoss is framed by stone columns that look like the pipes of a giant organ.",
+      "Reynisfjara is a beach in Iceland where the sand is black, made from ground up lava.",
+      "In August the sun barely sets in Iceland and it never gets fully dark."
+    ],
+    "trivia": [
+      {
+        "q": "In Minecraft you make obsidian when water touches lava. In real life, what makes obsidian?",
+        "choices": ["Lava that cools super fast, usually in water or cold air", "Water that freezes into black ice", "Sand squished for a million years", "Gold melted in a volcano"],
+        "answer": 0,
+        "fact": "It cools too fast to grow crystals, so it freezes into shiny black glass. Iceland, where hot lava meets the cold sea, is one of the best places on Earth for it."
+      },
+      {
+        "q": "What is the Icelandic word for obsidian?",
+        "choices": ["Hrafntinna", "Vatn", "Foss", "Lundi"],
+        "answer": 0,
+        "fact": "Hrafntinna means raven's flint. There is even a mountain named Hrafntinnusker, Obsidian Skerry, with black glass all over the ground."
+      },
+      {
+        "q": "Basalt columns in Iceland come out shaped like what?",
+        "choices": ["Six sided pillars, like stacked blocks", "Perfect round balls", "Flat pancakes", "Squiggly ropes"],
+        "answer": 0,
+        "fact": "When thick lava cools slowly and evenly it cracks into neat hexagons. Nature builds its own Minecraft blocks."
+      },
+      {
+        "q": "Iceland sits on a giant crack where two of Earth's plates pull apart. Which two?",
+        "choices": ["North America and Europe", "Africa and Asia", "Australia and Antarctica", "There is only one plate"],
+        "answer": 0,
+        "fact": "You can stand with one foot on each plate. Iceland is pulling apart about as fast as your fingernails grow."
+      },
+      {
+        "q": "How does a lava cave, or lava tube, form?",
+        "choices": ["Lava drains out and leaves an empty stone tunnel", "A giant worm digs it", "Ice melts a hole in a mountain", "People carved it with pickaxes"],
+        "answer": 0,
+        "fact": "The top and sides of a lava river harden into rock, then the last lava drains out the bottom, leaving a hollow pipe you can walk through. Vatnshellir is about 8,000 years old."
+      },
+      {
+        "q": "Which animal does Iceland famously have NONE of?",
+        "choices": ["Mosquitoes", "Sheep", "Puffins", "Horses"],
+        "answer": 0,
+        "fact": "Iceland is one of the only countries on Earth with zero mosquitoes."
+      },
+      {
+        "q": "Icelandic horses can do a special smooth extra way of running. What is it called?",
+        "choices": ["The tolt", "The gallop", "The trot", "The moonwalk"],
+        "answer": 0,
+        "fact": "Wild rule: if an Icelandic horse ever leaves the country it is never allowed back, and no outside horses are let in. It has been that way about 1,000 years."
+      },
+      {
+        "q": "Instead of a family last name, most Icelanders' names end in...",
+        "choices": ["-son or -dottir, from their parent's name", "-ville", "-berg for everyone", "a number"],
+        "answer": 0,
+        "fact": "Kilian would be something like Kilian Michaelsson, meaning Michael's son. The phone book is even sorted by first name."
+      },
+      {
+        "q": "In Minecraft, what is the weakest pickaxe that can actually mine obsidian?",
+        "choices": ["Diamond", "Wood", "Stone", "Iron"],
+        "answer": 0,
+        "fact": "Diamond or netherite only. Obsidian has the highest blast resistance in the game, so even TNT and creepers cannot break it."
+      },
+      {
+        "q": "In August, how much daylight does Iceland get each day?",
+        "choices": ["About 15 to 16 hours", "Exactly 12 hours", "About 4 hours", "Zero, it is dark all month"],
+        "answer": 0,
+        "fact": "The sun barely sets and it never gets fully dark. That is why an eye mask is on the packing list."
+      }
+    ]
+  },
   "closingNote": "Salt in the air, obsidian in the backpack, everybody home safe.",
   "places": [
     {
