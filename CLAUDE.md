@@ -76,7 +76,10 @@ line to the `trips` array in `config.json`. No `sw.js` edit needed.
   hub and `trips.json`.
 - **`manifest.json`** is PWA metadata. **`gen-icons.js`** regenerates icons and
   **`screenshots.js`** regenerates the `docs/` showcase images, both via
-  Playwright.
+  Playwright. **`gen-photos.js`** downscales journal photos, and
+  **`make-artifact.js`** builds a standalone shareable page from a trip's
+  `event.json` + `journal.json` (a derived view, never a source of truth: the
+  installable PWA is the real thing, it works offline and that page does not).
 - **`samples/vacation.json`** is a 3-day multi-day example kept in sync with the
   schema. **`NEW-EVENT.md`** is the human/Claude workflow for turning photos of
   a schedule or map into a new `event.json`. **`SPEC.md`** is the field-by-field

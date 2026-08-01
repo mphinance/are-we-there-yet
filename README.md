@@ -232,6 +232,7 @@ The short version (full walkthrough in [SETUP.md](SETUP.md)):
 | `SPEC.md` | The `event.json` and `config.json` schema, field by field. |
 | `gen-icons.js` / `screenshots.js` | Regenerate icons / `docs/` screenshots via Playwright. |
 | `gen-photos.js` | Downscale trip photos for the journal and strip EXIF. `npm run photos -- <trip> <image>...` |
+| `make-artifact.js` | Build a standalone shareable "follow along" page from a trip's `event.json` + `journal.json`, with photos inlined. |
 | `.claude/skills/trip-post/` | The skill that turns photos and notes into a pushed journal post in one pass. |
 | `.nojekyll` | Lets GitHub Pages serve the `assets/` folders. |
 
