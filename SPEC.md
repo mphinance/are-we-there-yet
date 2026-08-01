@@ -5,6 +5,10 @@ lives in that trip's `event.json`; the reused bits (your family, your home) live
 once in the root `config.json`. This is the full field reference. Times are
 24-hour `"HH:MM"` strings interpreted as local wall-clock on each day's date.
 
+A trip may also carry a `journal.json` next to its `event.json`, holding posts
+written from the road. That is a separate file, documented under
+[`journal.json`](#journaljson-posts-from-the-trip) below.
+
 ## `config.json` (shared, set up once)
 
 `config.json` at the site root holds the pieces reused across every trip, so an
@@ -255,6 +259,66 @@ your ticks persist offline per item like the packing list (under the
 A string shorthand is accepted and treated as a `todo` with just a title:
 `"bookings": ["Book the ferry", "Reserve a campsite"]`. Omit `bookings`
 entirely and the section does not appear.
+
+## `journal.json` (posts from the trip)
+
+Optional, and a **separate file** from `event.json`, sitting next to it at
+`<trip>/journal.json`. It holds short dated dispatches written while the trip is
+happening: a few lines and some photos. Each post is filed under the itinerary
+day it belongs to and renders in a "From the trip" card below that day's
+schedule, so the plan and what actually happened sit together. Days that have a
+post get a small dot on the day strip.
+
+It is a separate file on purpose. The journal is edited from a phone on bad wifi
+while the trip is running, and a broken edit there must never be able to take
+down the itinerary. A missing, empty, or malformed `journal.json` renders no
+posts and nothing else changes.
+
+```json
+{
+  "posts": [
+    {
+      "date": "2026-08-10",
+      "time": "18:20",
+      "title": "Kirkjufell in the rain",
+      "place": "kirkjufell",
+      "body": [
+        "Tendered in around nine. Sideways rain the whole time and nobody minded.",
+        "Kilian counted eleven waterfalls before lunch."
+      ],
+      "photos": [
+        { "src": "photos/kirkjufell-morning.jpg", "caption": "Four minutes before the rain." }
+      ]
+    }
+  ]
+}
+```
+
+| Field | Required | What it does |
+| --- | --- | --- |
+| `date` | yes | `YYYY-MM-DD`. The itinerary day this post files under. A post whose date matches no day in `event.json` simply never renders. |
+| `time` | no | `"HH:MM"`. Shown next to the title, and orders posts within a day. |
+| `title` | no | Bold heading for the post. |
+| `body` | no | Array of plain-text paragraphs. A bare string is accepted and treated as one paragraph. No markdown. |
+| `place` | no | A `places[]` `id` from `event.json`. Renders a chip that jumps to that map pin. An unknown id renders nothing. |
+| `photos` | no | Array of `{ "src", "caption" }`. A bare string is accepted as `src` with no caption. |
+
+`photos[].src` is relative to the trip folder, conventionally `photos/<name>.jpg`.
+Photos render as a grid (a single photo renders large), and tapping one opens a
+full-screen viewer that pages through every photo on that day. `caption` doubles
+as the image `alt` text.
+
+Posts may appear in any order in the file; the app sorts by `date` then `time`.
+
+**Getting photos in:** `node gen-photos.js <trip> <image>...` downscales to
+1600px on the long edge, re-encodes as JPEG, strips EXIF (so no GPS coordinates
+ride along into a public repo), and prints the `src` values to paste in. Raw
+phone photos are 3 to 5 MB and should never be committed. The `trip-post` skill
+in `.claude/skills/` does this whole flow, photos to pushed post, in one pass.
+
+**Caching:** `journal.json` is served network-first, so a new post appears as
+soon as it is pushed with no service worker version bump. Photos are cached on
+first view, so they keep working offline afterward.
 
 ## `prep` (the Prep tab: what still has to happen before you go)
 

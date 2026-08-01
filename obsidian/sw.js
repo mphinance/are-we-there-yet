@@ -6,13 +6,14 @@
 
 var SLUG = (self.location.pathname.match(/\/([^\/]+)\/sw\.js$/) || [])[1] || 'trip';
 var PREFIX = 'awty-' + SLUG + '-';
-var CACHE = PREFIX + 'v4';
+var CACHE = PREFIX + 'v5';
 var TILES = 'daykit-tiles';   // shared across trips; map tiles saved via "Save offline"
 
 var CORE = [
   './',
   './index.html',
   './event.json',
+  './journal.json',           // optional trip dispatches; absent is fine (allSettled)
   './manifest.json',
   '../config.json',            // shared family + home, filled in when the event omits them
   './assets/icon-192.png',
@@ -68,9 +69,10 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  // event.json and the shared config.json: network first (fresh copy wins online),
-  // fall back to cache offline.
-  if (url.origin === self.location.origin && /(event|config)\.json$/.test(url.pathname)) {
+  // event.json, journal.json and the shared config.json: network first (a fresh
+  // copy wins online), fall back to cache offline. The journal is posted to from
+  // the road, so a cached copy must never win over a newer one.
+  if (url.origin === self.location.origin && /(event|config|journal)\.json$/.test(url.pathname)) {
     e.respondWith((async function () {
       try {
         var res = await fetch(req);

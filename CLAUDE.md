@@ -59,6 +59,13 @@ line to the `trips` array in `config.json`. No `sw.js` edit needed.
 - **`<trip>/event.json`** is the only file you edit per event. Full schema in
   `SPEC.md`. Never hardcode event specifics into `index.html`; add a field and
   drive it from data instead.
+- **`<trip>/journal.json`** is optional and separate: dated posts written from
+  the road, filed under the itinerary day they belong to and rendered in a "From
+  the trip" card under that day's schedule. Kept out of `event.json` on purpose,
+  since it is edited from a phone mid-trip and a bad edit must not be able to
+  break the itinerary. Absent or malformed renders no posts. Photos live in
+  `<trip>/photos/` and are downscaled by `gen-photos.js`. The `trip-post` skill
+  in `.claude/skills/` runs the whole flow, photos to pushed post.
 - **`<trip>/sw.js`** is the service worker. It caches the shell, `event.json`,
   and any map tiles the user saves offline. Each trip's cache name is
   **prefixed** (`awty-<trip>-vN`) and its activate cleanup only deletes its own
@@ -69,7 +76,10 @@ line to the `trips` array in `config.json`. No `sw.js` edit needed.
   hub and `trips.json`.
 - **`manifest.json`** is PWA metadata. **`gen-icons.js`** regenerates icons and
   **`screenshots.js`** regenerates the `docs/` showcase images, both via
-  Playwright.
+  Playwright. **`gen-photos.js`** downscales journal photos, and
+  **`make-artifact.js`** builds a standalone shareable page from a trip's
+  `event.json` + `journal.json` (a derived view, never a source of truth: the
+  installable PWA is the real thing, it works offline and that page does not).
 - **`samples/vacation.json`** is a 3-day multi-day example kept in sync with the
   schema. **`NEW-EVENT.md`** is the human/Claude workflow for turning photos of
   a schedule or map into a new `event.json`. **`SPEC.md`** is the field-by-field
@@ -101,6 +111,9 @@ zone), `theme`, `location`, `team`, `places[]` (map pins, `kind` sets color),
 `schedule[]` items (`start`/`end`/`title`/`place`), `bring[]` (packing
 checklist), `lists[]` (trip-goal checklists: `must` and `stretch` tones),
 `notes[]`, `closingNote`. See `SPEC.md` for the authoritative reference.
+
+`journal.json` is its own file: `posts[]`, each with `date` (required), plus
+optional `time`, `title`, `body[]`, `place`, and `photos[]`.
 
 ## Running and verifying
 
@@ -153,6 +166,7 @@ backend.
    include it. If it is shared-across-trips data (like family or home), it
    belongs in `config.json` and `applyConfig()`, and is documented in `SPEC.md`.
 4. Bump the shared trip `CACHE` version in `sw.js` (the `PREFIX + 'vN'` line)
-   when you change the app or assets. Pure `event.json` / `config.json` edits
-   need no bump, they are fetched network-first.
+   when you change the app or assets. Pure `event.json` / `config.json` /
+   `journal.json` edits need no bump, they are fetched network-first. Adding a
+   journal post needs no bump either: photos are cached on first view.
 5. Regenerate `docs/` screenshots if the change is visible.

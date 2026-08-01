@@ -472,6 +472,41 @@
   .prepFilter button { font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid var(--line);
                        background:var(--card); color:var(--muted); cursor:pointer; }
   .prepFilter button[aria-pressed="true"] { background:var(--ink); color:var(--card); border-color:var(--ink); }
+
+  /* ---------- journal: dispatches posted from the trip ---------- */
+  .jcard h2 { display:flex; align-items:center; gap:7px; }
+  .jcount { font-size:11px; font-weight:600; padding:1px 7px; border-radius:999px;
+            background:var(--codebg); color:var(--muted); }
+  .jpost { border-top:1px solid var(--line); padding:13px 0 3px; }
+  .jpost:first-of-type { border-top:0; padding-top:4px; }
+  .jhead { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .jtitle { font-weight:700; font-size:15px; }
+  .jtime { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .jbody p { margin:7px 0 0; font-size:14px; line-height:1.5; }
+  .jwhere { display:inline-flex; align-items:center; gap:4px; margin-top:8px; font-size:12px;
+            padding:2px 9px; border-radius:999px; border:1px solid var(--line);
+            background:var(--card); color:var(--muted); cursor:pointer; }
+  .jphotos { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:7px; margin-top:10px; }
+  .jphotos.one { grid-template-columns:1fr; }
+  .jphotos figure { margin:0; }
+  .jphotos img { width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:10px; display:block;
+                 background:var(--codebg); cursor:zoom-in; }
+  .jphotos.one img { aspect-ratio:auto; max-height:62vh; object-fit:contain; }
+  .jphotos figcaption { font-size:11px; color:var(--muted); margin-top:4px; line-height:1.35; }
+  .jdot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--accent); margin-left:3px; vertical-align:middle; }
+
+  /* Full-screen photo viewer. Plain fixed overlay so it works with no signal. */
+  .lightbox { position:fixed; inset:0; z-index:900; background:rgba(0,0,0,.97);
+              display:flex; align-items:center; justify-content:center; flex-direction:column; padding:16px; }
+  .lightbox[hidden] { display:none; }
+  .lightbox img { max-width:100%; max-height:82vh; object-fit:contain; border-radius:8px; }
+  .lbcap { color:#eee; font-size:13px; margin-top:12px; text-align:center; max-width:640px; line-height:1.45; }
+  .lbclose { position:absolute; top:12px; right:14px; font-size:26px; line-height:1; color:#fff;
+             background:rgba(255,255,255,.14); border:0; border-radius:50%; width:40px; height:40px; cursor:pointer; }
+  .lbnav { position:absolute; top:50%; transform:translateY(-50%); font-size:30px; line-height:1; color:#fff;
+           background:rgba(255,255,255,.14); border:0; border-radius:50%; width:44px; height:44px; cursor:pointer; }
+  .lbprev { left:10px; } .lbnext { right:10px; }
+  .lbnav[hidden] { display:none; }
 </style>
 </head>
 <body>
@@ -557,6 +592,14 @@
   <button class="x" id="installX" aria-label="Dismiss">&times;</button>
 </div>
 
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lbclose" id="lbClose" aria-label="Close">&times;</button>
+  <button class="lbnav lbprev" id="lbPrev" aria-label="Previous photo">&lsaquo;</button>
+  <button class="lbnav lbnext" id="lbNext" aria-label="Next photo">&rsaquo;</button>
+  <img id="lbImg" alt="">
+  <div class="lbcap" id="lbCap"></div>
+</div>
+
 <footer id="foot"></footer>
 
 <script>
@@ -575,6 +618,9 @@ var myPos = null;
 var MEMBERS = [];                          // normalized team.members[]
 var memberBy = {};                         // lower-case name -> member
 var whoFilter = { names:[], mode:"any" };  // in-memory who filter, shared across tabs
+var POSTS = [];                            // normalized journal.json posts, oldest first
+var postsByDate = {};                      // "YYYY-MM-DD" -> posts on that day
+var lbShots = [], lbAt = 0;                // photos currently open in the lightbox
 
 function walkUrl(p){ return "https://www.google.com/maps/dir/?api=1&destination="+p.lat+","+p.lng+"&travelmode=walking"; }
 function searchUrl(o){ return "https://www.google.com/maps/search/?api=1&query="+o.lat+","+o.lng; }
@@ -971,8 +1017,9 @@ function renderDayStrip(){
     var b=document.createElement("button");
     b.className="daychip"+(isTodayD(day)?" today":"");
     b.setAttribute("aria-selected", i===curDay ? "true":"false");
+    var jd=(postsByDate[day.date]||[]).length ? '<span class="jdot" title="Has a post from the trip"></span>' : "";
     b.innerHTML='<div class="d1">'+fmtDay(day.date,{weekday:"short"})+'</div>'+
-                '<div class="d2">'+fmtDay(day.date,{month:"numeric",day:"numeric"})+'</div>';
+                '<div class="d2">'+fmtDay(day.date,{month:"numeric",day:"numeric"})+jd+'</div>';
     b.addEventListener("click", function(){ selectDay(i); });
     strip.appendChild(b);
     if(i===curDay) setTimeout(function(){ try{ b.scrollIntoView({inline:"center",block:"nearest"}); }catch(e){} }, 0);
@@ -1439,7 +1486,118 @@ function renderSchedule(){
     dnHtml+='<div class="card"><h2>Notes for this day</h2><ul class="plain">'+
       day.notes.map(function(n){ return '<li>'+esc(n)+'</li>'; }).join("")+'</ul></div>';
   }
+  dnHtml+=journalHtml(day);
   dn.innerHTML=dnHtml;
+  wireJournal(dn, day.date);
+}
+
+/* ---------- journal ----------
+   Dispatches posted from the trip itself: a few lines and some photos, filed
+   under the day they belong to, so the plan and what actually happened sit
+   together. Lives in its own journal.json rather than event.json, so a post
+   written on bad wifi can never break the itinerary. Absent file renders
+   nothing. Photos are plain files next to the app, cached by the service
+   worker once viewed, so they keep working offline after the first look. */
+function normalizeJournal(raw){
+  var posts = (raw && raw.posts) || [];
+  if(!Array.isArray(posts)) return [];
+  return posts.filter(function(p){ return p && p.date; }).map(function(p){
+    var body = p.body;
+    if(typeof body==="string") body=[body];
+    if(!Array.isArray(body)) body=[];
+    var photos=Array.isArray(p.photos)?p.photos:[];
+    return {
+      date: p.date,
+      time: p.time || "",
+      title: p.title || "",
+      body: body.filter(function(t){ return typeof t==="string" && t.trim(); }),
+      place: p.place || "",
+      photos: photos.map(function(ph){
+        return (typeof ph==="string") ? { src:ph, caption:"" }
+             : { src:(ph&&ph.src)||"", caption:(ph&&ph.caption)||"" };
+      }).filter(function(ph){ return ph.src; })
+    };
+  }).sort(function(a,b){
+    return a.date===b.date ? hmMin(a.time||"00:00")-hmMin(b.time||"00:00") : (a.date<b.date?-1:1);
+  });
+}
+function indexPosts(){
+  postsByDate={};
+  POSTS.forEach(function(p){ (postsByDate[p.date]=postsByDate[p.date]||[]).push(p); });
+}
+/* All photos in day order, so the lightbox can page through a whole day. */
+function dayShots(date){
+  var out=[];
+  (postsByDate[date]||[]).forEach(function(p){
+    p.photos.forEach(function(ph){ out.push({ src:ph.src, caption:ph.caption, title:p.title }); });
+  });
+  return out;
+}
+function journalHtml(day){
+  var posts=postsByDate[day.date]||[];
+  if(!posts.length) return "";
+  var shot=0;
+  var html='<div class="card jcard"><h2>📔 From the trip'+
+    (posts.length>1?'<span class="jcount">'+posts.length+' posts</span>':'')+'</h2>';
+  posts.forEach(function(p){
+    html+='<div class="jpost">';
+    if(p.title || p.time){
+      html+='<div class="jhead">'+
+        (p.title?'<span class="jtitle">'+esc(p.title)+'</span>':'')+
+        (p.time?'<span class="jtime">'+fmt12(p.time)+'</span>':'')+'</div>';
+    }
+    if(p.body.length){
+      html+='<div class="jbody">'+p.body.map(function(t){ return '<p>'+esc(t)+'</p>'; }).join("")+'</div>';
+    }
+    var pl=p.place && placeById[p.place];
+    if(pl) html+='<button class="jwhere" data-place="'+esc(pl.id)+'">📍 '+esc(pl.name)+'</button>';
+    if(p.photos.length){
+      html+='<div class="jphotos'+(p.photos.length===1?" one":"")+'">';
+      p.photos.forEach(function(ph){
+        html+='<figure><img loading="lazy" src="'+esc(ph.src)+'" alt="'+esc(ph.caption||p.title||"Trip photo")+
+          '" data-shot="'+(shot++)+'">'+
+          (ph.caption?'<figcaption>'+esc(ph.caption)+'</figcaption>':'')+'</figure>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  return html+'</div>';
+}
+function wireJournal(root, date){
+  root.querySelectorAll(".jphotos img").forEach(function(im){
+    im.addEventListener("click", function(){ openLightbox(dayShots(date), parseInt(im.getAttribute("data-shot"),10)||0); });
+  });
+  root.querySelectorAll(".jwhere").forEach(function(b){
+    b.addEventListener("click", function(){ focusPlace(b.getAttribute("data-place")); });
+  });
+}
+function openLightbox(shots, i){
+  if(!shots.length) return;
+  lbShots=shots; lbAt=Math.max(0, Math.min(shots.length-1, i));
+  paintLightbox();
+  document.getElementById("lightbox").hidden=false;
+  document.body.style.overflow="hidden";   // don't scroll the page behind the photo
+}
+function paintLightbox(){
+  var s=lbShots[lbAt];
+  if(!s) return;
+  var im=document.getElementById("lbImg");
+  im.src=s.src;
+  im.alt=s.caption||s.title||"Trip photo";
+  document.getElementById("lbCap").textContent=s.caption||s.title||"";
+  document.getElementById("lbPrev").hidden = lbShots.length<2;
+  document.getElementById("lbNext").hidden = lbShots.length<2;
+}
+function closeLightbox(){
+  document.getElementById("lightbox").hidden=true;
+  document.getElementById("lbImg").src="";
+  document.body.style.overflow="";
+}
+function stepLightbox(d){
+  if(!lbShots.length) return;
+  lbAt=(lbAt+d+lbShots.length)%lbShots.length;
+  paintLightbox();
 }
 
 /* ---------- jump to now ----------
@@ -2594,12 +2752,17 @@ function applyConfig(cfg){
 function boot(){
   Promise.all([
     fetch("event.json", {cache:"no-cache"}).then(function(r){ return r.json(); }),
-    fetch("../config.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).catch(function(){ return null; })
+    fetch("../config.json", {cache:"no-cache"}).then(function(r){ return r.json(); }).catch(function(){ return null; }),
+    // Optional. A trip with no journal.json (or one being written right now) just
+    // renders no posts, it never blocks the itinerary from loading.
+    fetch("journal.json", {cache:"no-cache"}).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
   ]).then(function(res){
     var data=res[0];
     EV=data;
     EV.places=EV.places||[];
     applyConfig(res[1]);
+    try { POSTS=normalizeJournal(res[2]); } catch(e){ POSTS=[]; console.error(e); }
+    indexPosts();
     EV.days=normalizeDays(data);
     isMulti=EV.days.length>1;
     placeById={};
@@ -2639,6 +2802,18 @@ function boot(){
 /* wire up */
 document.querySelectorAll("nav.tabs button").forEach(function(b){
   b.addEventListener("click", function(){ showTab(b.getAttribute("data-tab")); });
+});
+document.getElementById("lbClose").addEventListener("click", closeLightbox);
+document.getElementById("lbPrev").addEventListener("click", function(){ stepLightbox(-1); });
+document.getElementById("lbNext").addEventListener("click", function(){ stepLightbox(1); });
+document.getElementById("lightbox").addEventListener("click", function(e){
+  if(e.target.id==="lightbox") closeLightbox();   // tap the backdrop to dismiss
+});
+document.addEventListener("keydown", function(e){
+  if(document.getElementById("lightbox").hidden) return;
+  if(e.key==="Escape") closeLightbox();
+  else if(e.key==="ArrowLeft") stepLightbox(-1);
+  else if(e.key==="ArrowRight") stepLightbox(1);
 });
 document.getElementById("findMe").addEventListener("click", startFindMe);
 document.getElementById("parkBtn").addEventListener("click", markCar);
