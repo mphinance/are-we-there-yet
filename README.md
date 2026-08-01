@@ -81,6 +81,16 @@ Three tabs, no backend, no build step.
   Share button, where you're staying, a reservations tracker, a saved packing
   checklist, trip goal lists, live weather, reminder controls, a light/dark
   appearance toggle, and good-to-know notes.
+- **Trip journal** - Optional short dispatches posted from the trip itself, a
+  few lines and some photos, filed under the itinerary day they belong to. They
+  render in a "From the trip" card below that day's schedule, so the plan and
+  what actually happened sit together, and days with a post get a dot on the day
+  strip. Tapping a photo opens a full-screen viewer that pages through the whole
+  day. Because the site is on GitHub Pages, sharing the trip link is the whole
+  publishing step: anyone following it sees new posts within a minute or two of
+  a push, and the photos keep working offline once viewed. Lives in its own
+  `<trip>/journal.json` so a post written on bad wifi can never break the
+  itinerary. See [SPEC.md](SPEC.md#journaljson-posts-from-the-trip).
 - **Trip goals** - Two saved checklists on the Info tab that split the trip
   into what matters. A "must-do / the whole point" list for the reasons you
   came, and a "would-be-awesome / bonus adventures" list for the stops you'll
@@ -210,14 +220,19 @@ The short version (full walkthrough in [SETUP.md](SETUP.md)):
 | `index.html` (root) | The hub landing page. Reads `config.json` and links to each trip. |
 | `<trip>/index.html` | The entire app for one trip: shell, four tabs, map, live clock, day switcher, PWA wiring. Data-driven; identical in every trip folder (edit `zion/`, copy to the rest). |
 | `<trip>/event.json` | The one file that describes that trip. Family and home come from `config.json`. |
+| `<trip>/journal.json` | Optional. Dated posts written from the road, filed under the itinerary day. |
+| `<trip>/photos/` | Optional. Journal photos, downscaled by `gen-photos.js`. |
 | `<trip>/manifest.json` | That trip's PWA name, icon, and color. |
 | `<trip>/sw.js` | Service worker. Identical everywhere; derives its own offline cache name from the folder. |
 | `new-trip.sh` | Scaffolds a new trip folder from `zion/`. |
 | `samples/vacation.json` | A 3-day multi-day trip example. |
+| `samples/journal.json` | A worked `journal.json` example. |
 | `SETUP.md` | The human setup walkthrough. |
 | `NEW-EVENT.md` | How to turn photos into an `event.json` with Claude. |
 | `SPEC.md` | The `event.json` and `config.json` schema, field by field. |
 | `gen-icons.js` / `screenshots.js` | Regenerate icons / `docs/` screenshots via Playwright. |
+| `gen-photos.js` | Downscale trip photos for the journal and strip EXIF. `npm run photos -- <trip> <image>...` |
+| `.claude/skills/trip-post/` | The skill that turns photos and notes into a pushed journal post in one pass. |
 | `.nojekyll` | Lets GitHub Pages serve the `assets/` folders. |
 
 ## Credits

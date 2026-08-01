@@ -1,0 +1,26 @@
+{
+  "posts": [
+    {
+      "date": "2026-08-10",
+      "time": "18:20",
+      "title": "Kirkjufell in the rain",
+      "place": "kirkjufell",
+      "body": [
+        "Tendered in around nine. The mountain does the thing it does in every photo you have ever seen of Iceland, except it was sideways rain the whole time and nobody minded.",
+        "Kilian counted eleven waterfalls before lunch and then lost count on purpose so he could start over."
+      ],
+      "photos": [
+        { "src": "photos/kirkjufell-morning.jpg", "caption": "The mountain, about four minutes before the rain arrived." },
+        { "src": "photos/kirkjufell-falls.jpg", "caption": "Waterfall number six, or possibly number one again." }
+      ]
+    },
+    {
+      "date": "2026-08-10",
+      "time": "21:05",
+      "title": "Back aboard",
+      "body": [
+        "Everyone is dry. Dinner was late and the light never really went away."
+      ]
+    }
+  ]
+}
