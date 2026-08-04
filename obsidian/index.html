@@ -295,6 +295,12 @@
   .locstat { font-size: 13px; margin-top: 8px; }
   .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; margin-top: 10px; }
   .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  /* Kind entries are buttons that toggle their pins. "You" and "Route" stay plain spans. */
+  .legend button { appearance: none; border: 0; background: none; padding: 2px 4px; margin: -2px -4px;
+    font: inherit; color: inherit; display: inline-flex; align-items: center; gap: 5px;
+    cursor: pointer; border-radius: 999px; }
+  .legend button[aria-pressed="false"] { opacity: .35; }
+  .legend button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
   .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 2px solid var(--card); box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
 
   .pin {
@@ -551,7 +557,7 @@
       <button class="btn ghost" id="recenter">Recenter</button>
     </div>
     <div id="map"></div>
-    <div class="locstat muted" id="locStat">Tap "Find me" to drop your live location. Tap a pin to add a note.</div>
+    <div class="locstat muted" id="locStat">Tap "Find me" to drop your live location. Tap a pin to add a note, or a legend label to hide those pins.</div>
     <div class="legend" id="legend"></div>
   </section>
 
@@ -610,6 +616,9 @@ var placeById = {};
 var isMulti = false;
 var curDay = 0;
 var showAllPins = false;
+/* Kinds switched off from the legend. Absent key means shown, so an untouched
+   trip behaves exactly as before. Persisted per trip like the other checklists. */
+var hiddenKinds = {};
 var map = null, meMarker = null, markers = {}, watchId = null, carMarker = null, routeLine = null;
 var WX = {};                               // per-date weather cache (daily + hourly rain), filled online
 var autoScrolledKey = "";                  // guards the jump-to-now auto-scroll to once per day view
@@ -1854,11 +1863,31 @@ function popupHtml(p){
     '<br><a href="'+walkUrl(p)+'" target="_blank" rel="noopener">🚶 Walk here</a>'+
     ' · <a href="#" onclick="editNote(\''+p.id+'\');return false;">'+(note?'Edit note':'Add note')+'</a>';
 }
+function kindFilterKey(){ return "daykit:"+EV.id+":kindfilter"; }
+function loadKindFilter(){
+  try { hiddenKinds = JSON.parse(localStorage.getItem(kindFilterKey())||"{}") || {}; }
+  catch(e){ hiddenKinds = {}; }
+}
+function saveKindFilter(){
+  try { localStorage.setItem(kindFilterKey(), JSON.stringify(hiddenKinds)); } catch(e){}
+}
+function toggleKind(k){
+  if(hiddenKinds[k]) delete hiddenKinds[k]; else hiddenKinds[k]=true;
+  saveKindFilter();
+  refreshMarkers();   /* deliberately no fitDay: refitting on every tap is jarring */
+}
+/* placesForDay decides what belongs to the day. This then drops the kinds the
+   legend has switched off. The two are kept separate on purpose, because the
+   legend keeps listing a hidden kind, and if it did not there would be nothing
+   left to tap to bring those pins back. */
+function visiblePlaces(idx){
+  return placesForDay(idx).filter(function(p){ return !hiddenKinds[p.kind]; });
+}
 function refreshMarkers(){
   if(!map) return;
   Object.keys(markers).forEach(function(id){ map.removeLayer(markers[id]); });
   markers={};
-  placesForDay(curDay).forEach(function(p){
+  visiblePlaces(curDay).forEach(function(p){
     var m=L.marker([p.lat,p.lng],{icon:mkPin(p)}).addTo(map);
     m.bindPopup(popupHtml(p));
     markers[p.id]=m;
@@ -1874,7 +1903,7 @@ function refreshMarkers(){
 }
 function fitDay(){
   if(!map) return;
-  var list=placesForDay(curDay);
+  var list=visiblePlaces(curDay);
   if(list.length>1){ map.fitBounds(L.latLngBounds(list.map(function(p){ return [p.lat,p.lng]; })).pad(0.25)); }
   else { var c=currentCenter(); map.setView([c.lat,c.lng], c.zoom||16); }
 }
@@ -1964,9 +1993,13 @@ function renderLegend(list){
   list.forEach(function(p){ used[p.kind]=true; });
   var el=document.getElementById("legend"); el.innerHTML="";
   Object.keys(used).forEach(function(k){
-    var s=document.createElement("span");
-    s.innerHTML='<span class="dot" style="background:'+(KIND_COLOR[k]||"#888")+'"></span>'+(KIND_LABEL[k]||k);
-    el.appendChild(s);
+    var off=!!hiddenKinds[k], b=document.createElement("button");
+    b.type="button";
+    b.setAttribute("aria-pressed", off ? "false" : "true");
+    b.title=(off ? "Show " : "Hide ")+esc(KIND_LABEL[k]||k).toLowerCase();
+    b.innerHTML='<span class="dot" style="background:'+(KIND_COLOR[k]||"#888")+'"></span>'+esc(KIND_LABEL[k]||k);
+    b.addEventListener("click", function(){ toggleKind(k); });
+    el.appendChild(b);
   });
   var me=document.createElement("span");
   me.innerHTML='<span class="dot" style="background:var(--water)"></span>You';
@@ -1982,7 +2015,12 @@ function focusPlace(id){
   showTab("map");
   setTimeout(function(){
     initMap(); if(!map) return; map.invalidateSize();
-    if(!markers[id]){ showAllPins=true; syncAllPinsBtn(); refreshMarkers(); }
+    if(!markers[id]){
+      /* a filtered-out kind must not swallow a deliberate jump to one of its pins */
+      var fp=placeById[id];
+      if(fp && hiddenKinds[fp.kind]){ delete hiddenKinds[fp.kind]; saveKindFilter(); }
+      showAllPins=true; syncAllPinsBtn(); refreshMarkers();
+    }
     var p=placeById[id]; if(!p) return;
     map.setView([p.lat,p.lng], Math.max(map.getZoom(),17), {animate:true});
     if(markers[id]) markers[id].openPopup();
@@ -2781,6 +2819,7 @@ function boot(){
     renderDayStrip();
     renderNow();
     renderNudge();
+    loadKindFilter();
     renderSchedule();
     renderInfo();
     renderWhoFilters();
