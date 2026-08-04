@@ -1706,7 +1706,8 @@ function renderInfo(){
   if(EV.bring && EV.bring.length){
     html+='<div class="card"><h2>'+(isMulti?"Packing":"Bring")+' / checklist</h2><ul class="check" id="bringList">';
     EV.bring.forEach(function(b,i){
-      html+='<li><input type="checkbox" id="bring'+i+'"><label for="bring'+i+'">'+esc(b)+'</label></li>';
+      var bt=(b&&typeof b==="object")?(b.text||""):b;
+      html+='<li><input type="checkbox" id="bring'+i+'"><label for="bring'+i+'">'+esc(bt)+'</label></li>';
     });
     html+='</ul></div>';
   }
@@ -1765,8 +1766,10 @@ function renderInfo(){
 
   var key="daykit:"+EV.id+":bring", saved={};
   try { saved=JSON.parse(localStorage.getItem(key)||"{}"); } catch(e){}
-  w.querySelectorAll("#bringList input").forEach(function(cb){
-    if(saved[cb.id]){ cb.checked=true; cb.closest("li").classList.add("done"); }
+  w.querySelectorAll("#bringList input").forEach(function(cb,i){
+    var seed=(EV.bring[i]&&typeof EV.bring[i]==="object")?!!EV.bring[i].packed:false;
+    var on=(cb.id in saved)?saved[cb.id]:seed;   // committed packed state seeds the box; localStorage still wins once you tap
+    if(on){ cb.checked=true; cb.closest("li").classList.add("done"); }
     cb.addEventListener("change", function(){
       cb.closest("li").classList.toggle("done", cb.checked);
       saved[cb.id]=cb.checked;

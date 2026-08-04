@@ -34,7 +34,7 @@
     "Mid layer: heavy fleece or wool",
     "Outer shell: waterproof AND windproof. Umbrellas are useless here",
     "Warm hat and gloves even in August. It is 50 to 55F with hard wind",
-    "Passports for everyone, plus the cruise boarding passes",
+    { "text": "Passports for everyone, plus the cruise boarding passes", "packed": true },
     "Seasick meds for the Aug 15 crossing of the Iceland-Faroe Ridge",
     "Swimsuits and flip flops. Sky Lagoon on day one, and Iceland makes you shower properly first",
     "Binoculars for the puffin cruise",
