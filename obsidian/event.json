@@ -203,7 +203,8 @@
     "Iceland is card-first. You can go the whole trip without touching cash.",
     "Grundarfjordur is a tender port. Tender tickets are the first thing you do, not the thing you get around to.",
     "Isafjordur all-aboard at 2pm is hard, but the puffin cruise is an NCL tour, so the ship waits for that one.",
-    "Grandma and Grandpa fly separately and stay on after we go home. Their days are not our days."
+    "Grandma and Grandpa fly separately and stay on after we go home. Their days are not our days.",
+    "Every port day has free Wi-Fi ashore, a short walk from the ship. The green pins are the spots. The only real gap is the sea day on the 15th."
   ],
   "kids": {
     "facts": [
@@ -501,6 +502,66 @@
       "lat": 65.2604,
       "lng": -14.006,
       "desc": "Lunch and an exhibition in town. Indoors, which matters when the alternative is horizontal rain."
+    },
+    {
+      "id": "wifi_harpa",
+      "name": "Harpa: free Wi-Fi",
+      "kind": "service",
+      "icon": "coffee",
+      "lat": 64.1502,
+      "lng": -21.9323,
+      "days": ["2026-08-08", "2026-08-09", "2026-08-16"],
+      "desc": "Free Wi-Fi in the lobby and cafe, no purchase needed. Reykjavik is full of free Wi-Fi, but this one is reliable, indoors, and open late. The fastest connection of the whole trip is the hotel, so do big uploads there first."
+    },
+    {
+      "id": "wifi_grundarfjordur",
+      "name": "Saga Center: free Wi-Fi",
+      "kind": "service",
+      "icon": "coffee",
+      "lat": 64.9246,
+      "lng": -23.2606,
+      "days": ["2026-08-10"],
+      "desc": "Tourist information, library and the Emil cafe under one roof, a short walk up from the tender pier. Free Wi-Fi for visitors."
+    },
+    {
+      "id": "wifi_akureyri",
+      "name": "Tourist Information: free Wi-Fi",
+      "kind": "service",
+      "icon": "coffee",
+      "lat": 65.6835,
+      "lng": -18.0878,
+      "days": ["2026-08-11"],
+      "desc": "Inside the Hof cultural centre, about 150m from the pier gate. Buy a coffee and ask for the password. Longest port day of the week, so this is the best upload window on the ship side of the trip."
+    },
+    {
+      "id": "wifi_isafjordur",
+      "name": "Harbour info hut: free Wi-Fi",
+      "kind": "service",
+      "icon": "pin",
+      "lat": 66.0679,
+      "lng": -23.1265,
+      "days": ["2026-08-12"],
+      "desc": "The info hut runs at the harbour whenever ships are in and you see it the moment you walk off. Free Wi-Fi. The Culture House library up the hill has it too. Ship leaves at 14:00, so this is a morning job."
+    },
+    {
+      "id": "wifi_seydisfjordur",
+      "name": "Ferry terminal: free Wi-Fi",
+      "kind": "service",
+      "icon": "pin",
+      "lat": 65.2632,
+      "lng": -14.0019,
+      "days": ["2026-08-13"],
+      "desc": "The cruise and ferry terminal has internet, and the town library has free Wi-Fi with no sign on the building. Skaftfell has it for customers over lunch."
+    },
+    {
+      "id": "wifi_torshavn",
+      "name": "SMS centre: free Wi-Fi",
+      "kind": "service",
+      "icon": "pin",
+      "lat": 62.0144,
+      "lng": -6.7742,
+      "days": ["2026-08-14"],
+      "desc": "Free Wi-Fi at the shopping centre, and in the old town cafes. Worth knowing: EU roaming does not cover the Faroes, so an Iceland or Europe eSIM is dead here. Wi-Fi or nothing."
     }
   ],
   "days": [
@@ -509,7 +570,8 @@
       "title": "Fly out",
       "timezone": "America/Chicago",
       "notes": [
-        "Kilian skips the last day of camp, so this day has room in it now. Keep the room."
+        "Kilian skips the last day of camp, so this day has room in it now. Keep the room.",
+        "Icelandair charges Economy for onboard Wi-Fi, about 12 to 24 EUR for the flight. ORD and KEF are both free."
       ],
       "schedule": [
         {
@@ -550,7 +612,8 @@
       "date": "2026-08-08",
       "title": "Land in Reykjavik",
       "notes": [
-        "You lose a night to the flight. Go easy and stay up until a normal bedtime."
+        "You lose a night to the flight. Go easy and stay up until a normal bedtime.",
+        "Hotel Wi-Fi is the fastest connection of the whole trip. Do any big uploads here, not on the ship."
       ],
       "schedule": [
         {
@@ -592,7 +655,8 @@
       "title": "Sky Lagoon, then board",
       "notes": [
         "Checkout is 11:00 and the Sky Lagoon starts at 11:00. The bags have to be down before the front desk shuts at 11.",
-        "All aboard is 17:00, not 19:00. The ship does not wait."
+        "All aboard is 17:00, not 19:00. The ship does not wait.",
+        "Free Wi-Fi all over Reykjavik: cafes, Harpa, the museums. Last easy connection before we board."
       ],
       "schedule": [
         {
@@ -651,7 +715,8 @@
       "date": "2026-08-10",
       "title": "Grundarfjordur",
       "notes": [
-        "Tender port. Tickets first, everything else second."
+        "Tender port. Tickets first, everything else second.",
+        "Free Wi-Fi at the Saga Center tourist information, a short walk up from the tender pier."
       ],
       "schedule": [
         {
@@ -693,7 +758,8 @@
       "date": "2026-08-11",
       "title": "Akureyri and the Diamond Circle",
       "notes": [
-        "The longest day in port and the best one for whales."
+        "The longest day in port and the best one for whales.",
+        "Free Wi-Fi at the tourist information cafe, about 150m from the pier gate. Buy a coffee and ask for the password."
       ],
       "schedule": [
         {
@@ -735,7 +801,8 @@
       "date": "2026-08-12",
       "title": "Puffins at Isafjordur",
       "notes": [
-        "Seven hours and a hard 14:00 all-aboard. The puffin cruise is an NCL tour, so the ship waits for it."
+        "Seven hours and a hard 14:00 all-aboard. The puffin cruise is an NCL tour, so the ship waits for it.",
+        "The harbour info hut has free Wi-Fi and you see it the moment you walk off. Ship leaves at 14:00, so do it in the morning."
       ],
       "schedule": [
         {
@@ -779,7 +846,8 @@
       "title": "Seydisfjordur on foot",
       "notes": [
         "The only day with nothing booked, and the only day we get to pick. Nothing here needs a ticket.",
-        "The ship is a ten minute walk away all day. If the weather turns, just go back."
+        "The ship is a ten minute walk away all day. If the weather turns, just go back.",
+        "Free Wi-Fi in the ferry terminal and at the town library, which has no sign on it. Skaftfell has it for customers."
       ],
       "schedule": [
         {
@@ -841,7 +909,8 @@
       "date": "2026-08-14",
       "title": "Torshavn, Faroe Islands",
       "notes": [
-        "Faroe local time is one hour ahead of the ship. Your phone will lie to you. Trust ship time."
+        "Faroe local time is one hour ahead of the ship. Your phone will lie to you. Trust ship time.",
+        "Free Wi-Fi at the SMS centre and in old town cafes. EU roaming does not cover the Faroes, so an eSIM will not help here."
       ],
       "schedule": [
         {
@@ -891,7 +960,8 @@
       "date": "2026-08-15",
       "title": "At sea",
       "notes": [
-        "Crossing the Iceland-Faroe Ridge. Sea state here is genuinely variable."
+        "Crossing the Iceland-Faroe Ridge. Sea state here is genuinely variable.",
+        "No land and no free Wi-Fi. This is the one day a paid ship pass earns its money."
       ],
       "schedule": [
         {
@@ -931,7 +1001,8 @@
       "closingNote": "Salt in the air, obsidian in the backpack, everybody home safe.",
       "notes": [
         "You walk off at 7am and the plane leaves at 7:45pm. That is eleven hours. Do not spend them in an airport.",
-        "The Blue Lagoon sits between Reykjavik and Keflavik and stores luggage. That is the whole answer to this day."
+        "The Blue Lagoon sits between Reykjavik and Keflavik and stores luggage. That is the whole answer to this day.",
+        "Free Wi-Fi across Reykjavik, and KEF Free WiFi at the airport with no password."
       ],
       "schedule": [
         {
@@ -1027,6 +1098,12 @@
       "by": "2026-08-01",
       "owner": "Everyone",
       "note": "Waterproof AND windproof shells, wool base layers, and boots broken in before we go. New boots on day four is how a trip gets ruined."
+    },
+    {
+      "title": "Buy one day of ship Wi-Fi for the sea day",
+      "by": "2026-08-08",
+      "owner": "Michael",
+      "note": "Roughly $30 for a 24 hour pass, 10 to 20 percent cheaper pre-bought in My NCL than onboard. Aug 15 only, since every other day has free Wi-Fi ashore. While you are in there, confirm the fare actually includes the 150 Free at Sea minutes, which are per stateroom and not per person, and that a single day pass is sold on this sailing rather than only a full voyage plan."
     }
   ]
 }
