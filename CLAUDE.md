@@ -66,6 +66,12 @@ line to the `trips` array in `config.json`. No `sw.js` edit needed.
   break the itinerary. Absent or malformed renders no posts. Photos live in
   `<trip>/photos/` and are downscaled by `gen-photos.js`. The `trip-post` skill
   in `.claude/skills/` runs the whole flow, photos to pushed post.
+- **`<trip>/learn/index.html`** is optional and standalone: a self-contained
+  reading page (its own CSS and JS, no shared code, no CDN) that ships with a
+  trip and is precached by its `sw.js`, so it reads offline like the rest of the
+  app. It is linked from the Info tab through the `links` field in `event.json`,
+  never hardcoded. A trip without one loses nothing: the precache entry is in
+  `Promise.allSettled`, so a missing file is a no-op.
 - **`<trip>/sw.js`** is the service worker. It caches the shell, `event.json`,
   and any map tiles the user saves offline. Each trip's cache name is
   **prefixed** (`awty-<trip>-vN`) and its activate cleanup only deletes its own

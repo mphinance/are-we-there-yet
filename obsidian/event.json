@@ -206,6 +206,14 @@
     "Grandma and Grandpa fly separately and stay on after we go home. Their days are not our days.",
     "Every port day has free Wi-Fi ashore, a short walk from the ship. The green pins are the spots. The only real gap is the sea day on the 15th."
   ],
+  "links": [
+    {
+      "emoji": "📚",
+      "title": "Working With AI: an offline field guide",
+      "url": "./learn/",
+      "desc": "Long read on getting more out of Claude and other models. Cached with the app, so it works on the sea day and in the fjords."
+    }
+  ],
   "kids": {
     "facts": [
       "Iceland is one of the only countries on Earth with zero mosquitoes. Nobody is totally sure why.",

@@ -6,7 +6,7 @@
 
 var SLUG = (self.location.pathname.match(/\/([^\/]+)\/sw\.js$/) || [])[1] || 'trip';
 var PREFIX = 'awty-' + SLUG + '-';
-var CACHE = PREFIX + 'v5';
+var CACHE = PREFIX + 'v6';
 var TILES = 'daykit-tiles';   // shared across trips; map tiles saved via "Save offline"
 
 var CORE = [
@@ -14,6 +14,9 @@ var CORE = [
   './index.html',
   './event.json',
   './journal.json',           // optional trip dispatches; absent is fine (allSettled)
+  './learn/',                 // optional extras page linked from Info; absent is fine (allSettled).
+  './learn/index.html',       // Both keys: the folder URL is what the link uses, the file is what a
+                              // server that drops the trailing slash asks for.
   './manifest.json',
   '../config.json',            // shared family + home, filled in when the event omits them
   './assets/icon-192.png',

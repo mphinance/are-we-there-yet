@@ -74,7 +74,9 @@ corner.
 > - Reference places from schedule items by `id` so each stop links to the
 >   map and gets walking directions.
 > - Pick a `theme` that fits the trip, add a `bring` packing list, and a few
->   `notes`.
+>   `notes`. Mark anything already packed as `{ "text": "...", "packed": true }`.
+> - If there is reading or a guide worth carrying along, add a `links` array
+>   (each entry a `title`, a `url`, and an optional `desc` and `emoji`).
 > - Add a `lists` array with a `must` list (the reasons for the trip) and a
 >   `stretch` list (would-be-awesome extras if time allows).
 > - If kids are along, add a `kids` object with a `facts` array (short "Did you
