@@ -86,9 +86,12 @@ same internal shape, so single-day files never need a `days` array.
     "members": [ /* optional people, see "Who wants what" below */ ]
   },
 
-  "bring":  ["Layers", "Swimsuits"],   // optional; saved checklist on Info
+  "bring":  ["Layers", "Swimsuits"],   // optional; saved checklist on Info.
+                                       // An item may also be {text, packed} to
+                                       // start out ticked, see below.
   "lists":  [ /* optional trip-goal checklists, see below */ ],
   "notes":  ["Cherry season peaks in July."],  // optional; trip-level bullets
+  "links":  [ /* optional extra pages, see below */ ],
   "closingNote": "Safe drive home.",   // optional; shown when the day is over
 
   "places": [ /* shared across all days, see below */ ],
@@ -156,6 +159,49 @@ The filter is in-memory (optionally remembered per event under
 one selected person wants) and "Everyone agrees" (show only items every selected
 person is on). It renders nothing when there are fewer than two members, so a
 file without `members` is unchanged.
+
+## `bring` (packing checklist)
+
+Strings, in the order you want them read. Each one becomes a checkbox on the
+Info tab, and ticks are saved to `localStorage` per event.
+
+An item can instead be an object when you want it to start out already ticked,
+which is useful for the things that were packed weeks ago and should not nag:
+
+```jsonc
+"bring": [
+  "Waterproof boots, broken in",
+  { "text": "Passports for everyone", "packed": true }
+]
+```
+
+`packed` only seeds the initial state. The moment anyone taps that box, the
+saved local state wins and the committed value is ignored, so editing
+`event.json` never un-ticks something a person deliberately ticked.
+
+## `links` (extras)
+
+Optional. A card on the Info tab pointing at pages that are not the itinerary:
+a reading list, a guide, a shared album, a rental agreement.
+
+```jsonc
+"links": [
+  {
+    "title": "Working With AI",       // required; the link text
+    "url": "./learn/",                // required; relative or https
+    "desc": "A long read for the sea day.",  // optional; one line under the title
+    "emoji": "📚"                     // optional; defaults to 🔗
+  }
+]
+```
+
+A **relative** `url` points at something shipped inside the trip folder, so the
+service worker caches it and it works with no signal. Put the page at
+`<trip>/learn/index.html` and link to `./learn/` (both keys are precached). An
+**https** `url` opens in a new tab and needs a connection.
+
+Anything that is not `https://`, `http://`, or a relative path is dropped, so a
+bad `event.json` cannot inject a `javascript:` URL into the page.
 
 ## `lists` (trip goals)
 

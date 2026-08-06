@@ -366,6 +366,12 @@
   .lodge:last-child { border-bottom: 0; }
   .lodge b { display: block; }
   .actrow { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .lnk { display: flex; gap: 10px; align-items: flex-start; text-decoration: none; color: inherit;
+         border-bottom: 1px solid var(--line); padding: 10px 0; }
+  .lnk:last-child { border-bottom: 0; }
+  .lnk .lemoji { font-size: 20px; line-height: 1.2; flex: none; }
+  .lnk b { display: block; font-size: 14px; color: var(--accent); }
+  .lnk span.lsub { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
 
   .installbar {
     position: fixed; left: 12px; right: 12px; bottom: calc(12px + var(--safe-bottom)); z-index: 700;
@@ -1753,6 +1759,26 @@ function renderInfo(){
     html+='<div class="card"><h2>Good to know</h2><ul class="plain">';
     EV.notes.forEach(function(n){ html+='<li>'+esc(n)+'</li>'; });
     html+='</ul></div>';
+  }
+
+  /* Extras: optional links, either a page shipped alongside the app (relative,
+     so the service worker serves it offline) or an outside page. Anything that
+     is not http(s) or a relative path is dropped, so a bad event.json can never
+     inject a javascript: URL. */
+  var links=(EV.links||[]).filter(function(l){
+    return l && l.url && /^(https?:\/\/|\.{0,2}\/|[\w.-]+[\/#?])/.test(String(l.url));
+  });
+  if(links.length){
+    html+='<div class="card"><h2>Extras</h2>';
+    links.forEach(function(l){
+      var ext=/^https?:\/\//.test(l.url);
+      html+='<a class="lnk" href="'+esc(l.url)+'"'+(ext?' target="_blank" rel="noopener"':'')+'>'+
+        '<span class="lemoji">'+esc(l.emoji||"🔗")+'</span><span>'+
+        '<b>'+esc(l.title||l.url)+'</b>'+
+        (l.desc?'<span class="lsub">'+esc(l.desc)+'</span>':'')+
+        '</span></a>';
+    });
+    html+='</div>';
   }
 
   if("Notification" in window){

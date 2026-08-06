@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Working With AI: an offline field guide</title>
+<meta name="description" content="A read-anywhere guide to using Claude and other LLMs well. No connection required.">
+<meta name="theme-color" content="#5b3e8c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --primary:#5b3e8c; --accent:#7b5fb0; --sun:#e8b84b; --water:#3e8fa8;
+  --ink:#1a1226; --bg:#f5f2f8; --card:#ffffff; --muted:#6b6076;
+  --line:#e3dced; --code-bg:#f0ecf6; --mark:#fff3cf;
+  --maxw:44rem;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ink:#ece7f3; --bg:#140f1c; --card:#1e1729; --muted:#9c92ab;
+    --line:#2e2540; --code-bg:#241c33; --accent:#a98fd6; --primary:#a98fd6;
+    --mark:#4a3a12;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- chrome ---------- */
+.top{
+  position:sticky; top:0; z-index:20; background:var(--card);
+  border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 8px) 14px 8px;
+  display:flex; align-items:center; gap:10px;
+}
+.top h1{font-size:15px; margin:0; font-weight:650; letter-spacing:.2px; flex:1; min-width:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.top .back{color:var(--muted); text-decoration:none; font-size:14px; white-space:nowrap}
+.top button{
+  background:transparent; border:1px solid var(--line); color:var(--ink);
+  border-radius:8px; padding:6px 10px; font:inherit; font-size:14px; cursor:pointer;
+}
+#bar{position:fixed; top:0; left:0; height:3px; background:var(--accent); width:0; z-index:30; transition:width .1s linear}
+
+/* ---------- toc ---------- */
+#toc{
+  display:none; background:var(--card); border-bottom:1px solid var(--line);
+  padding:10px 14px 16px;
+}
+#toc.open{display:block}
+#toc ol{margin:0; padding-left:1.3em}
+#toc li{margin:.35em 0}
+#toc a{color:var(--ink); text-decoration:none}
+#toc a:hover{color:var(--accent)}
+#toc .sub{color:var(--muted); font-size:14px}
+
+/* ---------- layout ---------- */
+main{max-width:var(--maxw); margin:0 auto; padding:0 16px 96px}
+section{padding-top:28px; scroll-margin-top:64px}
+h2{
+  font-size:24px; line-height:1.25; margin:36px 0 4px; letter-spacing:-.2px;
+  border-top:2px solid var(--line); padding-top:26px;
+}
+section:first-of-type h2{border-top:0; padding-top:0; margin-top:16px}
+h2 .num{color:var(--accent); font-size:14px; display:block; font-weight:600; letter-spacing:.8px; text-transform:uppercase; margin-bottom:6px}
+h3{font-size:18px; margin:26px 0 6px; line-height:1.3}
+h4{font-size:16px; margin:20px 0 4px; color:var(--muted); font-weight:650}
+p{margin:.7em 0}
+ul,ol{padding-left:1.35em; margin:.7em 0}
+li{margin:.4em 0}
+a{color:var(--accent)}
+strong{font-weight:650}
+hr{border:0; border-top:1px solid var(--line); margin:28px 0}
+.lede{font-size:18px; color:var(--muted)}
+
+/* ---------- components ---------- */
+.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin:18px 0}
+.call{border-left:4px solid var(--accent); background:var(--card); border-radius:0 12px 12px 0;
+  padding:12px 16px; margin:18px 0}
+.call .lbl{font-size:12px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:4px}
+.call.warn{border-left-color:var(--sun)} .call.warn .lbl{color:#a8801a}
+@media (prefers-color-scheme:dark){.call.warn .lbl{color:var(--sun)}}
+.call.key{border-left-color:var(--water)} .call.key .lbl{color:var(--water)}
+.call p:first-of-type{margin-top:0} .call p:last-child{margin-bottom:0}
+
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.88em;
+  background:var(--code-bg); padding:.12em .38em; border-radius:5px; word-break:break-word}
+pre{background:var(--code-bg); border:1px solid var(--line); border-radius:10px;
+  padding:12px 14px; overflow-x:auto; margin:14px 0; -webkit-overflow-scrolling:touch}
+pre code{background:none; padding:0; font-size:13px; line-height:1.5; white-space:pre}
+
+.tw{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:16px 0;
+  border:1px solid var(--line); border-radius:12px; background:var(--card)}
+table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:30rem}
+th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-weight:650; background:var(--code-bg); white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+
+.ba{display:grid; gap:12px; margin:16px 0}
+@media(min-width:640px){.ba{grid-template-columns:1fr 1fr}}
+.ba > div{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+.ba .t{font-size:12px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; margin-bottom:6px}
+.ba .no .t{color:#b4553f} .ba .yes .t{color:#3f8a5c}
+@media (prefers-color-scheme:dark){.ba .no .t{color:#e0846c} .ba .yes .t{color:#77c99a}}
+.ba p{margin:.4em 0; font-size:15px}
+
+.drill{background:var(--card); border:1px dashed var(--accent); border-radius:12px; padding:14px 16px; margin:16px 0}
+.drill .lbl{font-size:12px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:6px}
+
+.tldr{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin:14px 0 22px}
+.tldr .lbl{font-size:12px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:4px}
+.tldr p{margin:0; font-size:15.5px}
+
+footer{max-width:var(--maxw); margin:0 auto; padding:24px 16px calc(env(safe-area-inset-bottom) + 40px);
+  color:var(--muted); font-size:14px; border-top:1px solid var(--line)}
+.totop{display:inline-block; margin-top:8px; color:var(--accent); text-decoration:none}
+</style>
+</head>
+<body>
+
+<div id="bar"></div>
+
+<header class="top">
+  <a class="back" href="../">&larr; Trip</a>
+  <h1>Working With AI</h1>
+  <button id="tocBtn" aria-expanded="false">Contents</button>
+</header>
+
+<nav id="toc" aria-label="Contents">
+  <ol>
+    <li><a href="#m1">How the thing actually works</a><br><span class="sub">The mental model that predicts behavior</span></li>
+    <li><a href="#m2">Prompting that survives contact</a><br><span class="sub">Context beats phrasing, every time</span></li>
+    <li><a href="#m3">Context engineering</a><br><span class="sub">The window is a budget, not a bucket</span></li>
+    <li><a href="#m4">Caching, and where the money goes</a><br><span class="sub">Prefix matching and real cost math</span></li>
+    <li><a href="#m5">Claude Code as a system</a><br><span class="sub">CLAUDE.md, skills, MCP, subagents</span></li>
+    <li><a href="#m6">Tools and agents</a><br><span class="sub">When to build one, and how they fail</span></li>
+    <li><a href="#m7">Picking a model</a><br><span class="sub">Effort is the bigger lever</span></li>
+    <li><a href="#m8">Knowing whether you improved anything</a><br><span class="sub">Evals without a research budget</span></li>
+    <li><a href="#m9">Failure modes, catalogued</a><br><span class="sub">What goes wrong and what it looks like</span></li>
+    <li><a href="#m10">Drills</a><br><span class="sub">Things to do with a notebook and no signal</span></li>
+    <li><a href="#m11">Reference card</a><br><span class="sub">Numbers, IDs, parameters</span></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="intro">
+  <p class="lede">This is a field guide to getting more out of large language models, written to be read with no connection: on a plane, in a fjord, on a ship somewhere north of the Faroe Ridge.</p>
+
+  <p>It assumes you already use these tools daily and are past the "write me a haiku" phase. The goal is not tricks. The goal is a mental model accurate enough that you can <em>predict</em> what the model will do before you hit enter, and debug it when you are wrong.</p>
+
+  <p>Everything factual here is current as of August 2026. Model names, prices, and parameters move fast, so treat section 11 as perishable and sections 1 through 10 as durable.</p>
+
+  <div class="call key">
+    <span class="lbl">The one idea</span>
+    <p>Almost every failure you will hit is a <strong>context</strong> failure, not an intelligence failure. The model did not know something you assumed it knew, or it knew too many things and the important one got diluted. Debug context first. Debug phrasing last.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="m1">
+  <h2><span class="num">Section 1</span>How the thing actually works</h2>
+
+  <div class="tldr"><span class="lbl">In one line</span>
+  <p>It is a next-token predictor with no memory, reading a flat buffer of text you rebuild from scratch on every single turn.</p></div>
+
+  <h3>Tokens, not words</h3>
+  <p>Text is chopped into tokens: roughly 3 to 4 characters of English, less for code, much less for non-Latin scripts. Everything is priced, budgeted, and limited in tokens. A useful habit is to stop estimating in words entirely.</p>
+  <p>Do not use an OpenAI tokenizer to count tokens for Claude. <code>tiktoken</code> undercounts Claude tokens by roughly 15 to 20 percent on prose and much more on code. Use the provider's own count endpoint if the number matters.</p>
+
+  <h3>The model is stateless</h3>
+  <p>This is the fact people most often fail to internalize, and it explains an enormous amount of otherwise confusing behavior.</p>
+  <p>There is no conversation living on a server somewhere. Every time you send a message, the client resends the <em>entire</em> conversation: system prompt, tool definitions, every previous turn, every tool result, and your new message. The model reads all of it fresh and predicts what comes next. Then it forgets everything.</p>
+  <p>Consequences that follow directly, and that are worth reasoning through until they feel obvious:</p>
+  <ul>
+    <li>A long conversation costs more <em>per turn</em> than a short one, because you are resending more each time. Cost grows quadratically over a session, not linearly.</li>
+    <li>"Remember what I said earlier" is not a memory operation. The earlier text is right there in the buffer. If the model missed it, that is an attention or dilution problem, not amnesia.</li>
+    <li>Starting a fresh session genuinely resets everything. There is no residue, no learning, no accumulated understanding of you unless something wrote it to a file.</li>
+    <li>Anything you want the model to "know" next week has to live somewhere on disk that gets read back in. That is the entire premise behind project instruction files, memory tools, and notes directories.</li>
+  </ul>
+
+  <h3>The context window</h3>
+  <p>The window is the maximum size of that flat buffer. Current frontier Claude models hold 1 million tokens; the smaller fast models hold 200,000. That sounds infinite and is not, for two reasons.</p>
+  <p>First, agentic work fills it startlingly fast. A single file read can be 20,000 tokens. A verbose test run can be 30,000. Twenty tool calls into a debugging session you can be at 300,000 without having done anything unusual.</p>
+  <p>Second, and more important: <strong>attention is not uniform across the window</strong>. Material at the very beginning and the very end of the buffer gets weighted more heavily than material in the middle. This is a real, measured effect and it is why a critical instruction buried at token 400,000 of a long session behaves as though you never said it. The fix is placement, not emphasis.</p>
+
+  <div class="call">
+    <span class="lbl">Practical</span>
+    <p>If something must not be missed, it goes in the system prompt (start of buffer) or in the most recent turn (end of buffer). Shouting at it in the middle does not work. This is also why re-stating a key constraint in your latest message often "fixes" a model that seemed to be ignoring you: you moved the instruction to a high-attention position.</p>
+  </div>
+
+  <h3>Thinking, effort, and what they actually buy</h3>
+  <p>Modern Claude models can generate reasoning tokens before their visible answer. On the current generation this is <em>adaptive</em>: the model decides per request how much to think, rather than you handing it a fixed token budget. The old fixed-budget parameter is gone and returns an error on current models.</p>
+  <p>What you control instead is <strong>effort</strong>, a five-step dial: <code>low</code>, <code>medium</code>, <code>high</code>, <code>xhigh</code>, <code>max</code>. The default is <code>high</code>. Effort governs more than reasoning depth; it also governs how many tool calls the model makes, how much it explores before committing, and how much preamble it writes.</p>
+  <p>Two things surprise people:</p>
+  <ul>
+    <li><strong>Effort is not a quality slider you should max out.</strong> Higher effort on a simple task produces overthinking, unrequested refactors, and worse results, not better ones. Low and medium on a current frontier model routinely beat the top setting of the previous generation.</li>
+    <li><strong>Higher effort can be cheaper end to end.</strong> On agentic work, more thinking up front often means fewer wrong turns, fewer tool calls, and fewer rounds. Per-request cost goes up; total task cost goes down. Measure the task, not the request.</li>
+  </ul>
+  <p>You never see the raw chain of thought. On current models you get either nothing or a readable summary, depending on a display setting. The reasoning genuinely happened and was genuinely billed either way.</p>
+
+  <h3>Why it makes things up</h3>
+  <p>Hallucination is not a bug bolted onto an otherwise truthful system. The model produces a plausible continuation. When the true continuation is in its weights, plausible and true coincide. When it is not, you get plausible alone, delivered with exactly the same fluency.</p>
+  <p>This predicts precisely where you should distrust output:</p>
+  <ul>
+    <li><strong>Specific and rare</strong> beats specific and common. Version numbers, exact API signatures for niche libraries, page numbers, case citations, obscure config keys. The shape is memorable; the content is not.</li>
+    <li><strong>Anything after the training cutoff.</strong> The model does not know what it does not know about recent events, and will confidently interpolate.</li>
+    <li><strong>Anything you led it to.</strong> "What was the name of that flag again?" presupposes a flag exists. The model will supply one.</li>
+  </ul>
+  <p>The structural fix is not "tell it not to hallucinate," which does close to nothing. It is to change the task from recall to reading: give it the document, the file, the search result. A model summarizing text in front of it is far more reliable than a model recalling text from memory.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="m2">
+  <h2><span class="num">Section 2</span>Prompting that survives contact</h2>
+
+  <div class="tldr"><span class="lbl">In one line</span>
+  <p>Give it what only you know, say what you actually want at a normal volume, and stop writing incantations.</p></div>
+
+  <h3>The hierarchy of levers</h3>
+  <p>Ranked by how much they actually move outcomes, largest first:</p>
+  <ol>
+    <li><strong>Context.</strong> Who this is for, what it plugs into, what the constraints are, what "good" looks like here. This is the whole game.</li>
+    <li><strong>Task specification.</strong> The actual deliverable, its scope, its boundaries.</li>
+    <li><strong>Examples.</strong> Two or three, deliberately varied.</li>
+    <li><strong>Effort and model choice.</strong> A parameter, not a sentence.</li>
+    <li><strong>Phrasing.</strong> Nearly irrelevant on modern models, and the thing people spend the most time on.</li>
+  </ol>
+  <p>If you find yourself rewording a sentence for the fourth time, stop. You are optimizing lever five. Go back and ask what the model does not know that you do.</p>
+
+  <h3>Give it the reason, not just the request</h3>
+  <p>Compare:</p>
+  <div class="ba">
+    <div class="no"><div class="t">Thin</div><p>"Write a summary of this report."</p></div>
+    <div class="yes"><div class="t">Loaded</div><p>"I need to brief our CFO on this vendor report before a renewal call Thursday. She has not read it and will not. She cares about cost exposure and contract lock-in, not implementation detail. Write what she needs."</p></div>
+  </div>
+  <p>The second version is not longer for the sake of being longer. Every clause changes an actual decision the model has to make: audience, depth, framing, what to cut. Without them the model picks defaults, and defaults are generic because generic is the safest guess about an unknown reader.</p>
+  <p>The general form: <em>I am doing X for Y, who needs it in order to Z. With that in mind, do the following.</em></p>
+
+  <h3>Say it once, at normal volume</h3>
+  <p>Older, less steerable models genuinely needed shouting. Current models follow the system prompt closely, which means old emphasis now <strong>overshoots</strong>.</p>
+  <div class="tw"><table>
+  <tr><th>Written for an older model</th><th>What to write now</th></tr>
+  <tr><td><code>CRITICAL: You MUST use this tool when...</code></td><td><code>Use this tool when...</code></td></tr>
+  <tr><td><code>If in doubt, use the search tool</code></td><td>Delete it. It causes constant unnecessary searching.</td></tr>
+  <tr><td><code>Be thorough. Do not be lazy. Do not stop early.</code></td><td>Delete it. Current models are proactive by default.</td></tr>
+  <tr><td><code>Think step by step</code></td><td>Delete it. Reasoning is a parameter now, not an incantation.</td></tr>
+  <tr><td><code>Try to include a summary if possible</code></td><td><code>Include a summary.</code> Hedges get read literally as permission to skip.</td></tr>
+  </table></div>
+  <p>There is a second-order effect worth knowing: when five instructions are all marked critical, the marker stops carrying information. And the register of your prompt becomes the register of the output. An anxious, hedge-laden, all-caps prompt produces cautious, hedging, over-qualified answers.</p>
+
+  <h3>Describe success, do not enumerate failure</h3>
+  <p>Long prohibition lists work worse than they look like they should. Two reasons: describing a failure mode in detail can anchor the model toward it, and a wall of "never do X" leaves the model with no positive target, so it optimizes for not-being-wrong rather than for being useful.</p>
+  <div class="ba">
+    <div class="no"><div class="t">Prohibition stack</div><p>"Do not be verbose. Do not use bullet points. Do not add caveats. Do not start with 'Certainly'. Never use headers."</p></div>
+    <div class="yes"><div class="t">Positive target</div><p>"Answer in prose, at the length the question actually needs. Lead with the answer."</p></div>
+  </div>
+  <p>Keep prohibitions where they encode a real constraint: a refund cap, a compliance rule, a thing the business must not promise. Those are context, and context is never clutter. Drop the ones that just describe an output style you dislike, and state the style you want instead.</p>
+
+  <h3>Examples are the strongest signal in the prompt</h3>
+  <p>Stronger than your instructions. If your instruction says "be concise" and your single example is four paragraphs, you get four paragraphs. The example wins.</p>
+  <p>This cuts both ways, and the failure mode has a name: <strong>gold-example anchoring</strong>. One perfect example freezes its length, tone, structure, and even its idiosyncrasies into every output. Use two or three deliberately different examples so the model infers the <em>principle</em> rather than copying the <em>artifact</em>. Label them as illustrative.</p>
+
+  <h3>State the boundary</h3>
+  <p>Current frontier models are autonomous by default, which is usually what you want and occasionally not. The failure looks like: you asked a question and got a refactor. You described a problem and got a fix applied. You asked for an assessment and got a pull request.</p>
+  <p>The fix is one sentence in the system prompt, and it is remarkably effective:</p>
+  <div class="card"><p><em>"Deliver what was asked, at the scope intended. Make routine judgment calls yourself; check in only when different readings would lead to materially different work. When someone is describing a problem or thinking out loud rather than requesting a change, the deliverable is your assessment: report and stop. If you think the ask is wrong, say so in a sentence and proceed as asked anyway."</em></p></div>
+
+  <h3>Stop telling it to check its work</h3>
+  <p>This one inverts a piece of advice that used to be correct, which makes it easy to miss.</p>
+  <p>"Double-check your answer" and "add a final verification step" were good instructions two model generations ago. On the current frontier they cause <em>over</em>-verification: redundant passes, re-derivation of things already established, extra subagents spawned to check work that was already checked. The models verify by default now. Deleting the instruction reduces the waste with no measurable loss in correctness.</p>
+  <p>Same category, same direction: forced progress-update choreography ("summarize after every three tool calls") is now redundant scaffolding. The models narrate on their own, and often too much rather than too little.</p>
+
+  <div class="call warn">
+    <span class="lbl">The general rule</span>
+    <p>Prompts are <strong>per-model artifacts</strong>. A line that is load-bearing on one generation is dead weight on the next, and actively harmful on the one after. Every model release is a reason to re-read your prompts and delete, not just add. Nobody owns that deletion, which is why prompts accumulate the union of every generation's workarounds.</p>
+  </div>
+
+  <h3>A structure that holds up</h3>
+  <p>Not a magic template. Just an ordering that puts stable material first, which matters for caching (section 4) and for attention (section 1).</p>
+  <pre><code>1. Role and situation      one or two sentences, no more
+2. Context                 audience, product, environment, constraints
+3. The task                what to produce, at what scope
+4. Quality bar             what good looks like here, specifically
+5. Boundaries              what not to touch, when to stop and ask
+6. Examples                two or three, varied, labeled illustrative
+7. The specific request     <-- the only volatile part</code></pre>
+  <p>Items 1 through 6 should be byte-identical across requests. Item 7 changes. Keeping that split clean is worth real money, which is section 4.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="m3">
+  <h2><span class="num">Section 3</span>Context engineering</h2>
+
+  <div class="tldr"><span class="lbl">In one line</span>
+  <p>Curating what goes into the window is now a bigger skill than writing what goes into the prompt.</p></div>
+
+  <h3>The budget framing</h3>
+  <p>Treat the window as a budget with three competing claims on it: the instructions that shape behavior, the material the task actually needs, and the accumulated debris of the session so far. The third one grows without asking permission and crowds out the first two.</p>
+  <p>Signs your context has gone bad, in rough order of how early they appear:</p>
+  <ul>
+    <li>The model re-reads a file it already read.</li>
+    <li>It re-derives a conclusion you reached together twenty turns ago.</li>
+    <li>It contradicts a constraint you set early in the session.</li>
+    <li>It starts hedging on things it was confident about.</li>
+    <li>It suggests starting a new session.</li>
+  </ul>
+  <p>The first one is the tell. When you see it, the useful move is almost always to start fresh with a tight, deliberate summary rather than to keep pushing.</p>
+
+  <h3>Poisoning</h3>
+  <p>A specific and underappreciated failure: once a wrong fact enters the context, it stays. The model treats its own earlier output as established. If it misread a config file on turn three, that misreading is load-bearing on turn thirty, and every conclusion built on it inherits the error.</p>
+  <p>You cannot fix this by arguing. Correcting it in a later turn leaves both the wrong version and the correction in the buffer, and the model now has to reconcile them, which sometimes works and sometimes produces a muddle. For a genuinely poisoned session, restart and carry forward only what you know is true.</p>
+
+  <h3>The three mechanisms for keeping it lean</h3>
+  <div class="tw"><table>
+  <tr><th>Mechanism</th><th>What it does</th><th>Use when</th></tr>
+  <tr><td><strong>Context editing</strong></td><td>Deletes stale tool results and old reasoning blocks outright</td><td>Long tool-heavy runs where old outputs are genuinely dead</td></tr>
+  <tr><td><strong>Compaction</strong></td><td>Summarizes earlier turns into a compact block, server side</td><td>Long conversations approaching the window limit</td></tr>
+  <tr><td><strong>Memory (files)</strong></td><td>Writes to disk, survives the session ending</td><td>Anything that should still be true next week</td></tr>
+  </table></div>
+  <p>These are complementary, not alternatives. Editing prunes, compaction summarizes, memory persists. Long-running agents typically use all three.</p>
+  <p>One implementation trap on compaction: the summary comes back as a block in the response, and you have to pass it back on the next request. Code that extracts only the text string and appends that will silently drop the compaction state and quietly stop working.</p>
+
+  <h3>The memory file pattern</h3>
+  <p>Worth knowing even outside a formal memory tool, because it is the mechanism behind every "the AI remembers my project" feature you have used.</p>
+  <p>Give the model a directory it can read and write. Tell it to check there before starting and to record what it learns. Then give it a format, because without one you get an unusable pile:</p>
+  <div class="card"><p><em>"One lesson per file, with a one-line summary at the top. Record corrections and confirmed approaches alike, and say why each mattered. Do not save what the repository or the chat history already records. Update an existing note rather than creating a near-duplicate. Delete notes that turn out to be wrong."</em></p></div>
+  <p>The last two clauses are the ones people leave out, and they are why memory directories rot into contradictory sludge after a month.</p>
+
+  <div class="call warn">
+    <span class="lbl">Never</span>
+    <p>Do not put credentials in memory files, system prompts, or conversation history. All three are durably persisted and replayed into every future session that touches them. A key written once is a key leaked repeatedly.</p>
+  </div>
+
+  <h3>Retrieval beats recall, always</h3>
+  <p>Whenever you can convert "what do you know about X" into "here is X, work with it," do it. Every measure of reliability improves: fewer fabrications, better citations, more calibrated uncertainty. This is the entire reason search tools, file reading, and document upload exist, and it is why an agent with tools beats a bigger model without them on most real tasks.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="m4">
+  <h2><span class="num">Section 4</span>Caching, and where the money goes</h2>
+
+  <div class="tldr"><span class="lbl">In one line</span>
+  <p>Caching is a prefix match, so one timestamp at the top of your prompt can cost you the entire discount.</p></div>
+
+  <h3>The single invariant</h3>
+  <p>Prompt caching works on an exact byte-prefix match. The cache key is derived from the rendered prompt up to a marked breakpoint. <strong>Any change anywhere in the prefix invalidates everything after it.</strong></p>
+  <p>Render order is fixed: tool definitions first, then the system prompt, then messages. So a change to your tool list invalidates literally everything. A change to the system prompt invalidates system and messages. A change to message content invalidates only messages.</p>
+
+  <h3>The economics</h3>
+  <div class="tw"><table>
+  <tr><th>Operation</th><th>Cost vs normal input</th></tr>
+  <tr><td>Cache read</td><td>about 0.1x</td></tr>
+  <tr><td>Cache write, 5 minute lifetime</td><td>1.25x</td></tr>
+  <tr><td>Cache write, 1 hour lifetime</td><td>2x</td></tr>
+  </table></div>
+  <p>Break-even with the short lifetime is two requests (1.25 + 0.1 = 1.35, versus 2.0 uncached). With the hour lifetime you need three. After that it is close to a ninety percent discount on everything cached, which on a large stable system prompt is the difference between a viable product and an unviable one.</p>
+
+  <h3>The silent invalidators</h3>
+  <p>These are the ones that bite, because nothing errors. You just quietly pay full price forever.</p>
+  <div class="tw"><table>
+  <tr><th>Pattern</th><th>Why it breaks caching</th></tr>
+  <tr><td><code>datetime.now()</code> in the system prompt</td><td>The prefix differs on every single request</td></tr>
+  <tr><td>A request ID or UUID near the top</td><td>Same. Every request is unique.</td></tr>
+  <tr><td><code>json.dumps(d)</code> without sorting keys</td><td>Non-deterministic serialization, so the bytes differ</td></tr>
+  <tr><td>User ID interpolated into the system prompt</td><td>Per-user prefix, no sharing across users</td></tr>
+  <tr><td>Conditional system sections</td><td>Every flag combination is a separate prefix</td></tr>
+  <tr><td>A tool list that varies by user or mode</td><td>Tools render first, so nothing caches at all</td></tr>
+  </table></div>
+
+  <h3>How to actually verify</h3>
+  <p>The response reports what happened. Check it, do not assume:</p>
+  <pre><code>usage.cache_creation_input_tokens   written this request (you paid the premium)
+usage.cache_read_input_tokens      served from cache (you paid ~10%)
+usage.input_tokens                 full price, not cached</code></pre>
+  <p>If cache reads are zero across repeated requests with what you believe is an identical prefix, you have an invalidator. Diff the actual rendered bytes of two requests. It is always something small and always something you did not think of as part of the prompt.</p>
+  <p>A second gotcha: <code>input_tokens</code> is only the <em>uncached remainder</em>. Total prompt size is the sum of all three fields. An agent that ran for hours and reports 4,000 input tokens did not use 4,000 tokens; the rest came from cache.</p>
+
+  <h3>Design rules that follow</h3>
+  <ul>
+    <li><strong>Freeze the system prompt.</strong> Never interpolate the date, the user, or the mode into it. Inject those later in the message array where they invalidate nothing before them.</li>
+    <li><strong>Sort your tools deterministically</strong> and do not change the set mid-conversation.</li>
+    <li><strong>Do not switch models mid-conversation.</strong> Caches are per-model. If a sub-task wants a cheaper model, spawn a subagent for it and keep the main loop on one model.</li>
+    <li><strong>Place the breakpoint at the end of the shared part</strong>, not at the end of the whole prompt. If you cache through the varying question, every request writes a new entry and nothing is ever read.</li>
+    <li><strong>Fan-out needs a warm-up.</strong> A cache entry is only readable once the first response starts streaming. Fifty parallel identical-prefix requests all pay full price. Send one, wait for the first token, then send the other forty-nine.</li>
+  </ul>
+
+  <h3>Other cost levers, in order of size</h3>
+  <ol>
+    <li><strong>Caching.</strong> Up to 90 percent on the repeated portion. Nothing else comes close.</li>
+    <li><strong>Batch processing.</strong> Flat 50 percent off for anything that can tolerate up to 24 hours of latency. Absurdly underused.</li>
+    <li><strong>Effort tuning.</strong> Dropping from the top setting to medium on routine work is often invisible in quality and very visible on the bill.</li>
+    <li><strong>Model routing.</strong> Real, but smaller than people assume, and it comes with a cache penalty when you switch mid-session.</li>
+    <li><strong>Shorter prompts.</strong> Last, and mostly a distraction. Deleting context to save tokens usually costs more in retries than it saves.</li>
+  </ol>
+  <p>If you have no per-surface token accounting, add that before optimizing anything. Every issue in this section is invisible without it.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="m5">
+  <h2><span class="num">Section 5</span>Claude Code as a system</h2>
+
+  <div class="tldr"><span class="lbl">In one line</span>
+  <p>Four layers: instructions that always load, skills that load on demand, connectors that add capability, and subagents that add parallelism.</p></div>
+
+  <h3>Instruction files</h3>
+  <p>A <code>CLAUDE.md</code> in a project root loads into context automatically, every session, every turn. That is its power and its cost. It is prime real estate at the high-attention start of the buffer, and everything in it is paid for on every request.</p>
+  <div class="ba">
+    <div class="yes"><div class="t">Belongs there</div>
+      <p>Architecture and how the pieces relate. Where the canonical source lives. Conventions that are not guessable. Commands to run and verify. Hard style rules. Things that will bite someone who does not know them.</p></div>
+    <div class="no"><div class="t">Does not belong</div>
+      <p>General programming knowledge. Restatements of trained defaults ("write clean code"). One session's stumble encoded as a permanent rule. Anything the repository already makes obvious. Incident archaeology and PR numbers.</p></div>
+  </div>
+  <p>The test for any line: <em>could the model already know this?</em> Keep what only you know. That is the whole rule, and it is why "be helpful and accurate" is pure waste while "the canonical source is this file, copy it to the others" is worth its weight.</p>
+  <p>The recency trap deserves its own warning. After a bad session it is tempting to write a rule preventing exactly that stumble. Before you do, ask whether the rule would have helped the last ten sessions or only the one that just annoyed you. Instruction files rot into a minefield of one-off patches otherwise.</p>
+
+  <h3>Skills</h3>
+  <p>A skill is a folder with instructions that load <em>only when relevant</em>. Its short description sits in context permanently; the full body loads when the task matches. That is progressive disclosure, and it is the mechanism that lets you have fifty specialized workflows without paying for fifty specialized workflows on every request.</p>
+  <p>When to create one, in practical terms: <strong>the third time you do a task by hand.</strong> Once is a task. Twice is a coincidence. Three times is a process, and processes should be written down where the model can find them.</p>
+  <p>Skill design notes worth internalizing:</p>
+  <ul>
+    <li><strong>Match specificity to fragility.</strong> Exact scripts for the narrow bridges where only one sequence is safe. Prose heuristics for the open fields where judgment beats a checklist. Getting this backwards is the most common skill failure: rigid scripts for judgment calls, vague hand-waving for the destructive command.</li>
+    <li><strong>Size is a tax on every trigger.</strong> If a skill file cannot be read in one sitting, it is too long.</li>
+    <li><strong>The description is the trigger.</strong> It is the only part always in context and the only thing deciding whether the skill fires. Write it as categories of intent, not as a growing list of example phrasings.</li>
+    <li><strong>Encode architecture, not trivia.</strong> Hardcoded paths, flags, and version numbers rot as code ships. Data models and workflows do not.</li>
+  </ul>
+
+  <h3>Connectors</h3>
+  <p>MCP servers give the model tools it did not otherwise have: a database, a broker, a calendar, an issue tracker. Two facts that catch people out.</p>
+  <p>First, <strong>connectors are scoped</strong>. Tools available in one project are not available in another. If you built tooling for one workspace, it does not follow you into a different directory, and that is deliberate.</p>
+  <p>Second, <strong>credentials never belong in prompts</strong>. They belong in the connector's own configuration or a secret store. A key pasted into a message is persisted in the conversation history and replayed forever.</p>
+
+  <h3>Subagents</h3>
+  <p>A subagent is a fresh context window doing a scoped piece of work and reporting back. The appeal is obvious: parallelism, and isolation of a messy exploration from your main thread.</p>
+  <p>The cost is less obvious and larger than people expect. Each subagent has to re-establish context from nothing, re-explore, form conclusions, and write a report. Then the parent reads the report. You pay for the setup, the work, the report, and the reading, and you lose all the nuance that did not fit in the report.</p>
+  <div class="ba">
+    <div class="yes"><div class="t">Worth it</div>
+      <p>Genuinely independent tracks. Wide multi-file investigation where each branch is self-contained. Work you want to fan out and are happy to receive as a summary.</p></div>
+    <div class="no"><div class="t">Not worth it</div>
+      <p>Anything you could finish in a handful of tool calls yourself. Sequential work with dependencies. Verification and double-checking (that belongs in the main loop). Splitting one modest job into pieces.</p></div>
+  </div>
+  <p>The current frontier models lean <em>toward</em> delegation, which is a reversal from the previous generation that had to be nudged into it. If you carried forward a "delegate more aggressively" instruction from a year ago, delete it, and consider capping spawn counts explicitly instead.</p>
+
+  <h3>Plan mode and permissions</h3>
+  <p>Plan mode separates "figure out what to do" from "do it." It is worth reaching for whenever the cost of a wrong approach exceeds the cost of a round trip: unfamiliar codebases, anything touching data, anything where you would rather review a plan than a diff.</p>
+  <p>Permission modes are a real safety boundary and a real productivity dial, and they trade against each other honestly. The useful habit is to match the mode to the blast radius: loose in a scratch directory or a throwaway branch, tight anywhere a mistake is expensive to undo.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="m6">
+  <h2><span class="num">Section 6</span>Tools and agents</h2>
+
+  <div class="tldr"><span class="lbl">In one line</span>
+  <p>Most things people build as agents should have been a workflow, and most agent failures are tool-design failures.</p></div>
+
+  <h3>The tiers</h3>
+  <div class="tw"><table>
+  <tr><th>Tier</th><th>Shape</th><th>Right for</th></tr>
+  <tr><td><strong>Single call</strong></td><td>One request, one response</td><td>Classify, summarize, extract, answer</td></tr>
+  <tr><td><strong>Workflow</strong></td><td>Several calls, <em>your</em> code controls the order</td><td>Multi-step pipelines with a known shape</td></tr>
+  <tr><td><strong>Agent</strong></td><td>The model decides what to do next, in a loop</td><td>Open-ended tasks you cannot fully specify up front</td></tr>
+  </table></div>
+  <p>Start at the top and only move down when forced. The strong default is that a workflow beats an agent whenever the steps are knowable in advance, because deterministic control flow is debuggable and a model-driven loop is not.</p>
+
+  <h3>The four-question test</h3>
+  <p>Before building an agent, all four must pass:</p>
+  <ol>
+    <li><strong>Complexity.</strong> Is the task genuinely multi-step and hard to specify up front? "Turn this design doc into a pull request" qualifies. "Extract the title from this PDF" does not.</li>
+    <li><strong>Value.</strong> Does the outcome justify the cost and the latency? Agents are expensive and slow relative to a single call.</li>
+    <li><strong>Viability.</strong> Is the model actually good at this class of task? Not "could it in principle," but "does it, reliably, today."</li>
+    <li><strong>Cost of error.</strong> Can mistakes be caught and undone? Tests, review, rollback, an audit trail. If a wrong action is silent and permanent, do not build an agent.</li>
+  </ol>
+  <p>A "no" on any one of these means stay at a simpler tier. The fourth one is the one people wave past, and it is the one that produces the horror stories.</p>
+
+  <h3>Tool design is the actual work</h3>
+  <p>The quality of an agent is mostly determined by its tool surface, not its prompt. A few principles that hold up:</p>
+  <p><strong>Descriptions are the highest-leverage text you will write.</strong> Not the system prompt: the tool descriptions. Under-description is the most common failure by a wide margin. Three or four sentences minimum, covering what it does, when to use it, when <em>not</em> to, what each parameter means, and what it does not return.</p>
+  <p>Be prescriptive about triggering, not just descriptive about function. "Returns current stock quotes" is weaker than "Call this whenever the answer depends on a current price. Do not use it for historical analysis." Current models reach for tools conservatively, and the trigger condition in the description measurably raises the should-call rate.</p>
+  <p><strong>Start with a broad tool, promote to specific ones.</strong> A shell gives the model maximum leverage but gives your harness an opaque string. Promote an action to its own tool when you need to gate it (destructive or irreversible), render it (custom UI), audit it, or parallelize it safely. A <code>send_email</code> tool is easy to put behind a confirmation. A shell command that happens to contain a curl to a mail API is not.</p>
+  <p><strong>Fewer, clearly bounded tools beat many overlapping ones.</strong> If two tools have descriptions that a careful reader would confuse, the model will confuse them too. Say the boundary explicitly in both.</p>
+  <p><strong>Return high-signal results.</strong> A tool that dumps 40,000 tokens of JSON when the model needed three fields is burning context on every call. Filter server side.</p>
+
+  <h3>Verification is the difference between a demo and a system</h3>
+  <p>The thing that separates agents that work from agents that impress once is a feedback loop the agent can actually run. Tests. A type checker. A linter. A schema validator. A second model with a rubric. Anything that turns "I think this is right" into a signal.</p>
+  <p>Without it the agent has no way to distinguish plausible from correct, which is section 1's problem showing up at the system level.</p>
+
+  <h3>How agents fail, specifically</h3>
+  <ul>
+    <li><strong>Context exhaustion.</strong> Fills the window with tool output, degrades, loses the plot. Section 3 is the mitigation.</li>
+    <li><strong>Loops.</strong> Tries the same failing approach repeatedly with cosmetic variation. Almost always because the error message it gets back is uninformative. Fix the tool's error output, not the prompt.</li>
+    <li><strong>Silent partial completion.</strong> Reports success having done sixty percent. This is why "report outcomes faithfully, and if a step was skipped say so" earns its place in a system prompt, and why you need external verification anyway.</li>
+    <li><strong>Scope creep.</strong> Asked to fix a bug, refactors the module. Bounded by an explicit scope instruction (section 2).</li>
+    <li><strong>Confident wrong premises.</strong> Misreads something early, builds twenty steps on it. See poisoning, section 3.</li>
+  </ul>
+  <p>Notice how many of these are fixed by better tool output rather than better prompting. That is the general shape of agent debugging.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="m7">
+  <h2><span class="num">Section 7</span>Picking a model</h2>
+
+  <div class="tldr"><span class="lbl">In one line</span>
+  <p>Pick the strong default, then tune effort. Effort moves cost and latency more than model choice does.</p></div>
+
+  <h3>The shape of the lineup</h3>
+  <p>Every provider now offers roughly the same three tiers, and the reasoning transfers:</p>
+  <ul>
+    <li><strong>A frontier tier</strong> for the hardest reasoning and longest-horizon autonomous work. Most expensive, slowest, and genuinely better on problems the tier below cannot finish.</li>
+    <li><strong>A workhorse tier</strong> that handles the large majority of real work, including most coding and agentic tasks. This is where you should default.</li>
+    <li><strong>A fast tier</strong> for high-volume, latency-sensitive, mechanically simple work: classification, routing, extraction, formatting.</li>
+  </ul>
+  <p>The mistake people make is treating the frontier tier as "the good one" and everything else as a compromise. In practice the workhorse tier at high effort beats the frontier tier at low effort on most tasks, and costs less.</p>
+
+  <h3>Effort, revisited</h3>
+  <p>Worth repeating because it is the lever people leave untouched. Effort defaults to <code>high</code>. That is a reasonable default and it is usually not the right setting for your specific route.</p>
+  <p>A practical procedure: take a representative sample of your actual workload, run it at <code>low</code>, <code>medium</code>, <code>high</code>, and <code>xhigh</code>, and look at quality against cost and latency. The relationship is frequently not monotonic. Routine work often shows no quality difference between medium and max while costing a fraction. Hard agentic work often shows the opposite, where higher effort means fewer wasted rounds and lower total cost.</p>
+  <p>Effort settings carried over from a previous model generation are almost never right. Re-sweep on every upgrade.</p>
+
+  <div class="call warn">
+    <span class="lbl">A trap</span>
+    <p>Effort is not a verbosity control. If responses are too long, lowering effort may reduce reasoning without shortening the visible answer at all. Verbosity is a prompting problem: ask for concision explicitly, and it works.</p>
+  </div>
+
+  <h3>When routing between models is worth it</h3>
+  <p>Genuinely worth it when: the volume is high, the tasks are cleanly separable by difficulty, and each route has its own stable prompt so caching is not disrupted.</p>
+  <p>Not worth it when: you would be switching models mid-conversation (this destroys the cache), the classification of which task is hard is itself hard, or the volume is low enough that the engineering cost exceeds the savings.</p>
+  <p>The clean pattern is a subagent on a cheaper model for a scoped sub-task, with the main loop staying on one model throughout.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="m8">
+  <h2><span class="num">Section 8</span>Knowing whether you improved anything</h2>
+
+  <div class="tldr"><span class="lbl">In one line</span>
+  <p>Twenty saved test cases beat any amount of intuition, and asking the model whether your prompt is good is not a measurement.</p></div>
+
+  <h3>Why intuition fails here</h3>
+  <p>These systems are non-deterministic and you are prompting them while holding a hypothesis. That combination is close to a laboratory for confirmation bias. You change a line, the next output looks better, you conclude the line helped. It may have been variance. It may have been a different input. It may have been that you read the output more charitably because you expected improvement.</p>
+
+  <h3>The minimum viable eval</h3>
+  <p>This is genuinely small and almost nobody does it:</p>
+  <ol>
+    <li><strong>Collect 20 real inputs.</strong> Not synthetic ones. Real ones from your actual use, deliberately including the hard and weird cases, because those are the ones a prompt change breaks.</li>
+    <li><strong>Write down what a good output looks like</strong> for each. Not necessarily a full gold answer. Often a checklist of three things it must get right is more useful, and much faster to write.</li>
+    <li><strong>Run all 20 before your change.</strong> Save the outputs.</li>
+    <li><strong>Make exactly one change.</strong></li>
+    <li><strong>Run all 20 again and diff.</strong></li>
+  </ol>
+  <p>An afternoon of setup, and after that every prompt change becomes an experiment rather than a vibe. The step people skip is the fourth one: changing three things at once and then being unable to attribute the result is the most common way an eval set gets abandoned.</p>
+
+  <h3>The self-report trap</h3>
+  <p>Asking a model "is this prompt good?" or "do you need this instruction?" produces fluent, confident, plausible commentary that is unrelated to what the model will actually do. It does not have introspective access to its own behavior. It is predicting what an answer to that question looks like.</p>
+  <p>The same applies to "did you check everything?" The answer is yes. The answer is always yes. Verify externally or do not verify.</p>
+
+  <h3>Removal is a hypothesis</h3>
+  <p>When you delete a line from a prompt, that is a hypothesis that the line was not doing anything. Test it like one: run the eval, and if quality drops, put back a minimal version rather than restoring the original wall of text.</p>
+  <p>This matters because prompts only ever grow otherwise. Every incident adds a line; nothing removes one. Six months later you have a document nobody understands, where half the lines are patches for a model that no longer exists, and where the accumulated caution is measurably degrading output.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="m9">
+  <h2><span class="num">Section 9</span>Failure modes, catalogued</h2>
+
+  <p>A diagnostic table. Symptom on the left, likely cause and fix on the right.</p>
+
+  <div class="tw"><table>
+  <tr><th>Symptom</th><th>Likely cause and fix</th></tr>
+  <tr><td>Ignores an instruction you definitely gave</td><td>It is buried mid-context. Move it to the system prompt or restate it in the current turn. Do not add emphasis.</td></tr>
+  <tr><td>Over-triggers a tool or behavior</td><td>Emphasis written for an older model. Delete the <code>CRITICAL</code>, delete "if in doubt", state the condition plainly.</td></tr>
+  <tr><td>Under-triggers a tool</td><td>The tool description says what it does but not when to call it. Add the trigger condition to the description itself.</td></tr>
+  <tr><td>Output is the wrong length or register</td><td>Your example set is doing it. One gold example anchors everything. Vary the examples, or state the target explicitly.</td></tr>
+  <tr><td>Generic, safe, useless answers</td><td>Under-specified context. It does not know the audience or the bar, so it hedged. Add who, for what, and what good looks like.</td></tr>
+  <tr><td>Does more than you asked</td><td>Missing a scope boundary. One sentence fixes it, see section 2.</td></tr>
+  <tr><td>Re-reads files it already read</td><td>Context is degraded. Restart with a tight summary; do not push through.</td></tr>
+  <tr><td>Loops on the same failing approach</td><td>The error it gets back is uninformative. Fix the tool output, not the prompt.</td></tr>
+  <tr><td>Confidently wrong on a specific fact</td><td>Recall, not reading. Convert to retrieval: give it the source.</td></tr>
+  <tr><td>Contradicts something from earlier</td><td>Context poisoning or dilution. Check whether a wrong fact entered early and is now load-bearing.</td></tr>
+  <tr><td>Costs far more than expected</td><td>Cache is not hitting. Check <code>cache_read_input_tokens</code>; look for a timestamp or ID in the prefix.</td></tr>
+  <tr><td>Quality regressed after a model upgrade</td><td>Prompt written for the old model. Re-read it and delete, especially verification instructions and forced scaffolding.</td></tr>
+  <tr><td>Response truncates mid-sentence</td><td>Hit the output cap. Note that reasoning tokens count against it, so enabling thinking can truncate a previously fine request.</td></tr>
+  <tr><td>Excessive self-correction and apologizing</td><td>The register of your prompt. Anxious prompt, anxious model. Also state that only outcome-changing corrections are worth narrating.</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="m10">
+  <h2><span class="num">Section 10</span>Drills</h2>
+
+  <p>Nothing here needs a connection. A notebook is enough, and the point is to have the work already done when you are back online.</p>
+
+  <div class="drill"><span class="lbl">Drill 1 &middot; Audit an instruction file</span>
+  <p>Take a <code>CLAUDE.md</code> or system prompt you rely on and go through it line by line with one question: <em>could the model already know this?</em> Mark every line KEEP, CUT, or UNSURE. Then count the CUTs. In most real prompts it is between a third and a half. Do not act on it yet, just make the list.</p></div>
+
+  <div class="drill"><span class="lbl">Drill 2 &middot; Date the fossils</span>
+  <p>In the same document, find every line containing MUST, NEVER, CRITICAL, ALWAYS, or an all-caps word. For each, write down what failure it was preventing and which model it was written for. Any line where you cannot answer either question is a removal candidate. Any line naming a model you no longer use is a removal candidate with high confidence.</p></div>
+
+  <div class="drill"><span class="lbl">Drill 3 &middot; Build the eval set</span>
+  <p>Write out 20 real inputs from something you actually use. Next to each, three bullet points describing what a correct output must contain. This is the highest-value hour in this entire guide, and it is fully doable offline.</p></div>
+
+  <div class="drill"><span class="lbl">Drill 4 &middot; Rewrite the context header</span>
+  <p>Pick a task you do repeatedly. Write the context block you should be leading with every time: who it is for, what it plugs into, what the constraints are, what good looks like. Aim for a paragraph you can paste. Most people discover they have been re-explaining this from scratch, badly, every time.</p></div>
+
+  <div class="drill"><span class="lbl">Drill 5 &middot; Find the cache invalidator</span>
+  <p>For each place you build a prompt programmatically, write out in order what goes into the prefix. Circle anything that could vary between two requests you would expect to share a cache. Dates and IDs are the usual suspects; unsorted dictionary serialization is the sneaky one.</p></div>
+
+  <div class="drill"><span class="lbl">Drill 6 &middot; The third-time inventory</span>
+  <p>List every task you have done by hand three or more times in the last month. Each one is a skill you have not written yet. Sketch the description line for each, since that is the part that decides whether it ever fires.</p></div>
+
+  <div class="drill"><span class="lbl">Drill 7 &middot; Agent triage</span>
+  <p>Take something you have considered automating and run the four-question test honestly: complexity, value, viability, cost of error. Then write down what the verification loop would be. If you cannot name one, you have your answer, and it is a workflow rather than an agent.</p></div>
+
+  <div class="drill"><span class="lbl">Drill 8 &middot; Write the tool description</span>
+  <p>Pick a tool you already expose and rewrite its description from scratch: what it does, when to call it, when explicitly not to, what each parameter means, what it does not return. Compare to what is there now. This is usually where the biggest uncaptured gain is hiding.</p></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="m11">
+  <h2><span class="num">Section 11</span>Reference card</h2>
+
+  <p class="lede">Perishable. Accurate as of August 2026. Verify anything load-bearing when you are back online.</p>
+
+  <h3>Claude models</h3>
+  <div class="tw"><table>
+  <tr><th>Model</th><th>ID</th><th>Context</th><th>In / Out per Mtok</th></tr>
+  <tr><td>Claude Fable 5</td><td><code>claude-fable-5</code></td><td>1M</td><td>$10 / $50</td></tr>
+  <tr><td>Claude Opus 5</td><td><code>claude-opus-5</code></td><td>1M</td><td>$5 / $25</td></tr>
+  <tr><td>Claude Opus 4.8</td><td><code>claude-opus-4-8</code></td><td>1M</td><td>$5 / $25</td></tr>
+  <tr><td>Claude Sonnet 5</td><td><code>claude-sonnet-5</code></td><td>1M</td><td>$3 / $15</td></tr>
+  <tr><td>Claude Sonnet 4.6</td><td><code>claude-sonnet-4-6</code></td><td>1M</td><td>$3 / $15</td></tr>
+  <tr><td>Claude Haiku 4.5</td><td><code>claude-haiku-4-5</code></td><td>200K</td><td>$1 / $5</td></tr>
+  </table></div>
+  <p class="lede" style="font-size:14.5px">Model IDs have no date suffix. Do not construct one. Max output is 128K on the current models (64K on Haiku 4.5), and anything above roughly 16K should be streamed to avoid HTTP timeouts.</p>
+
+  <h3>Effort</h3>
+  <div class="tw"><table>
+  <tr><th>Level</th><th>Reach for it when</th></tr>
+  <tr><td><code>low</code></td><td>Short scoped tasks, latency-sensitive work, chat, simple lookups</td></tr>
+  <tr><td><code>medium</code></td><td>Cost-sensitive routine work. Often indistinguishable from high.</td></tr>
+  <tr><td><code>high</code></td><td>The default. Sensible for most intelligence-sensitive work.</td></tr>
+  <tr><td><code>xhigh</code></td><td>Hard coding and agentic work. Give it a large output budget.</td></tr>
+  <tr><td><code>max</code></td><td>Correctness matters more than cost. Can overthink simple tasks.</td></tr>
+  </table></div>
+
+  <h3>Prompt caching</h3>
+  <div class="tw"><table>
+  <tr><th>Fact</th><th>Value</th></tr>
+  <tr><td>Match type</td><td>Exact byte prefix</td></tr>
+  <tr><td>Render order</td><td>tools, then system, then messages</td></tr>
+  <tr><td>Max breakpoints</td><td>4 per request</td></tr>
+  <tr><td>Minimum cacheable prefix</td><td>512 tokens on Opus 5, 1024 on Opus 4.8 and Sonnet 5, higher on older models</td></tr>
+  <tr><td>Read cost</td><td>about 0.1x input</td></tr>
+  <tr><td>Write cost</td><td>1.25x for 5 minute lifetime, 2x for 1 hour</td></tr>
+  <tr><td>Lookback window</td><td>20 content blocks. Long agentic turns can silently outrun it.</td></tr>
+  <tr><td>Verify with</td><td><code>usage.cache_read_input_tokens</code></td></tr>
+  </table></div>
+
+  <h3>Things that changed and will trip up old code</h3>
+  <ul>
+    <li><strong>Fixed thinking budgets are gone.</strong> <code>budget_tokens</code> errors on current models. Use adaptive thinking plus effort.</li>
+    <li><strong>Sampling parameters are gone.</strong> <code>temperature</code>, <code>top_p</code>, and <code>top_k</code> are rejected on current frontier models. Steer with prompting instead. For variety in creative or design work, ask the model to propose several distinct directions and pick one.</li>
+    <li><strong>Assistant prefills are gone.</strong> The trick of starting the assistant turn with <code>{"</code> to force JSON now errors. Use structured outputs instead, and delete the whole apparatus around the prefill: stop sequences, regex extraction, parse-retry loops.</li>
+    <li><strong>Reasoning is hidden by default.</strong> If you were rendering thinking text to users, it will now be empty unless you opt into summaries.</li>
+    <li><strong>Thinking counts against the output cap.</strong> A request that was comfortably sized before can truncate once thinking is on.</li>
+  </ul>
+
+  <h3>Response fields worth reading</h3>
+  <pre><code>stop_reason        end_turn | max_tokens | tool_use | refusal | pause_turn
+usage.input_tokens                  uncached input only
+usage.cache_read_input_tokens       served from cache
+usage.cache_creation_input_tokens   written to cache
+usage.output_tokens                 includes reasoning tokens</code></pre>
+  <p>Check <code>stop_reason</code> before reading content. Code that unconditionally reads the first content block breaks on a refusal, where the content array can be empty.</p>
+
+  <h3>The compressed version of this whole guide</h3>
+  <ol>
+    <li>Context is the lever. Phrasing is not.</li>
+    <li>The model is stateless. Everything is resent, every turn.</li>
+    <li>Middle-of-context material gets less attention. Placement beats emphasis.</li>
+    <li>Say it once, plainly. Emphasis written for old models now overshoots.</li>
+    <li>Describe success, not a list of failures.</li>
+    <li>Examples outrank instructions. Vary them.</li>
+    <li>Give the reason behind the request.</li>
+    <li>State the boundary, or it will exceed the scope.</li>
+    <li>Delete "double-check your work". It over-verifies now.</li>
+    <li>Retrieval beats recall. Give it the document.</li>
+    <li>Caching is a prefix match. One timestamp costs you everything.</li>
+    <li>Batch anything that tolerates latency. Fifty percent off.</li>
+    <li>Sweep effort. The default is not your answer.</li>
+    <li>Third time by hand means write a skill.</li>
+    <li>Tool descriptions matter more than the system prompt.</li>
+    <li>An agent without a verification loop is a demo.</li>
+    <li>Twenty saved test cases beat any amount of intuition.</li>
+    <li>Prompts are per-model artifacts. Re-read and delete on every upgrade.</li>
+  </ol>
+</section>
+
+</main>
+
+<footer>
+  <p>Written for Project Obsidian. Cached with the trip app, so it works with no signal.</p>
+  <p>Sections 1 through 10 should age slowly. Section 11 will not.</p>
+  <a class="totop" href="#intro">Back to top</a>
+</footer>
+
+<script>
+(function(){
+  var btn=document.getElementById("tocBtn"), toc=document.getElementById("toc"), bar=document.getElementById("bar");
+
+  btn.addEventListener("click", function(){
+    var open=toc.classList.toggle("open");
+    btn.setAttribute("aria-expanded", open?"true":"false");
+    btn.textContent = open ? "Close" : "Contents";
+  });
+  toc.addEventListener("click", function(e){
+    if(e.target.tagName==="A"){
+      toc.classList.remove("open");
+      btn.setAttribute("aria-expanded","false");
+      btn.textContent="Contents";
+    }
+  });
+
+  // reading progress
+  function tick(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    var p=max>0 ? (h.scrollTop||document.body.scrollTop)/max : 0;
+    bar.style.width=(p*100).toFixed(1)+"%";
+    try { localStorage.setItem("awty:learn:pos", String(h.scrollTop||document.body.scrollTop)); } catch(e){}
+  }
+  var pending=false;
+  window.addEventListener("scroll", function(){
+    if(pending) return; pending=true;
+    requestAnimationFrame(function(){ pending=false; tick(); });
+  }, {passive:true});
+
+  // restore where you left off
+  try {
+    var saved=parseInt(localStorage.getItem("awty:learn:pos")||"0",10);
+    if(saved>200 && !location.hash) window.scrollTo(0, saved);
+  } catch(e){}
+  tick();
+})();
+</script>
+</body>
+</html>

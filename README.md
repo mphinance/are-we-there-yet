@@ -80,7 +80,10 @@ Three tabs, no backend, no build step.
 - **Info** - Location and Open-in-Maps, an Add-to-Calendar export (.ics), a
   Share button, where you're staying, a reservations tracker, a saved packing
   checklist, trip goal lists, live weather, reminder controls, a light/dark
-  appearance toggle, and good-to-know notes.
+  appearance toggle, good-to-know notes, and an optional `links` card for
+  extras: a reading list, a guide, a shared album. A relative link points at a
+  page shipped inside the trip folder, so it is cached and readable offline
+  along with everything else.
 - **Trip journal** - Optional short dispatches posted from the trip itself, a
   few lines and some photos, filed under the itinerary day they belong to. They
   render in a "From the trip" card below that day's schedule, so the plan and
