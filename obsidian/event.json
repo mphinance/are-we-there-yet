@@ -61,6 +61,15 @@
       "note": "One night before the ship. Walkable to everything downtown."
     },
     {
+      "title": "Flybus PLUS, Keflavik Airport into town",
+      "status": "confirmed",
+      "when": "Sat Aug 8, any departure",
+      "ref": "BUS-OBSIDIAN",
+      "place": "flybus_stop1",
+      "who": "Everyone",
+      "note": "Three seats, paid, two adults and one youth. The time is flexible, so there is no bus to miss and no reason to rush customs. Buses leave about 45 minutes after each flight lands."
+    },
+    {
       "title": "Norwegian Star, 7 nights",
       "status": "confirmed",
       "when": "Aug 9 to 16",
@@ -153,7 +162,7 @@
       "by": "2026-07-26",
       "url": "https://flybus.is",
       "who": "Everyone",
-      "note": "About $29 to $35 a head instead of the ship's $99.50."
+      "note": "About $29 to $35 a head instead of the ship's $99.50. This is the last day and it is a separate ticket. The one we hold covers the airport into town on Aug 8 and nothing else."
     },
     {
       "title": "ORD parking, Aug 7 to 16",
@@ -330,6 +339,18 @@
       "lng": -21.942,
       "address": "2 Kirkjustraeti, Reykjavik",
       "desc": "One night before the ship, right on the old town square."
+    },
+    {
+      "id": "flybus_stop1",
+      "name": "Flybus stop 1: Radhusid, City Hall",
+      "kind": "travel",
+      "icon": "transport",
+      "lat": 64.1466,
+      "lng": -21.9429,
+      "days": [
+        "2026-08-08"
+      ],
+      "desc": "Where the Flybus PLUS sets us down on arrival morning, beside the City Hall on the pond. The hotel is a two minute walk from here, across the square."
     },
     {
       "id": "sky_lagoon",
@@ -633,10 +654,13 @@
         },
         {
           "start": "07:30",
-          "end": "08:30",
-          "title": "Transfer into Reykjavik",
-          "place": "hotel_rvk",
-          "note": "45 minutes. Flybus or a pre-booked van."
+          "end": "09:00",
+          "title": "Flybus PLUS into Reykjavik",
+          "place": "flybus_stop1",
+          "booking": "BUS-OBSIDIAN",
+          "who": "Everyone",
+          "flex": true,
+          "note": "Booked and paid, and the ticket is good for any departure that day, so take whichever bus you make. Desk is in the arrivals hall once you are through customs. About 45 minutes to the BSI terminal, then a smaller bus out to stop 1 at the City Hall."
         },
         {
           "start": "09:00",
@@ -645,7 +669,7 @@
           "place": "hotel_rvk",
           "who": "Everyone",
           "flex": true,
-          "note": "Rooms will not be ready this early. Leave the bags and go."
+          "note": "Two minutes on foot from the bus stop. Rooms will not be ready this early, so leave the bags and go. The desk shuts at 11."
         },
         {
           "start": "12:00",
