@@ -1,0 +1,134 @@
+{
+  "id": "lionsden",
+  "title": "The Bluff",
+  "subtitle": "Half a day at Lion's Den Gorge",
+  "timezone": "America/Chicago",
+  "date": "2026-08-22",
+  "theme": {
+    "primary": "#2e7d8f",
+    "accent": "#6d8f3c",
+    "sun": "#f2c14e",
+    "water": "#1f6f8b",
+    "ink": "#12303a",
+    "bg": "#f1f8f9",
+    "card": "#ffffff"
+  },
+  "location": { "name": "Lion's Den Gorge Nature Preserve, Grafton, WI", "lat": 43.3378, "lng": -87.8880, "zoom": 12 },
+  "travel": { "roadFactor": 1.3, "mph": 42, "walkUnderMi": 0.3 },
+  "team": {
+    "emoji": "🌊",
+    "rank": "The Hankos",
+    "note": "Three of us, out the door from a meeting that ends at 10:30. One flat walk everybody does, one stairway only whoever wants it.",
+    "members": [
+      { "name": "Kilian", "emoji": "🧢" },
+      { "name": "Mom" },
+      { "name": "Dad" }
+    ]
+  },
+  "bring": [
+    "Lunch, snacks and water. There is no food at the preserve.",
+    "A towel and a full change for Kilian if the stairs and the water happen",
+    "Shoes with grip for whoever takes the stairway down",
+    "Sunscreen. The bluff top is open with nothing over it.",
+    "A light windbreaker. Northwest wind 5 to 15 off the lake.",
+    "Bug spray",
+    "Your phone, for the caretaker number in Prep"
+  ],
+  "prep": [
+    {
+      "title": "Call the Lion's Den caretaker, (262) 241-5868",
+      "by": "2026-08-22",
+      "owner": "Dad",
+      "note": "Trail apps reported a bluff trail bridge closure as of June 2026 and the county page shows no advisory either way. Ninety seconds. If it does not happen before you leave, call from the parking lot, and read the trailhead sign before you walk."
+    }
+  ],
+  "lists": [
+    {
+      "tone": "must",
+      "title": "The whole point",
+      "note": "All of this happens from level ground.",
+      "who": "Everyone",
+      "items": [
+        "Stand on top of a hundred foot bluff over Lake Michigan",
+        "Walk the boardwalk out to the near overlook and back",
+        "Eat lunch with the lake in front of you"
+      ]
+    },
+    {
+      "tone": "stretch",
+      "title": "If people have it in them",
+      "note": "Bonus, not the plan.",
+      "items": [
+        { "text": "Take the stone stairway down into the gorge", "who": ["Kilian", "Dad"] },
+        { "text": "Skip stones on the shoreline", "who": ["Kilian", "Dad"] },
+        "Walk on to the far overlook, another tenth of a mile out",
+        "Stop at Lime Kiln Park in Grafton on the way home"
+      ]
+    }
+  ],
+  "kids": {
+    "facts": [
+      "The bluff you are standing on is 90 to 100 feet tall and runs for seven tenths of a mile along the lake.",
+      "Lake Michigan is the only one of the five Great Lakes that sits entirely inside the United States.",
+      "This whole preserve is 73 acres, which is about 55 football fields.",
+      "Turkey vultures ride the wind along the bluff edge with a wingspan close to six feet, and they almost never flap.",
+      "Down the road at Lime Kiln Park, three big stone ovens are still standing. They burned cordwood to cook rock into lime for mortar, and they went cold in the 1920s."
+    ],
+    "trivia": [
+      {
+        "q": "How tall is the bluff over the lake here?",
+        "choices": ["About 10 feet", "About 100 feet", "About 1,000 feet"],
+        "answer": 1,
+        "fact": "Ninety to a hundred feet, for seven tenths of a mile."
+      },
+      {
+        "q": "Which Great Lake is the only one entirely inside the United States?",
+        "choices": ["Lake Superior", "Lake Erie", "Lake Michigan", "Lake Ontario"],
+        "answer": 2,
+        "fact": "The other four are all shared with Canada."
+      },
+      {
+        "q": "What did the kilns at Lime Kiln Park make?",
+        "choices": ["Lime for mortar", "Ice cream", "Steel"],
+        "answer": 0,
+        "fact": "Limestone plus a very hot cordwood fire makes lime, which builders mixed into mortar."
+      },
+      {
+        "q": "A big dark bird is circling the bluff without flapping. What is it probably?",
+        "choices": ["A penguin", "A turkey vulture", "A hummingbird"],
+        "answer": 1,
+        "fact": "It is riding warm air rising off the bluff face. Free ride, no flapping."
+      }
+    ]
+  },
+  "notes": [
+    "Free. Ozaukee County's fee schedule dated 5 March 2026 lists no day use fee, no parking fee and no non resident vehicle charge. No state park sticker.",
+    "Park hours are 6 AM to 9 PM, an hour earlier than most county parks.",
+    "The county states plainly that there is no ADA compliant path down to the beach. The bluff top is flat. The shore is stairs or nothing.",
+    "The 2.1 mile figure on trail apps is the full circuit: bluff, gorge stairway, lakeshore, back up. The near overlook is a quarter mile from the car.",
+    "Restrooms are real now. The new pavilion has indoor accessible bathrooms. Anything calling this park portable toilets only is out of date.",
+    "Not a guarded beach and no posted swimming rule. Rock and pebble, not sand. Treat it as at your own risk shoreline.",
+    "Wind is northwest, which is offshore here, so the lake should be flat rather than surf. Good for skipping stones.",
+    "If a bridge is out or the radar turns, Lime Kiln Park is 11 minutes away and its pavilion is heated, cooled and has restrooms.",
+    "If you do end up at Lime Kiln: no wading or swimming in the Milwaukee River, village rule 10, and there is an archery range on site."
+  ],
+  "closingNote": "Home by mid afternoon and ahead of the rain. Short day, big view.",
+  "places": [
+    { "id": "church", "name": "Cedar Springs Church", "kind": "hub", "icon": "flag", "lat": 43.3045863, "lng": -88.278597, "address": "3128 Slinger Rd, Slinger, WI 53086", "desc": "Where the day starts. Meeting ends at 10:30." },
+    { "id": "lionsden", "name": "Lion's Den Gorge Nature Preserve", "kind": "sight", "icon": "hike", "lat": 43.33765, "lng": -87.889144, "open": "06:00-21:00", "desc": "73 acres, seven tenths of a mile of 90 to 100 foot bluff over Lake Michigan, and a mile of shoreline at the bottom of it." },
+    { "id": "parking", "name": "Main parking lot", "kind": "service", "icon": "parking", "lat": 43.337758, "lng": -87.889029, "desc": "Asphalt, free, no fee and no sticker." },
+    { "id": "pavilion", "name": "Pavilion restrooms", "kind": "service", "icon": "rest", "lat": 43.338063, "lng": -87.887886, "desc": "New pavilion, indoor accessible bathrooms, open. About 350 feet from the lot." },
+    { "id": "overlook", "name": "Near bluff overlook", "kind": "sight", "icon": "star", "lat": 43.338946, "lng": -87.887384, "desc": "The one everybody walks to. 0.13 miles from the lot in a straight line, flat crushed limestone and boardwalk." },
+    { "id": "farview", "name": "Far overlook", "kind": "sight", "icon": "sight", "lat": 43.338919, "lng": -87.884973, "desc": "Another tenth of a mile along the bluff top. Optional, same flat surface." },
+    { "id": "limekiln", "name": "Lime Kiln Park, Grafton", "kind": "sight", "icon": "sight", "lat": 43.305533, "lng": -87.955223, "open": "06:00-22:00", "desc": "The fallback. Three restored kilns of an original five, and a heated year round pavilion with restrooms. 11 minutes from the preserve." }
+  ],
+  "schedule": [
+    { "start": "10:30", "end": "11:10", "title": "Roll out of the church lot", "place": "church", "who": "Everyone", "note": "About 38 minutes to Grafton. Call the caretaker from the car if it did not happen before." },
+    { "start": "11:10", "end": "11:25", "title": "Park, restrooms, read the trailhead sign", "place": "parking", "also": "pavilion", "who": "Everyone", "note": "Any closure this size gets posted at the trailhead, not just online." },
+    { "start": "11:25", "end": "12:05", "title": "Walk out to the bluff overlook", "place": "overlook", "who": "Everyone", "flex": true, "dist": 0.5, "level": "easy", "note": "Quarter mile each way, flat crushed limestone and boardwalk. Go as far along the bluff as it stays pleasant and turn around. It is an out and back, not a loop." },
+    { "start": "12:05", "end": "12:45", "title": "Lunch on the bluff top", "place": "lionsden", "who": "Everyone", "flex": true, "note": "Whatever you packed. There is nothing to buy here." },
+    { "start": "12:45", "end": "13:45", "title": "Down the gorge stairway to the shoreline", "place": "lionsden", "who": ["Kilian", "Dad"], "flex": true, "dist": 1.0, "gain": 100, "level": "moderate", "note": "Stone steps, the bridge over the creek, then right onto the shore. The climb back is the hard half, so do not save it for last. Whoever stays up top has the overlook and the pavilion." },
+    { "start": "13:45", "end": "14:00", "title": "Regroup at the car", "place": "parking", "who": "Everyone", "flex": true },
+    { "start": "14:00", "end": "14:40", "title": "Drive home", "place": "home", "who": "Everyone", "note": "Leaving at two clears the afternoon storm window. Staying until four is a fair bet at 30 percent, and the flat loop is never more than ten minutes from the car." }
+  ]
+}

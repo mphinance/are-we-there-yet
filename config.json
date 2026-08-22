@@ -21,6 +21,14 @@
 
   "trips": [
     {
+      "slug": "lionsden",
+      "title": "The Bluff",
+      "subtitle": "Half a day at Lion's Den Gorge",
+      "dates": "Aug 22, 2026",
+      "emoji": "🌊",
+      "primary": "#2e7d8f"
+    },
+    {
       "slug": "obsidian",
       "title": "Project Obsidian",
       "subtitle": "Iceland and the Faroes on the Norwegian Star",
