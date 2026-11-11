@@ -24,13 +24,12 @@ The human-facing walkthrough is `SETUP.md`; this is the map for working in here.
   and home so a trip's `event.json` does not repeat them.
 - **`/index.html`** is the hub: a small landing page that reads `config.json` and
   renders a card linking to each trip folder. It is NOT the app.
-- **`/<trip>/`** (e.g. `zion/`, `callahan/`) each hold a **complete, self-
+- **`/<trip>/`** (`zion/`, `callahan/`, `obsidian/`, `lionsden/`) each hold a **complete, self-
   contained copy of the app**: `index.html`, that trip's `event.json`,
   `manifest.json`, `sw.js`, and `assets/`. Each is independently installable and
   offline-capable, and all its paths are relative so the folder just works.
 - The **canonical app source is `zion/index.html`.** To change app behavior,
-  edit it and copy it to the other trip folders (`cp zion/index.html
-  callahan/index.html`, same for `sw.js`). The app and `sw.js` are byte-identical
+  edit it and copy it to the other trip folders (same for `sw.js`) into `callahan/`, `lionsden/` and `obsidian/`. The app and `sw.js` are byte-identical
   in every trip folder; only `event.json` and `manifest.json` differ.
 
 **Config inheritance:** the app's `boot()` fetches `../config.json` and
@@ -54,8 +53,8 @@ line to the `trips` array in `config.json`. No `sw.js` edit needed.
   `<style>`, and all JS in one `<script>`. No framework, no build step, no
   bundler. Plain ES5-flavored JS (`var`, `function`, no modules). It fetches
   `event.json` (relative, so its own folder's) at load, normalizes single-day
-  and multi-day shapes into one internal form, and renders four tabs: Schedule,
-  Map, Kids, Info.
+  and multi-day shapes into one internal form, and renders five tabs: Schedule,
+  Map, Kids, Prep, Info (Prep hides itself when there is nothing to prep).
 - **`<trip>/event.json`** is the only file you edit per event. Full schema in
   `SPEC.md`. Never hardcode event specifics into `index.html`; add a field and
   drive it from data instead.
@@ -79,7 +78,7 @@ line to the `trips` array in `config.json`. No `sw.js` edit needed.
   per-origin). **Bump that trip's `CACHE` version whenever you change its
   `index.html`, `event.json`, or other cached assets**, or installed clients
   keep serving the old version. The root `sw.js` (prefix `awty-hub-`) caches the
-  hub and `trips.json`.
+  hub and `config.json`.
 - **`manifest.json`** is PWA metadata. **`gen-icons.js`** regenerates icons and
   **`screenshots.js`** regenerates the `docs/` showcase images, both via
   Playwright. **`gen-photos.js`** downscales journal photos, and
@@ -128,7 +127,7 @@ Serve the repo root statically (geolocation needs localhost or HTTPS, not
 
 ```
 npx serve .            # or: python -m http.server 8000
-# hub at /  ·  a trip at /zion/  ·  /callahan/
+# hub at /  ·  a trip at /zion/  ·  /callahan/  ·  /obsidian/  ·  /lionsden/
 ```
 
 Note: some static servers rewrite `/<trip>/index.html` and drop the trailing
@@ -164,7 +163,7 @@ backend.
 
 1. Keep the app (`<trip>/index.html`) generic and data-driven.
 2. Edit the canonical `zion/index.html`, then copy it to the other trip folders
-   so they stay identical (`cp zion/index.html callahan/index.html`; same for
+   so they stay identical (`cp zion/index.html <trip>/`; same for
    `sw.js` if you touch it). Verify the copies match (`md5sum`).
 3. If you add an `event.json` field: document it in `SPEC.md`, add a sample to a
    trip's `event.json` and to `samples/vacation.json`, mention it in

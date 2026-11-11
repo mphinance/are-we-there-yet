@@ -19,6 +19,11 @@ as a complete, independently installable copy of the app:
 - **[`/zion/`](zion/)** - Red Rock Road Trip, 3 days in Zion and Bryce Canyon.
 - **[`/callahan/`](callahan/)** - Operation Callahan, Kilian's 8th birthday at
   Cedar Point (the trip this whole thing grew out of).
+- **[`/obsidian/`](obsidian/)** - Project Obsidian, Iceland and the Faroes on a
+  cruise, Aug 7 to 16, 2026. Ships a trip journal and an offline "Working With
+  AI" field guide (`obsidian/learn/`).
+- **[`/lionsden/`](lionsden/)** - The Bluff, a half day at Lion's Den Gorge,
+  Aug 22, 2026.
 
 You set up your **family and home once** in [`config.json`](config.json), and
 every trip inherits them. Adding a trip is `./new-trip.sh <slug>`, then filling
@@ -55,7 +60,7 @@ a one-day trip, so old files keep working.
 
 ## What the app does
 
-Three tabs, no backend, no build step.
+Five tabs (Schedule, Map, Kids, Prep, Info), no backend, no build step.
 
 - **Schedule** - A live "right now / up next" banner with a countdown, a
   "how much of the day is done" progress bar, and the day as a timeline. On
@@ -68,7 +73,8 @@ Three tabs, no backend, no build step.
   lodging, sights, services). "Find me" drops your live GPS and names the
   nearest stop, "Mark my car" saves where you parked, "Save offline" caches
   the visible tiles so the map keeps working with no signal, and tapping any
-  pin lets you jot a note.
+  pin lets you jot a note. The legend is a filter: tap a kind to hide its pins
+  (the choice is remembered per trip).
 - **Kids** - The back-seat tab that earns the app its name. A big glanceable
   "Are we there yet?" answer with a car driving along a road toward the finish,
   a kid-worded countdown ("7 minutes until Bottle Rockets"), and a talking
@@ -77,6 +83,10 @@ Three tabs, no backend, no build step.
   Bingo, Spot It, and I Spy. A trip can also add its own **Trivia** quiz and a
   "Did you know?" facts card by filling in the optional `kids` field in
   `event.json`, so the learning is tuned to where you're going.
+- **Prep** - What still has to happen before you go: a countdown to departure,
+  a month calendar, and a checklist of tasks (`prep` entries plus any `bookings`
+  that are still to book). The tab hides itself when a trip has neither. See
+  [SPEC.md](SPEC.md#prep-the-prep-tab-what-still-has-to-happen-before-you-go).
 - **Info** - Location and Open-in-Maps, an Add-to-Calendar export (.ics), a
   Share button, where you're staying, a reservations tracker, a saved packing
   checklist, trip goal lists, live weather, reminder controls, a light/dark
@@ -221,7 +231,7 @@ The short version (full walkthrough in [SETUP.md](SETUP.md)):
 |------|------------|
 | `config.json` | Set-up-once config: your family, your home, and the list of trips for the hub. Trips inherit family and home from here. |
 | `index.html` (root) | The hub landing page. Reads `config.json` and links to each trip. |
-| `<trip>/index.html` | The entire app for one trip: shell, four tabs, map, live clock, day switcher, PWA wiring. Data-driven; identical in every trip folder (edit `zion/`, copy to the rest). |
+| `<trip>/index.html` | The entire app for one trip: shell, five tabs, map, live clock, day switcher, PWA wiring. Data-driven; identical in every trip folder (edit `zion/`, copy to the rest). |
 | `<trip>/event.json` | The one file that describes that trip. Family and home come from `config.json`. |
 | `<trip>/journal.json` | Optional. Dated posts written from the road, filed under the itinerary day. |
 | `<trip>/photos/` | Optional. Journal photos, downscaled by `gen-photos.js`. |
